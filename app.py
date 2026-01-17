@@ -74,18 +74,108 @@ st.sidebar.markdown("---")
 
 page = st.sidebar.radio(
     "Navigation",
-    ["📝 Observation", "📊 Dashboard", "📁 Données", "ℹ️ À propos"]
+    ["👤 Profils", "📝 Observation", "🧪 Tests Cognitifs", "📊 Dashboard", "📁 Données", "ℹ️ À propos"]
 )
+
+# Individual selector in sidebar (if individuals exist)
+individuals_df = db.get_all_individuals()
+selected_individual_id = None
+
+if not individuals_df.empty:
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🐕 Individu")
+    individual_names = ["Tous"] + individuals_df['name'].tolist()
+    selected_individual = st.sidebar.selectbox("Sélectionner:", individual_names)
+    
+    if selected_individual != "Tous":
+        selected_individual_id = individuals_df[individuals_df['name'] == selected_individual]['id'].iloc[0]
+        st.sidebar.info(f"Observations filtrées pour: **{selected_individual}**")
+
+# ============================================================================
+# PROFILES PAGE
+# ============================================================================
+if page == "👤 Profils":
+    st.title("👤 Gestion des Profils Individuels")
+    st.markdown("Gérez les profils de vos chiens pour un suivi personnalisé.")
+    
+    st.markdown("---")
+    
+    # Add new individual
+    st.subheader("➕ Ajouter un Nouveau Profil")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        new_name = st.text_input("Nom *", key="new_name")
+        new_breed = st.text_input("Race", key="new_breed")
+    
+    with col2:
+        new_sex = st.selectbox("Sexe", ["", "Mâle", "Femelle"], key="new_sex")
+        new_neutered = st.checkbox("Stérilisé(e)", key="new_neutered")
+    
+    with col3:
+        new_birth_date = st.date_input("Date de naissance", value=None, key="new_birth_date")
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("➕ Ajouter", type="primary", use_container_width=True):
+            if new_name:
+                birth_date_str = new_birth_date.strftime('%Y-%m-%d') if new_birth_date else None
+                if db.add_individual(new_name, new_breed, birth_date_str, new_sex, new_neutered):
+                    st.success(f"✅ Profil '{new_name}' ajouté avec succès!")
+                    st.rerun()
+                else:
+                    st.error(f"❌ Un profil nommé '{new_name}' existe déjà")
+            else:
+                st.error("❌ Le nom est requis")
+    
+    st.markdown("---")
+    
+    # Display existing individuals
+    st.subheader("📋 Profils Existants")
+    
+    if not individuals_df.empty:
+        for _, individual in individuals_df.iterrows():
+            with st.expander(f"🐕 {individual['name']}", expanded=False):
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.markdown(f"**Race:** {individual['breed'] or 'Non spécifiée'}")
+                    st.markdown(f"**Sexe:** {individual['sex'] or 'Non spécifié'}")
+                
+                with col2:
+                    birth_date = individual['birth_date']
+                    if birth_date:
+                        from datetime import datetime
+                        birth_dt = datetime.strptime(birth_date, '%Y-%m-%d')
+                        age_days = (datetime.now() - birth_dt).days
+                        age_years = age_days // 365
+                        age_months = (age_days % 365) // 30
+                        st.markdown(f"**Date de naissance:** {birth_date}")
+                        st.markdown(f"**Âge:** {age_years} ans, {age_months} mois")
+                    else:
+                        st.markdown(f"**Date de naissance:** Non spécifiée")
+                
+                with col3:
+                    neutered_text = "Oui" if individual['neutered'] else "Non"
+                    st.markdown(f"**Stérilisé(e):** {neutered_text}")
+                    
+                    if st.button(f"🗑️ Supprimer", key=f"del_{individual['id']}", type="secondary"):
+                        if db.delete_individual(individual['id']):
+                            st.success(f"✅ Profil supprimé")
+                            st.rerun()
+                        else:
+                            st.error("❌ Erreur lors de la suppression")
+    else:
+        st.info("Aucun profil enregistré. Ajoutez votre premier chien ci-dessus!")
 
 # ============================================================================
 # OBSERVATION PAGE
 # ============================================================================
-if page == "📝 Observation":
+elif page == "📝 Observation":
     st.title("📝 Observation en Temps Réel")
     st.markdown("Enregistrez les comportements de votre chiot en temps réel.")
     
     # Display active states
-    active_states = db.get_active_states()
+    active_states = db.get_active_states(selected_individual_id)
     if active_states:
         st.info(f"🔴 **États actifs en cours:** {len(active_states)}")
         for behavior, category, start_time in active_states:
@@ -113,11 +203,74 @@ if page == "📝 Observation":
     
     st.markdown("---")
     
+    # Scan Sampling Module
+    st.subheader("⏱️ Scan Sampling (Échantillonnage par Intervalle)")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        scan_interval = st.selectbox(
+            "Intervalle de scan",
+            [2, 5, 10, 15, 30],
+            index=1,
+            help="Intervalle en minutes entre chaque scan"
+        )
+    
+    with col2:
+        # Initialize scan timer state
+        if 'scan_active' not in st.session_state:
+            st.session_state.scan_active = False
+        if 'scan_start_time' not in st.session_state:
+            st.session_state.scan_start_time = None
+        if 'last_scan_alert' not in st.session_state:
+            st.session_state.last_scan_alert = None
+        
+        if not st.session_state.scan_active:
+            if st.button("▶️ Démarrer Scan Sampling", type="primary", use_container_width=True):
+                st.session_state.scan_active = True
+                st.session_state.scan_start_time = datetime.now()
+                st.session_state.last_scan_alert = datetime.now()
+                st.rerun()
+        else:
+            if st.button("⏹️ Arrêter Scan Sampling", type="secondary", use_container_width=True):
+                st.session_state.scan_active = False
+                st.session_state.scan_start_time = None
+                st.session_state.last_scan_alert = None
+                st.rerun()
+    
+    with col3:
+        if st.session_state.scan_active:
+            elapsed = (datetime.now() - st.session_state.last_scan_alert).total_seconds()
+            next_scan_in = (scan_interval * 60) - elapsed
+            
+            if next_scan_in <= 0:
+                st.warning("🔔 **Temps de Scanner!**")
+                st.session_state.last_scan_alert = datetime.now()
+                # Auto-play sound would require JavaScript, so we use visual notification
+            else:
+                minutes = int(next_scan_in // 60)
+                seconds = int(next_scan_in % 60)
+                st.info(f"⏱️ Prochain scan: {minutes}m {seconds}s")
+    
+    st.markdown("---")
+    
+    # Context fields
+    st.subheader("📍 Contexte de l'Observation")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        location = st.selectbox("Lieu", ["", "Maison", "Jardin", "Parc", "Extérieur", "Autre"], key="location_input")
+    with col2:
+        weather = st.selectbox("Météo", ["", "Ensoleillé", "Nuageux", "Pluie", "Orage", "Neige"], key="weather_input")
+    with col3:
+        stimuli = st.selectbox("Stimuli", ["", "Calme", "Visiteurs", "Bruit", "Autres animaux", "Jouets"], key="stimuli_input")
+    with col4:
+        notes = st.text_input("Notes:", key="notes_input")
+    
+    st.markdown("---")
+    
     # Ethogram buttons organized by category
     st.subheader("Éthogramme")
-    
-    # Notes field for observations
-    notes = st.text_input("Notes optionnelles:", key="notes_input")
     
     # Create columns for categories
     num_cols = 3
@@ -150,7 +303,8 @@ if page == "📝 Observation":
                         
                         if observation_mode == "Événement":
                             if st.button(f"{icon} {behavior}", key=button_key, use_container_width=True):
-                                if db.record_event(behavior, category, notes):
+                                if db.record_event(behavior, category, notes, selected_individual_id, 
+                                                 location, weather, stimuli):
                                     st.success(f"✅ {behavior} enregistré!")
                                     st.rerun()
                                 else:
@@ -165,14 +319,15 @@ if page == "📝 Observation":
                             
                             if is_active:
                                 if st.button(f"⏹️ STOP {behavior}", key=button_key, use_container_width=True, type="primary"):
-                                    if db.stop_state(behavior, category, notes):
+                                    if db.stop_state(behavior, category, notes, selected_individual_id,
+                                                   location, weather, stimuli):
                                         st.success(f"✅ {behavior} terminé et enregistré!")
                                         st.rerun()
                                     else:
                                         st.error("❌ Erreur lors de l'arrêt")
                             else:
                                 if st.button(f"▶️ START {behavior}", key=button_key, use_container_width=True):
-                                    if db.start_state(behavior, category):
+                                    if db.start_state(behavior, category, selected_individual_id):
                                         st.success(f"🔴 Enregistrement de {behavior} démarré!")
                                         st.rerun()
                                     else:
@@ -182,20 +337,227 @@ if page == "📝 Observation":
     
     # Recent observations
     st.subheader("📋 Observations Récentes")
-    recent_df = db.get_all_observations()
+    recent_df = db.get_all_observations(selected_individual_id)
     
     if not recent_df.empty:
         # Display only the 10 most recent
-        display_df = recent_df.head(10)[['timestamp', 'behavior_name', 'category', 'observation_type', 'duration_seconds']]
+        cols_to_display = ['timestamp', 'behavior_name', 'category', 'observation_type', 'duration_seconds']
+        if 'location' in recent_df.columns:
+            cols_to_display.append('location')
+        
+        display_df = recent_df.head(10)[cols_to_display]
         display_df['timestamp'] = display_df['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
         display_df['duration_seconds'] = display_df['duration_seconds'].apply(
             lambda x: f"{int(x)}s" if pd.notna(x) else "N/A"
         )
-        display_df.columns = ['Horodatage', 'Comportement', 'Catégorie', 'Type', 'Durée']
+        
+        col_names = ['Horodatage', 'Comportement', 'Catégorie', 'Type', 'Durée']
+        if 'location' in display_df.columns:
+            col_names.append('Lieu')
+        display_df.columns = col_names
         
         st.dataframe(display_df, use_container_width=True)
     else:
         st.info("Aucune observation enregistrée pour le moment.")
+
+# ============================================================================
+# COGNITIVE TESTS PAGE
+# ============================================================================
+elif page == "🧪 Tests Cognitifs":
+    st.title("🧪 Tests Cognitifs et Évaluation")
+    st.markdown("Évaluez les capacités cognitives de vos chiens avec des tests scientifiques.")
+    
+    # Check if individuals exist
+    if individuals_df.empty:
+        st.warning("⚠️ Veuillez d'abord créer un profil dans la section 'Profils' avant d'effectuer des tests.")
+    else:
+        # Select individual for testing
+        st.subheader("🐕 Sélection de l'Individu")
+        test_individual_name = st.selectbox(
+            "Choisir le chien à tester:",
+            individuals_df['name'].tolist(),
+            key="test_individual_select"
+        )
+        test_individual_id = individuals_df[individuals_df['name'] == test_individual_name]['id'].iloc[0]
+        
+        st.markdown("---")
+        
+        # Test selection
+        st.subheader("🎯 Type de Test")
+        
+        test_types = {
+            "Permanence de l'Objet": "Capacité à suivre une récompense cachée sous un gobelet (mémoire de travail)",
+            "Test du Détour": "Capacité à contourner une barrière transparente pour atteindre un objectif (résolution spatiale)",
+            "Test de Manipulation": "Temps pour se libérer d'une couverture ou ouvrir un dispositif simple (persévérance)"
+        }
+        
+        selected_test = st.selectbox(
+            "Sélectionner un test:",
+            list(test_types.keys()),
+            key="test_type_select"
+        )
+        
+        st.info(f"📖 **Description:** {test_types[selected_test]}")
+        
+        st.markdown("---")
+        
+        # Test execution
+        st.subheader("⏱️ Exécution du Test")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            # Timer functionality
+            if 'test_start_time' not in st.session_state:
+                st.session_state.test_start_time = None
+            
+            if st.button("▶️ Démarrer le Chronomètre", type="primary", use_container_width=True):
+                st.session_state.test_start_time = datetime.now()
+                st.rerun()
+            
+            if st.session_state.test_start_time:
+                elapsed = (datetime.now() - st.session_state.test_start_time).total_seconds()
+                st.metric("Temps écoulé", f"{elapsed:.1f}s")
+        
+        with col2:
+            if st.button("⏹️ Arrêter", type="secondary", use_container_width=True):
+                if st.session_state.test_start_time:
+                    st.session_state.test_duration = (datetime.now() - st.session_state.test_start_time).total_seconds()
+                    st.session_state.test_start_time = None
+                    st.rerun()
+        
+        with col3:
+            if st.button("🔄 Réinitialiser", use_container_width=True):
+                st.session_state.test_start_time = None
+                st.session_state.test_duration = None
+                st.rerun()
+        
+        # Manual entry of duration and score
+        st.markdown("---")
+        st.subheader("📝 Enregistrement du Résultat")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            duration_input = st.number_input(
+                "Durée (secondes)",
+                min_value=0.0,
+                value=st.session_state.get('test_duration', 0.0),
+                step=0.1,
+                key="duration_input"
+            )
+        
+        with col2:
+            score_input = st.number_input(
+                "Score (0-10, optionnel)",
+                min_value=0.0,
+                max_value=10.0,
+                value=5.0,
+                step=0.5,
+                key="score_input"
+            )
+        
+        with col3:
+            test_notes = st.text_area("Notes", key="test_notes", height=100)
+        
+        if st.button("💾 Enregistrer le Test", type="primary"):
+            if duration_input > 0:
+                if db.record_cognitive_test(test_individual_id, selected_test, 
+                                          duration_input, score_input, test_notes):
+                    st.success(f"✅ Test '{selected_test}' enregistré pour {test_individual_name}!")
+                    st.session_state.test_start_time = None
+                    st.session_state.test_duration = None
+                    st.rerun()
+                else:
+                    st.error("❌ Erreur lors de l'enregistrement")
+            else:
+                st.error("❌ La durée doit être supérieure à 0")
+        
+        st.markdown("---")
+        
+        # Display test history
+        st.subheader(f"📊 Historique des Tests - {test_individual_name}")
+        
+        tests_df = db.get_cognitive_tests(test_individual_id)
+        
+        if not tests_df.empty:
+            # Summary statistics
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Total de tests", len(tests_df))
+            with col2:
+                avg_duration = tests_df['duration_seconds'].mean()
+                st.metric("Durée moyenne", f"{avg_duration:.1f}s")
+            with col3:
+                if tests_df['score'].notna().any():
+                    avg_score = tests_df['score'].mean()
+                    st.metric("Score moyen", f"{avg_score:.1f}/10")
+            
+            st.markdown("---")
+            
+            # Detailed results table
+            display_tests = tests_df.copy()
+            display_tests['timestamp'] = display_tests['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
+            display_tests = display_tests[['timestamp', 'test_type', 'duration_seconds', 'score', 'notes']]
+            display_tests.columns = ['Date', 'Test', 'Durée (s)', 'Score', 'Notes']
+            
+            st.dataframe(display_tests, use_container_width=True)
+            
+            # Comparison chart if multiple tests
+            if len(tests_df) > 1:
+                st.markdown("---")
+                st.subheader("📈 Évolution des Performances")
+                
+                import plotly.express as px
+                fig = px.line(tests_df, x='timestamp', y='duration_seconds', 
+                            color='test_type', markers=True,
+                            title="Évolution des Durées par Type de Test",
+                            labels={'timestamp': 'Date', 'duration_seconds': 'Durée (s)', 'test_type': 'Type de Test'})
+                st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info(f"Aucun test enregistré pour {test_individual_name}.")
+        
+        # Comparison between individuals
+        if len(individuals_df) > 1:
+            st.markdown("---")
+            st.subheader("🔬 Comparaison entre Individus")
+            
+            all_tests = db.get_cognitive_tests()
+            
+            if not all_tests.empty:
+                # Merge with individual names
+                all_tests = all_tests.merge(individuals_df[['id', 'name']], 
+                                           left_on='individual_id', right_on='id', how='left')
+                
+                comparison_test = st.selectbox(
+                    "Sélectionner un type de test à comparer:",
+                    all_tests['test_type'].unique(),
+                    key="comparison_test"
+                )
+                
+                filtered_tests = all_tests[all_tests['test_type'] == comparison_test]
+                
+                if not filtered_tests.empty:
+                    avg_by_individual = filtered_tests.groupby('name').agg({
+                        'duration_seconds': 'mean',
+                        'score': 'mean'
+                    }).reset_index()
+                    
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        fig_dur = px.bar(avg_by_individual, x='name', y='duration_seconds',
+                                       title=f"Durée Moyenne - {comparison_test}",
+                                       labels={'name': 'Individu', 'duration_seconds': 'Durée (s)'})
+                        st.plotly_chart(fig_dur, use_container_width=True)
+                    
+                    with col2:
+                        if avg_by_individual['score'].notna().any():
+                            fig_score = px.bar(avg_by_individual, x='name', y='score',
+                                             title=f"Score Moyen - {comparison_test}",
+                                             labels={'name': 'Individu', 'score': 'Score'})
+                            st.plotly_chart(fig_score, use_container_width=True)
 
 # ============================================================================
 # DASHBOARD PAGE
@@ -222,7 +584,8 @@ elif page == "📊 Dashboard":
     # Get data for the selected period
     df = db.get_observations_by_date_range(
         start_date.strftime('%Y-%m-%d'),
-        end_date.strftime('%Y-%m-%d')
+        end_date.strftime('%Y-%m-%d'),
+        selected_individual_id
     )
     
     if df.empty:
@@ -344,6 +707,37 @@ elif page == "📊 Dashboard":
                 most_common = stress_by_behavior.iloc[0] if not stress_by_behavior.empty else None
                 if most_common is not None:
                     st.metric("Comportement le plus fréquent", most_common['behavior_name'])
+            
+            # Stress correlation analysis
+            st.markdown("---")
+            st.markdown("**🔍 Corrélations de Stress**")
+            
+            # Correlation with time of day
+            if 'timestamp' in stress_df.columns:
+                stress_df['hour'] = stress_df['timestamp'].dt.hour
+                stress_by_hour = stress_df.groupby('hour').size().reset_index(name='count')
+                
+                fig_hour = px.bar(stress_by_hour, x='hour', y='count',
+                                title="Comportements de Stress par Heure de la Journée",
+                                labels={'hour': 'Heure', 'count': 'Nombre de comportements'})
+                st.plotly_chart(fig_hour, use_container_width=True)
+            
+            # Correlation with stimuli if available
+            if 'stimuli' in stress_df.columns and stress_df['stimuli'].notna().any():
+                stimuli_counts = stress_df[stress_df['stimuli'] != ''].groupby('stimuli').size().reset_index(name='count')
+                if not stimuli_counts.empty:
+                    fig_stimuli = px.pie(stimuli_counts, values='count', names='stimuli',
+                                       title="Stress en Fonction des Stimuli")
+                    st.plotly_chart(fig_stimuli, use_container_width=True)
+            
+            # Correlation with location if available
+            if 'location' in stress_df.columns and stress_df['location'].notna().any():
+                location_counts = stress_df[stress_df['location'] != ''].groupby('location').size().reset_index(name='count')
+                if not location_counts.empty:
+                    fig_location = px.bar(location_counts, x='location', y='count',
+                                        title="Stress en Fonction du Lieu",
+                                        labels={'location': 'Lieu', 'count': 'Occurrences'})
+                    st.plotly_chart(fig_location, use_container_width=True)
         else:
             st.info("Aucun comportement de stress enregistré pour cette période.")
         
@@ -411,7 +805,7 @@ elif page == "📁 Données":
     # Display all data
     st.markdown("### 📊 Toutes les Observations")
     
-    all_data = db.get_all_observations()
+    all_data = db.get_all_observations(selected_individual_id)
     
     if not all_data.empty:
         st.info(f"Total: {len(all_data)} observations")
@@ -423,9 +817,30 @@ elif page == "📁 Données":
             lambda x: f"{int(x)}s" if pd.notna(x) else "N/A"
         )
         
+        # Select columns to display based on what's available
+        base_cols = ['id', 'timestamp', 'behavior_name', 'category', 'observation_type', 'duration_seconds', 'notes']
+        display_cols = [col for col in base_cols if col in display_df.columns]
+        
+        # Add context columns if available
+        if 'location' in display_df.columns:
+            display_cols.append('location')
+        if 'weather' in display_df.columns:
+            display_cols.append('weather')
+        if 'stimuli' in display_df.columns:
+            display_cols.append('stimuli')
+        
+        display_df = display_df[display_cols]
+        
         # Rename columns for French display
-        display_df = display_df[['id', 'timestamp', 'behavior_name', 'category', 'observation_type', 'duration_seconds', 'notes']]
-        display_df.columns = ['ID', 'Horodatage', 'Comportement', 'Catégorie', 'Type', 'Durée', 'Notes']
+        col_names = ['ID', 'Horodatage', 'Comportement', 'Catégorie', 'Type', 'Durée', 'Notes']
+        if 'location' in display_cols:
+            col_names.append('Lieu')
+        if 'weather' in display_cols:
+            col_names.append('Météo')
+        if 'stimuli' in display_cols:
+            col_names.append('Stimuli')
+        
+        display_df.columns = col_names
         
         st.dataframe(display_df, use_container_width=True, height=400)
         

@@ -519,16 +519,16 @@ class BehaviorDatabase:
                         test_data = [['Test', 'Durée Moyenne (s)', 'Score Moyen', 'Nb de Tests']]
                         test_summary = tests_df.groupby('test_type').agg({
                             'duration_seconds': 'mean',
-                            'score': 'mean',
-                            'test_type': 'count'
+                            'score': 'mean'
                         }).reset_index()
                         
                         for _, row in test_summary.iterrows():
+                            test_count = len(tests_df[tests_df['test_type'] == row['test_type']])
                             test_data.append([
                                 row['test_type'],
                                 f"{row['duration_seconds']:.1f}",
                                 f"{row['score']:.1f}" if pd.notna(row['score']) else 'N/A',
-                                str(len(tests_df[tests_df['test_type'] == row['test_type']]))
+                                str(test_count)
                             ])
                         
                         test_table = Table(test_data, colWidths=[2.5*inch, 1.5*inch, 1.5*inch, 1*inch])

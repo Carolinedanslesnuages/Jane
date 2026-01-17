@@ -800,6 +800,31 @@ elif page == "📁 Données":
             else:
                 st.error("❌ Erreur lors de l'export")
     
+    with col3:
+        st.markdown("<br>", unsafe_allow_html=True)
+        pdf_filename = f"bilan_comportemental_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        if st.button("📄 Rapport PDF", type="primary", use_container_width=True):
+            # Date range for PDF report
+            start_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+            end_date = datetime.now().strftime('%Y-%m-%d')
+            
+            if db.export_behavioral_report_pdf(pdf_filename, selected_individual_id, start_date, end_date):
+                st.success(f"✅ Rapport PDF généré: {pdf_filename}")
+                
+                # Provide download link
+                try:
+                    with open(pdf_filename, 'rb') as f:
+                        st.download_button(
+                            label="⬇️ Télécharger le rapport",
+                            data=f.read(),
+                            file_name=pdf_filename,
+                            mime="application/pdf"
+                        )
+                except FileNotFoundError:
+                    st.error("❌ Fichier PDF introuvable")
+            else:
+                st.error("❌ Erreur lors de la génération du PDF")
+    
     st.markdown("---")
     
     # Display all data

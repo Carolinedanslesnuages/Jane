@@ -8,6 +8,11 @@ import pandas as pd
 from datetime import datetime
 from typing import Optional, List, Tuple
 import os
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.lib.units import inch
 
 
 class BehaviorDatabase:
@@ -368,3 +373,190 @@ class BehaviorDatabase:
             df['timestamp'] = pd.to_datetime(df['timestamp'])
         
         return df
+    
+    def export_behavioral_report_pdf(self, filepath: str, individual_id: int = None, 
+                                     start_date: str = None, end_date: str = None) -> bool:
+        """Export a professional behavioral assessment report as PDF."""
+        try:
+            # Get individual info if specified
+            individual_name = "Tous les individus"
+            if individual_id:
+                individual = self.get_individual_by_id(individual_id)
+                if individual:
+                    individual_name = individual['name']
+            
+            # Create PDF document
+            doc = SimpleDocTemplate(filepath, pagesize=A4)
+            elements = []
+            styles = getSampleStyleSheet()
+            
+            # Title
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=24,
+                textColor=colors.HexColor('#2C3E50'),
+                spaceAfter=30,
+                alignment=1  # Center
+            )
+            
+            elements.append(Paragraph("🐕 Bilan Comportemental EthoLog", title_style))
+            elements.append(Spacer(1, 0.3*inch))
+            
+            # Individual and period info
+            info_style = styles['Normal']
+            elements.append(Paragraph(f"<b>Individu:</b> {individual_name}", info_style))
+            elements.append(Paragraph(f"<b>Date du rapport:</b> {datetime.now().strftime('%d/%m/%Y %H:%M')}", info_style))
+            
+            if start_date and end_date:
+                elements.append(Paragraph(f"<b>Période analysée:</b> {start_date} au {end_date}", info_style))
+            
+            elements.append(Spacer(1, 0.3*inch))
+            
+            # Get observations data
+            if start_date and end_date:
+                df = self.get_observations_by_date_range(start_date, end_date, individual_id)
+            else:
+                df = self.get_all_observations(individual_id)
+            
+            if df.empty:
+                elements.append(Paragraph("Aucune donnée disponible pour cette période.", styles['Normal']))
+            else:
+                # Summary statistics
+                elements.append(Paragraph("📊 Résumé Statistique", styles['Heading2']))
+                elements.append(Spacer(1, 0.1*inch))
+                
+                summary_data = [
+                    ['Métrique', 'Valeur'],
+                    ['Nombre total d\'observations', str(len(df))],
+                    ['Première observation', df['timestamp'].min().strftime('%d/%m/%Y %H:%M')],
+                    ['Dernière observation', df['timestamp'].max().strftime('%d/%m/%Y %H:%M')],
+                ]
+                
+                summary_table = Table(summary_data, colWidths=[3*inch, 2*inch])
+                summary_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498DB')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 12),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                
+                elements.append(summary_table)
+                elements.append(Spacer(1, 0.3*inch))
+                
+                # Behavior category distribution
+                elements.append(Paragraph("📈 Répartition par Catégorie", styles['Heading2']))
+                elements.append(Spacer(1, 0.1*inch))
+                
+                category_counts = df.groupby('category').size().reset_index(name='count')
+                category_data = [['Catégorie', 'Nombre d\'observations']]
+                for _, row in category_counts.iterrows():
+                    category_data.append([row['category'], str(row['count'])])
+                
+                category_table = Table(category_data, colWidths=[3*inch, 2*inch])
+                category_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#E74C3C')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 12),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                
+                elements.append(category_table)
+                elements.append(Spacer(1, 0.3*inch))
+                
+                # Stress analysis
+                stress_df = df[df['category'] == 'Stress']
+                if not stress_df.empty:
+                    elements.append(Paragraph("⚠️ Analyse des Comportements de Stress", styles['Heading2']))
+                    elements.append(Spacer(1, 0.1*inch))
+                    
+                    stress_summary = [
+                        ['Métrique', 'Valeur'],
+                        ['Total de comportements de stress', str(len(stress_df))],
+                        ['Comportement le plus fréquent', stress_df['behavior_name'].value_counts().index[0] if not stress_df.empty else 'N/A'],
+                    ]
+                    
+                    # Add context analysis if available
+                    if 'location' in stress_df.columns and stress_df['location'].notna().any():
+                        top_location = stress_df[stress_df['location'] != ''].groupby('location').size().idxmax()
+                        stress_summary.append(['Lieu le plus stressant', top_location])
+                    
+                    if 'stimuli' in stress_df.columns and stress_df['stimuli'].notna().any():
+                        top_stimuli = stress_df[stress_df['stimuli'] != ''].groupby('stimuli').size().idxmax()
+                        stress_summary.append(['Stimuli le plus stressant', top_stimuli])
+                    
+                    stress_table = Table(stress_summary, colWidths=[3*inch, 2*inch])
+                    stress_table.setStyle(TableStyle([
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#E67E22')),
+                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                        ('FONTSIZE', (0, 0), (-1, 0), 12),
+                        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                    ]))
+                    
+                    elements.append(stress_table)
+                    elements.append(Spacer(1, 0.3*inch))
+                
+                # Cognitive tests if available
+                if individual_id:
+                    tests_df = self.get_cognitive_tests(individual_id)
+                    if not tests_df.empty:
+                        elements.append(PageBreak())
+                        elements.append(Paragraph("🧪 Résultats des Tests Cognitifs", styles['Heading2']))
+                        elements.append(Spacer(1, 0.1*inch))
+                        
+                        test_data = [['Test', 'Durée Moyenne (s)', 'Score Moyen', 'Nb de Tests']]
+                        test_summary = tests_df.groupby('test_type').agg({
+                            'duration_seconds': 'mean',
+                            'score': 'mean',
+                            'test_type': 'count'
+                        }).reset_index()
+                        
+                        for _, row in test_summary.iterrows():
+                            test_data.append([
+                                row['test_type'],
+                                f"{row['duration_seconds']:.1f}",
+                                f"{row['score']:.1f}" if pd.notna(row['score']) else 'N/A',
+                                str(len(tests_df[tests_df['test_type'] == row['test_type']]))
+                            ])
+                        
+                        test_table = Table(test_data, colWidths=[2.5*inch, 1.5*inch, 1.5*inch, 1*inch])
+                        test_table.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#9B59B6')),
+                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0, 0), (-1, 0), 10),
+                            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                        ]))
+                        
+                        elements.append(test_table)
+                
+                # Footer
+                elements.append(Spacer(1, 0.5*inch))
+                elements.append(Paragraph("_______________", styles['Normal']))
+                elements.append(Paragraph(
+                    "Rapport généré par EthoLog - Outil d'observation du comportement canin",
+                    ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, textColor=colors.grey)
+                ))
+            
+            # Build PDF
+            doc.build(elements)
+            return True
+            
+        except Exception as e:
+            print(f"Error generating PDF report: {e}")
+            return False

@@ -393,13 +393,16 @@ elif page == "📁 Données":
                 st.success(f"✅ Données exportées vers: {export_filename}")
                 
                 # Provide download link
-                with open(export_filename, 'r') as f:
-                    st.download_button(
-                        label="⬇️ Télécharger le fichier",
-                        data=f.read(),
-                        file_name=export_filename,
-                        mime="text/csv"
-                    )
+                try:
+                    with open(export_filename, 'r') as f:
+                        st.download_button(
+                            label="⬇️ Télécharger le fichier",
+                            data=f.read(),
+                            file_name=export_filename,
+                            mime="text/csv"
+                        )
+                except FileNotFoundError:
+                    st.error("❌ Fichier d'export introuvable")
             else:
                 st.error("❌ Erreur lors de l'export")
     

@@ -150,14 +150,11 @@ class BehaviorDatabase:
     
     def get_all_observations(self) -> pd.DataFrame:
         """Get all behavior observations as a DataFrame."""
-        conn = sqlite3.connect(self.db_path)
-        
-        df = pd.read_sql_query("""
-            SELECT * FROM behaviors 
-            ORDER BY timestamp DESC
-        """, conn)
-        
-        conn.close()
+        with sqlite3.connect(self.db_path) as conn:
+            df = pd.read_sql_query("""
+                SELECT * FROM behaviors 
+                ORDER BY timestamp DESC
+            """, conn)
         
         if not df.empty:
             df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -166,15 +163,12 @@ class BehaviorDatabase:
     
     def get_observations_by_date_range(self, start_date: str, end_date: str) -> pd.DataFrame:
         """Get observations within a date range."""
-        conn = sqlite3.connect(self.db_path)
-        
-        df = pd.read_sql_query("""
-            SELECT * FROM behaviors 
-            WHERE DATE(timestamp) BETWEEN ? AND ?
-            ORDER BY timestamp DESC
-        """, conn, params=(start_date, end_date))
-        
-        conn.close()
+        with sqlite3.connect(self.db_path) as conn:
+            df = pd.read_sql_query("""
+                SELECT * FROM behaviors 
+                WHERE DATE(timestamp) BETWEEN ? AND ?
+                ORDER BY timestamp DESC
+            """, conn, params=(start_date, end_date))
         
         if not df.empty:
             df['timestamp'] = pd.to_datetime(df['timestamp'])

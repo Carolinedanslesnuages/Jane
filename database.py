@@ -178,10 +178,16 @@ class BehaviorDatabase:
             cursor = conn.cursor()
             
             # Check if this behavior is already being tracked
-            cursor.execute("""
-                SELECT id FROM active_states 
-                WHERE behavior_name = ? AND category = ? AND individual_id IS ?
-            """, (behavior_name, category, individual_id))
+            if individual_id is not None:
+                cursor.execute("""
+                    SELECT id FROM active_states 
+                    WHERE behavior_name = ? AND category = ? AND individual_id = ?
+                """, (behavior_name, category, individual_id))
+            else:
+                cursor.execute("""
+                    SELECT id FROM active_states 
+                    WHERE behavior_name = ? AND category = ? AND individual_id IS NULL
+                """, (behavior_name, category))
             
             if cursor.fetchone():
                 conn.close()
@@ -208,10 +214,16 @@ class BehaviorDatabase:
             cursor = conn.cursor()
             
             # Get the active state
-            cursor.execute("""
-                SELECT id, start_time FROM active_states 
-                WHERE behavior_name = ? AND category = ? AND individual_id IS ?
-            """, (behavior_name, category, individual_id))
+            if individual_id is not None:
+                cursor.execute("""
+                    SELECT id, start_time FROM active_states 
+                    WHERE behavior_name = ? AND category = ? AND individual_id = ?
+                """, (behavior_name, category, individual_id))
+            else:
+                cursor.execute("""
+                    SELECT id, start_time FROM active_states 
+                    WHERE behavior_name = ? AND category = ? AND individual_id IS NULL
+                """, (behavior_name, category))
             
             result = cursor.fetchone()
             if not result:

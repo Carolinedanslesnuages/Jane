@@ -144,7 +144,6 @@ if page == "👤 Profils":
                 with col2:
                     birth_date = individual['birth_date']
                     if birth_date:
-                        from datetime import datetime
                         birth_dt = datetime.strptime(birth_date, '%Y-%m-%d')
                         age_days = (datetime.now() - birth_dt).days
                         age_years = age_days // 365
@@ -509,7 +508,6 @@ elif page == "🧪 Tests Cognitifs":
                 st.markdown("---")
                 st.subheader("📈 Évolution des Performances")
                 
-                import plotly.express as px
                 fig = px.line(tests_df, x='timestamp', y='duration_seconds', 
                             color='test_type', markers=True,
                             title="Évolution des Durées par Type de Test",

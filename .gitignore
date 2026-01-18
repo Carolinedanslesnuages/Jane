@@ -42,3 +42,7 @@ Thumbs.db
 # Streamlit
 .streamlit/
 *.log
+
+# Exports
+etholog_export_*.csv
+bilan_comportemental_*.pdf

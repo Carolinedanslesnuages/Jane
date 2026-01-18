@@ -4,11 +4,17 @@ Application web locale pour l'observation et l'analyse du comportement canin dan
 
 ## 📋 Description
 
-EthoLog est un outil d'observation scientifique conçu pour les éthologues et les propriétaires de chiens souhaitant suivre et analyser le comportement de leurs animaux. L'application permet d'enregistrer des observations en temps réel, de visualiser des statistiques comportementales et d'exporter des données pour des analyses ultérieures.
+EthoLog est un outil d'observation scientifique professionnel conçu pour les éthologues, chercheurs et éleveurs souhaitant suivre et analyser le comportement de leurs animaux. L'application permet d'enregistrer des observations en temps réel, d'effectuer des tests cognitifs, de visualiser des statistiques comportementales avancées et d'exporter des rapports professionnels.
 
 ## ✨ Fonctionnalités
 
-### 1. 📝 Éthogramme Structuré
+### 👤 Gestion des Profils Individuels
+- Création de fiches détaillées pour chaque chien
+- Informations complètes: Nom, Race, Date de naissance, Sexe, Statut de stérilisation
+- Filtrage dynamique de toutes les observations par individu
+- Suivi multi-chiens pour les élevages ou études comparatives
+
+### 📝 Éthogramme Structuré
 Interface intuitive avec des boutons organisés par catégories comportementales:
 - 🔍 **Exploration**: Flairer, inspecter, chercher
 - 🎾 **Jeu**: Jouer avec jouets, humains, autres chiens
@@ -17,27 +23,51 @@ Interface intuitive avec des boutons organisés par catégories comportementales
 - ⚠️ **Stress**: Aboiements, gémissements, signaux de stress
 - 🚽 **Élimination**: Uriner, déféquer
 
-### 2. ⏱️ Modes d'Observation
+### ⏱️ Modes d'Observation
 - **Mode Événement**: Enregistrement d'actions instantanées (ex: un aboiement)
 - **Mode État**: Mesure de durée avec Start/Stop (ex: temps de sommeil)
+- **Scan Sampling**: Timer programmable (2, 5, 10, 15, 30 minutes) avec notifications visuelles pour échantillonnage par intervalle
 
-### 3. 💾 Stockage des Données
+### 📍 Enrichissement Contextuel
+Capture de métadonnées pour chaque observation:
+- **Lieu**: Maison, Jardin, Parc, Extérieur, etc.
+- **Météo**: Ensoleillé, Nuageux, Pluie, Orage, Neige
+- **Stimuli**: Calme, Visiteurs, Bruit, Autres animaux, Jouets
+- **Notes personnalisées** pour contexte additionnel
+
+### 🧪 Tests Cognitifs
+Module d'évaluation cognitive avec trois tests clés:
+- **Permanence de l'Objet**: Capacité à suivre une récompense cachée (mémoire de travail)
+- **Test du Détour**: Capacité à contourner une barrière transparente (résolution spatiale)
+- **Test de Manipulation**: Temps pour se libérer d'une couverture (persévérance et motricité)
+- Chronométrage précis et système de notation (0-10)
+- Comparaison des performances entre individus
+- Historique complet des tests avec graphiques d'évolution
+
+### 💾 Stockage des Données
 Base de données SQLite locale enregistrant:
-- Nom du comportement
-- Catégorie
+- Nom du comportement et catégorie
 - Date et horodatage précis (timestamp)
 - Durée (pour les états)
-- Notes optionnelles
+- Notes et contexte complet
+- Lien avec l'individu observé
 
-### 4. 📊 Tableau de Bord Analytique
+### 📊 Tableau de Bord Analytique Avancé
 Visualisations interactives avec Plotly:
 - Répartition du budget-temps journalier par catégorie
 - Évolution de la fréquence des comportements de stress
+- **Corrélations de stress**: Analyse par heure de la journée, lieu, et stimuli
 - Chronologie d'activité quotidienne
-- Statistiques détaillées
+- Statistiques détaillées filtrables par individu
 
-### 5. 📥 Export CSV
-Export complet des données pour analyse avec R ou autres outils statistiques.
+### 📥 Export de Données
+- **Export CSV**: Données complètes pour analyse avec R ou autres outils statistiques
+- **Rapport PDF Professionnel**: Bilan comportemental complet avec:
+  - Résumé statistique
+  - Répartition par catégorie
+  - Analyse approfondie des comportements de stress
+  - Résultats des tests cognitifs
+  - Mise en page professionnelle pour vétérinaires ou clients
 
 ## 🚀 Installation
 
@@ -70,22 +100,38 @@ L'application s'ouvrira automatiquement dans votre navigateur par défaut à l'a
 
 ### Guide d'Utilisation
 
+#### Page Profils
+1. Créez des profils pour chaque chien avec les informations complètes
+2. Consultez et gérez les profils existants
+3. Sélectionnez un individu dans la barre latérale pour filtrer les observations
+
 #### Page Observation
-1. Sélectionnez le mode d'observation (Événement ou État)
-2. Cliquez sur les boutons de comportement pour enregistrer
-3. Ajoutez des notes optionnelles si nécessaire
-4. Pour le mode État, cliquez sur START puis STOP pour mesurer la durée
+1. Sélectionnez l'individu à observer (barre latérale)
+2. Choisissez le mode d'observation (Événement ou État)
+3. Configurez le Scan Sampling si vous souhaitez des observations à intervalles réguliers
+4. Renseignez le contexte (Lieu, Météo, Stimuli)
+5. Cliquez sur les boutons de comportement pour enregistrer
+6. Pour le mode État, cliquez sur START puis STOP pour mesurer la durée
+
+#### Page Tests Cognitifs
+1. Sélectionnez le chien à tester
+2. Choisissez le type de test à effectuer
+3. Utilisez le chronomètre pour mesurer la durée
+4. Enregistrez le résultat avec un score optionnel
+5. Consultez l'historique et les comparaisons entre individus
 
 #### Page Dashboard
 1. Sélectionnez la période d'analyse
-2. Consultez les graphiques de répartition du temps
-3. Analysez l'évolution des comportements de stress
-4. Visualisez la chronologie d'activité
+2. Filtrez par individu si souhaité (barre latérale)
+3. Consultez les graphiques de répartition du temps
+4. Analysez l'évolution des comportements de stress avec corrélations (heure, lieu, stimuli)
+5. Visualisez la chronologie d'activité
 
 #### Page Données
-1. Visualisez toutes vos observations
-2. Exportez vos données en CSV
-3. Gérez et supprimez des observations si nécessaire
+1. Visualisez toutes vos observations (filtrables par individu)
+2. Exportez vos données en CSV pour analyses statistiques
+3. Générez un rapport PDF professionnel pour vétérinaires ou clients
+4. Gérez et supprimez des observations si nécessaire
 
 ## 🛠️ Structure du Projet
 
@@ -120,6 +166,7 @@ Vous pouvez ajouter, supprimer ou renommer des catégories selon vos besoins d'o
 
 ## 📊 Format des Données Exportées
 
+### Export CSV
 Le fichier CSV exporté contient les colonnes suivantes:
 - `id`: Identifiant unique de l'observation
 - `behavior_name`: Nom du comportement
@@ -128,14 +175,39 @@ Le fichier CSV exporté contient les colonnes suivantes:
 - `timestamp`: Horodatage au format ISO 8601
 - `duration_seconds`: Durée en secondes (pour les états)
 - `notes`: Notes optionnelles
+- `individual_id`: Référence à l'individu observé
+- `location`: Lieu de l'observation
+- `weather`: Conditions météorologiques
+- `stimuli`: Stimuli présents
+
+### Rapport PDF
+Le rapport PDF professionnel inclut:
+- **En-tête** avec nom de l'individu et période d'analyse
+- **Résumé statistique** général
+- **Répartition par catégorie** avec tableaux détaillés
+- **Analyse des comportements de stress** avec corrélations contextuelles
+- **Résultats des tests cognitifs** (si disponibles)
+- Mise en page professionnelle adaptée pour vétérinaires et clients
 
 ## 💡 Bonnes Pratiques d'Observation
 
-1. **Cohérence**: Soyez régulier dans vos observations
-2. **Contexte**: Utilisez les notes pour ajouter du contexte
-3. **Précision**: Enregistrez immédiatement les comportements observés
-4. **Révision**: Consultez régulièrement le dashboard pour identifier les patterns
-5. **Export**: Sauvegardez régulièrement vos données via l'export CSV
+1. **Profils**: Créez un profil complet pour chaque chien avant de commencer les observations
+2. **Cohérence**: Soyez régulier dans vos observations
+3. **Contexte**: Renseignez systématiquement le lieu, la météo et les stimuli pour des analyses de corrélation pertinentes
+4. **Scan Sampling**: Utilisez le mode Scan Sampling pour des observations standardisées à intervalles réguliers
+5. **Précision**: Enregistrez immédiatement les comportements observés
+6. **Tests Cognitifs**: Effectuez les tests dans des conditions similaires pour des comparaisons fiables
+7. **Révision**: Consultez régulièrement le dashboard pour identifier les patterns comportementaux
+8. **Export**: Sauvegardez régulièrement vos données via l'export CSV et générez des rapports PDF pour archivage
+
+## 🔬 Applications Scientifiques
+
+EthoLog est particulièrement adapté pour:
+- **Recherche en éthologie**: Études comportementales systématiques
+- **Élevage canin**: Suivi des lignées et sélection comportementale
+- **Vétérinaires**: Évaluation du bien-être et détection de problèmes comportementaux
+- **Éducation canine**: Suivi de l'évolution du comportement pendant le dressage
+- **Propriétaires**: Compréhension approfondie du comportement de leur chien
 
 ## 🔐 Confidentialité et Données
 

@@ -447,13 +447,15 @@ elif page == "🧪 Tests Cognitifs":
             )
         
         with col2:
+            with_score = st.checkbox("Renseigner un score", key="with_score")
             score_input = st.number_input(
-                "Score (0-10, optionnel)",
+                "Score (0-10)",
                 min_value=0.0,
                 max_value=10.0,
                 value=5.0,
                 step=0.5,
-                key="score_input"
+                key="score_input",
+                disabled=not with_score
             )
         
         with col3:
@@ -462,7 +464,7 @@ elif page == "🧪 Tests Cognitifs":
         if st.button("💾 Enregistrer le Test", type="primary"):
             if duration_input > 0:
                 if db.record_cognitive_test(test_individual_id, selected_test, 
-                                          duration_input, score_input, test_notes):
+                                          duration_input, score_input if with_score else None, test_notes):
                     st.success(f"✅ Test '{selected_test}' enregistré pour {test_individual_name}!")
                     st.session_state.test_start_time = None
                     st.session_state.test_duration = None

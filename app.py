@@ -116,7 +116,7 @@ if page == "👤 Profils":
     with col3:
         new_birth_date = st.date_input("Date de naissance", value=None, key="new_birth_date")
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("➕ Ajouter", type="primary", use_container_width=True):
+        if st.button("➕ Ajouter", type="primary", width="stretch"):
             if new_name:
                 birth_date_str = new_birth_date.strftime('%Y-%m-%d') if new_birth_date else None
                 if db.add_individual(new_name, new_breed, birth_date_str, new_sex, new_neutered):
@@ -223,13 +223,13 @@ elif page == "📝 Observation":
             st.session_state.last_scan_alert = None
         
         if not st.session_state.scan_active:
-            if st.button("▶️ Démarrer Scan Sampling", type="primary", use_container_width=True):
+            if st.button("▶️ Démarrer Scan Sampling", type="primary", width="stretch"):
                 st.session_state.scan_active = True
                 st.session_state.scan_start_time = datetime.now()
                 st.session_state.last_scan_alert = datetime.now()
                 st.rerun()
         else:
-            if st.button("⏹️ Arrêter Scan Sampling", type="secondary", use_container_width=True):
+            if st.button("⏹️ Arrêter Scan Sampling", type="secondary", width="stretch"):
                 st.session_state.scan_active = False
                 st.session_state.scan_start_time = None
                 st.session_state.last_scan_alert = None
@@ -299,7 +299,7 @@ elif page == "📝 Observation":
                         button_key = f"{behavior}_{category}_{observation_mode}"
                         
                         if observation_mode == "Événement":
-                            if st.button(f"{icon} {behavior}", key=button_key, use_container_width=True):
+                            if st.button(f"{icon} {behavior}", key=button_key, width="stretch"):
                                 if db.record_event(behavior, category, notes, selected_individual_id, 
                                                  location, weather, stimuli):
                                     st.success(f"✅ {behavior} enregistré!")
@@ -315,7 +315,7 @@ elif page == "📝 Observation":
                             )
                             
                             if is_active:
-                                if st.button(f"⏹️ STOP {behavior}", key=button_key, use_container_width=True, type="primary"):
+                                if st.button(f"⏹️ STOP {behavior}", key=button_key, width="stretch", type="primary"):
                                     if db.stop_state(behavior, category, notes, selected_individual_id,
                                                    location, weather, stimuli):
                                         st.success(f"✅ {behavior} terminé et enregistré!")
@@ -323,7 +323,7 @@ elif page == "📝 Observation":
                                     else:
                                         st.error("❌ Erreur lors de l'arrêt")
                             else:
-                                if st.button(f"▶️ START {behavior}", key=button_key, use_container_width=True):
+                                if st.button(f"▶️ START {behavior}", key=button_key, width="stretch"):
                                     if db.start_state(behavior, category, selected_individual_id):
                                         st.success(f"🔴 Enregistrement de {behavior} démarré!")
                                         st.rerun()
@@ -353,7 +353,7 @@ elif page == "📝 Observation":
             col_names.append('Lieu')
         display_df.columns = col_names
         
-        st.dataframe(display_df, use_container_width=True)
+        st.dataframe(display_df, width="stretch")
     else:
         st.info("Aucune observation enregistrée pour le moment.")
 
@@ -408,7 +408,7 @@ elif page == "🧪 Tests Cognitifs":
             if 'test_start_time' not in st.session_state:
                 st.session_state.test_start_time = None
             
-            if st.button("▶️ Démarrer le Chronomètre", type="primary", use_container_width=True):
+            if st.button("▶️ Démarrer le Chronomètre", type="primary", width="stretch"):
                 st.session_state.test_start_time = datetime.now()
                 st.rerun()
             
@@ -417,7 +417,7 @@ elif page == "🧪 Tests Cognitifs":
                 st.metric("Temps écoulé", f"{elapsed:.1f}s")
         
         with col2:
-            if st.button("⏹️ Arrêter", type="secondary", use_container_width=True):
+            if st.button("⏹️ Arrêter", type="secondary", width="stretch"):
                 if st.session_state.test_start_time:
                     measured = (datetime.now() - st.session_state.test_start_time).total_seconds()
                     st.session_state.test_duration = measured
@@ -427,7 +427,7 @@ elif page == "🧪 Tests Cognitifs":
                     st.rerun()
         
         with col3:
-            if st.button("🔄 Réinitialiser", use_container_width=True):
+            if st.button("🔄 Réinitialiser", width="stretch"):
                 st.session_state.test_start_time = None
                 st.session_state.test_duration = None
                 st.session_state.duration_input = 0.0
@@ -505,7 +505,7 @@ elif page == "🧪 Tests Cognitifs":
             display_tests = display_tests[['timestamp', 'test_type', 'duration_seconds', 'score', 'notes']]
             display_tests.columns = ['Date', 'Test', 'Durée (s)', 'Score', 'Notes']
             
-            st.dataframe(display_tests, use_container_width=True)
+            st.dataframe(display_tests, width="stretch")
             
             # Comparison chart if multiple tests
             if len(tests_df) > 1:
@@ -785,7 +785,7 @@ elif page == "📁 Données":
     
     with col2:
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("📥 Exporter en CSV", type="primary", use_container_width=True):
+        if st.button("📥 Exporter en CSV", type="primary", width="stretch"):
             if db.export_to_csv(export_filename):
                 st.success(f"✅ Données exportées vers: {export_filename}")
                 
@@ -806,7 +806,7 @@ elif page == "📁 Données":
     with col3:
         st.markdown("<br>", unsafe_allow_html=True)
         pdf_filename = f"bilan_comportemental_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        if st.button("📄 Rapport PDF", type="primary", use_container_width=True):
+        if st.button("📄 Rapport PDF", type="primary", width="stretch"):
             # Date range for PDF report
             start_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
             end_date = datetime.now().strftime('%Y-%m-%d')
@@ -870,7 +870,7 @@ elif page == "📁 Données":
         
         display_df.columns = col_names
         
-        st.dataframe(display_df, use_container_width=True, height=400)
+        st.dataframe(display_df, width="stretch", height=400)
         
         # Option to delete observations
         st.markdown("---")
@@ -888,7 +888,7 @@ elif page == "📁 Données":
         
         with col2:
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🗑️ Supprimer", type="secondary", use_container_width=True):
+            if st.button("🗑️ Supprimer", type="secondary", width="stretch"):
                 if db.delete_observation(obs_id_to_delete):
                     st.success(f"✅ Observation {obs_id_to_delete} supprimée")
                     st.rerun()

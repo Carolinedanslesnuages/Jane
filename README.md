@@ -139,12 +139,17 @@ L'application s'ouvrira automatiquement dans votre navigateur par défaut à l'a
 
 ```
 Jane/
-├── app.py              # Application Streamlit principale
-├── database.py         # Module de gestion de la base de données
+├── app.py              # Point d'entrée Streamlit (navigation)
+├── views/              # Une page par module (profils, observation, tests, dashboard, données, à propos)
+├── ethogram.py         # Catégories et comportements de l'éthogramme
+├── database.py         # Base de données SQLite et rapport PDF
+├── utils.py            # Utilitaires (âge, version)
+├── tests/              # Tests pytest
 ├── requirements.txt    # Dépendances Python
-├── .gitignore         # Fichiers à ignorer par Git
-├── README.md          # Documentation
-└── etholog.db         # Base de données SQLite (créée au premier lancement)
+├── requirements-dev.txt # Dépendances de développement
+├── .gitignore          # Fichiers à ignorer par Git
+├── README.md           # Documentation
+└── etholog.db          # Base de données SQLite (créée au premier lancement)
 ```
 
 ## 🔧 Personnalisation

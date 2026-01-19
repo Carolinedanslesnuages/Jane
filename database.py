@@ -8,6 +8,7 @@ import pandas as pd
 from datetime import datetime
 from typing import Optional, List, Tuple
 import os
+from contextlib import contextmanager
 from xml.sax.saxutils import escape
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -24,86 +25,91 @@ class BehaviorDatabase:
         self.db_path = db_path
         self.init_database()
     
+    @contextmanager
+    def _connect(self):
+        """Open a connection, commit on success, roll back on error, always close."""
+        conn = sqlite3.connect(self.db_path)
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+    
     def init_database(self):
         """Create database tables if they don't exist."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        # Create individuals/dogs table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS individuals (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE,
-                breed TEXT,
-                birth_date DATE,
-                sex TEXT,
-                neutered BOOLEAN,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        
-        # Create behaviors table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS behaviors (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                behavior_name TEXT NOT NULL,
-                category TEXT NOT NULL,
-                observation_type TEXT NOT NULL,
-                timestamp DATETIME NOT NULL,
-                duration_seconds REAL,
-                notes TEXT,
-                individual_id INTEGER,
-                location TEXT,
-                weather TEXT,
-                stimuli TEXT,
-                FOREIGN KEY (individual_id) REFERENCES individuals(id)
-            )
-        """)
-        
-        # Create active_states table for tracking ongoing state observations
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS active_states (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                behavior_name TEXT NOT NULL,
-                category TEXT NOT NULL,
-                start_time DATETIME NOT NULL,
-                individual_id INTEGER,
-                FOREIGN KEY (individual_id) REFERENCES individuals(id)
-            )
-        """)
-        
-        # Create cognitive_tests table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS cognitive_tests (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                individual_id INTEGER NOT NULL,
-                test_type TEXT NOT NULL,
-                timestamp DATETIME NOT NULL,
-                duration_seconds REAL,
-                score REAL,
-                notes TEXT,
-                FOREIGN KEY (individual_id) REFERENCES individuals(id)
-            )
-        """)
-        
-        conn.commit()
-        conn.close()
+        with self._connect() as conn:
+            cursor = conn.cursor()
+            
+            # Create individuals/dogs table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS individuals (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL UNIQUE,
+                    breed TEXT,
+                    birth_date DATE,
+                    sex TEXT,
+                    neutered BOOLEAN,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Create behaviors table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS behaviors (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    behavior_name TEXT NOT NULL,
+                    category TEXT NOT NULL,
+                    observation_type TEXT NOT NULL,
+                    timestamp DATETIME NOT NULL,
+                    duration_seconds REAL,
+                    notes TEXT,
+                    individual_id INTEGER,
+                    location TEXT,
+                    weather TEXT,
+                    stimuli TEXT,
+                    FOREIGN KEY (individual_id) REFERENCES individuals(id)
+                )
+            """)
+            
+            # Create active_states table for tracking ongoing state observations
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS active_states (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    behavior_name TEXT NOT NULL,
+                    category TEXT NOT NULL,
+                    start_time DATETIME NOT NULL,
+                    individual_id INTEGER,
+                    FOREIGN KEY (individual_id) REFERENCES individuals(id)
+                )
+            """)
+            
+            # Create cognitive_tests table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS cognitive_tests (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    individual_id INTEGER NOT NULL,
+                    test_type TEXT NOT NULL,
+                    timestamp DATETIME NOT NULL,
+                    duration_seconds REAL,
+                    score REAL,
+                    notes TEXT,
+                    FOREIGN KEY (individual_id) REFERENCES individuals(id)
+                )
+            """)
     
     # Individual management methods
     def add_individual(self, name: str, breed: str = "", birth_date: str = None, 
                       sex: str = "", neutered: bool = False) -> bool:
         """Add a new individual/dog to the database."""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute("""
-                INSERT INTO individuals (name, breed, birth_date, sex, neutered)
-                VALUES (?, ?, ?, ?, ?)
-            """, (name, breed, birth_date, sex, neutered))
-            
-            conn.commit()
-            conn.close()
+            with self._connect() as conn:
+                conn.execute("""
+                    INSERT INTO individuals (name, breed, birth_date, sex, neutered)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (name, breed, birth_date, sex, neutered))
             return True
         except sqlite3.IntegrityError:
             print(f"Individual with name '{name}' already exists")
@@ -114,18 +120,17 @@ class BehaviorDatabase:
     
     def get_all_individuals(self) -> pd.DataFrame:
         """Get all individuals as a DataFrame."""
-        with sqlite3.connect(self.db_path) as conn:
+        with self._connect() as conn:
             df = pd.read_sql_query("SELECT * FROM individuals ORDER BY name", conn)
         return df
     
     def get_individual_by_id(self, individual_id: int) -> Optional[dict]:
         """Get individual details by ID."""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM individuals WHERE id = ?", (individual_id,))
-            row = cursor.fetchone()
-            conn.close()
+            with self._connect() as conn:
+                row = conn.execute(
+                    "SELECT * FROM individuals WHERE id = ?", (individual_id,)
+                ).fetchone()
             
             if row:
                 return {
@@ -140,11 +145,8 @@ class BehaviorDatabase:
     def delete_individual(self, individual_id: int) -> bool:
         """Delete an individual."""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM individuals WHERE id = ?", (individual_id,))
-            conn.commit()
-            conn.close()
+            with self._connect() as conn:
+                conn.execute("DELETE FROM individuals WHERE id = ?", (individual_id,))
             return True
         except Exception as e:
             print(f"Error deleting individual: {e}")
@@ -155,18 +157,13 @@ class BehaviorDatabase:
                     weather: str = "", stimuli: str = "") -> bool:
         """Record an event-type observation (instant action)."""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute("""
-                INSERT INTO behaviors (behavior_name, category, observation_type, timestamp, notes, 
-                                     individual_id, location, weather, stimuli)
-                VALUES (?, ?, 'event', ?, ?, ?, ?, ?, ?)
-            """, (behavior_name, category, datetime.now().isoformat(), notes, 
-                  individual_id, location, weather, stimuli))
-            
-            conn.commit()
-            conn.close()
+            with self._connect() as conn:
+                conn.execute("""
+                    INSERT INTO behaviors (behavior_name, category, observation_type, timestamp, notes, 
+                                         individual_id, location, weather, stimuli)
+                    VALUES (?, ?, 'event', ?, ?, ?, ?, ?, ?)
+                """, (behavior_name, category, datetime.now().isoformat(), notes, 
+                      individual_id, location, weather, stimuli))
             return True
         except Exception as e:
             print(f"Error recording event: {e}")
@@ -175,32 +172,28 @@ class BehaviorDatabase:
     def start_state(self, behavior_name: str, category: str, individual_id: int = None) -> bool:
         """Start tracking a state-type observation."""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            # Check if this behavior is already being tracked
-            if individual_id is not None:
+            with self._connect() as conn:
+                cursor = conn.cursor()
+                
+                # Check if this behavior is already being tracked
+                if individual_id is not None:
+                    cursor.execute("""
+                        SELECT id FROM active_states 
+                        WHERE behavior_name = ? AND category = ? AND individual_id = ?
+                    """, (behavior_name, category, individual_id))
+                else:
+                    cursor.execute("""
+                        SELECT id FROM active_states 
+                        WHERE behavior_name = ? AND category = ? AND individual_id IS NULL
+                    """, (behavior_name, category))
+                
+                if cursor.fetchone():
+                    return False  # Already tracking this behavior
+                
                 cursor.execute("""
-                    SELECT id FROM active_states 
-                    WHERE behavior_name = ? AND category = ? AND individual_id = ?
-                """, (behavior_name, category, individual_id))
-            else:
-                cursor.execute("""
-                    SELECT id FROM active_states 
-                    WHERE behavior_name = ? AND category = ? AND individual_id IS NULL
-                """, (behavior_name, category))
-            
-            if cursor.fetchone():
-                conn.close()
-                return False  # Already tracking this behavior
-            
-            cursor.execute("""
-                INSERT INTO active_states (behavior_name, category, start_time, individual_id)
-                VALUES (?, ?, ?, ?)
-            """, (behavior_name, category, datetime.now().isoformat(), individual_id))
-            
-            conn.commit()
-            conn.close()
+                    INSERT INTO active_states (behavior_name, category, start_time, individual_id)
+                    VALUES (?, ?, ?, ?)
+                """, (behavior_name, category, datetime.now().isoformat(), individual_id))
             return True
         except Exception as e:
             print(f"Error starting state: {e}")
@@ -211,44 +204,40 @@ class BehaviorDatabase:
                    weather: str = "", stimuli: str = "") -> bool:
         """Stop tracking a state-type observation and record the duration."""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            # Get the active state
-            if individual_id is not None:
+            with self._connect() as conn:
+                cursor = conn.cursor()
+                
+                # Get the active state
+                if individual_id is not None:
+                    cursor.execute("""
+                        SELECT id, start_time FROM active_states 
+                        WHERE behavior_name = ? AND category = ? AND individual_id = ?
+                    """, (behavior_name, category, individual_id))
+                else:
+                    cursor.execute("""
+                        SELECT id, start_time FROM active_states 
+                        WHERE behavior_name = ? AND category = ? AND individual_id IS NULL
+                    """, (behavior_name, category))
+                
+                result = cursor.fetchone()
+                if not result:
+                    return False  # No active state found
+                
+                active_id, start_time = result
+                start_dt = datetime.fromisoformat(start_time)
+                end_dt = datetime.now()
+                duration = (end_dt - start_dt).total_seconds()
+                
+                # Record the completed observation
                 cursor.execute("""
-                    SELECT id, start_time FROM active_states 
-                    WHERE behavior_name = ? AND category = ? AND individual_id = ?
-                """, (behavior_name, category, individual_id))
-            else:
-                cursor.execute("""
-                    SELECT id, start_time FROM active_states 
-                    WHERE behavior_name = ? AND category = ? AND individual_id IS NULL
-                """, (behavior_name, category))
-            
-            result = cursor.fetchone()
-            if not result:
-                conn.close()
-                return False  # No active state found
-            
-            active_id, start_time = result
-            start_dt = datetime.fromisoformat(start_time)
-            end_dt = datetime.now()
-            duration = (end_dt - start_dt).total_seconds()
-            
-            # Record the completed observation
-            cursor.execute("""
-                INSERT INTO behaviors (behavior_name, category, observation_type, timestamp, 
-                                     duration_seconds, notes, individual_id, location, weather, stimuli)
-                VALUES (?, ?, 'state', ?, ?, ?, ?, ?, ?, ?)
-            """, (behavior_name, category, end_dt.isoformat(), duration, notes, 
-                  individual_id, location, weather, stimuli))
-            
-            # Remove from active states
-            cursor.execute("DELETE FROM active_states WHERE id = ?", (active_id,))
-            
-            conn.commit()
-            conn.close()
+                    INSERT INTO behaviors (behavior_name, category, observation_type, timestamp, 
+                                         duration_seconds, notes, individual_id, location, weather, stimuli)
+                    VALUES (?, ?, 'state', ?, ?, ?, ?, ?, ?, ?)
+                """, (behavior_name, category, end_dt.isoformat(), duration, notes, 
+                      individual_id, location, weather, stimuli))
+                
+                # Remove from active states
+                cursor.execute("DELETE FROM active_states WHERE id = ?", (active_id,))
             return True
         except Exception as e:
             print(f"Error stopping state: {e}")
@@ -256,30 +245,25 @@ class BehaviorDatabase:
     
     def get_active_states(self, individual_id: int = None) -> List[Tuple[str, str, str]]:
         """Get all currently active state observations."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        if individual_id is not None:
-            cursor.execute("""
-                SELECT behavior_name, category, start_time 
-                FROM active_states 
-                WHERE individual_id = ?
-                ORDER BY start_time DESC
-            """, (individual_id,))
-        else:
-            cursor.execute("""
-                SELECT behavior_name, category, start_time 
-                FROM active_states 
-                ORDER BY start_time DESC
-            """)
-        
-        results = cursor.fetchall()
-        conn.close()
-        return results
+        with self._connect() as conn:
+            if individual_id is not None:
+                cursor = conn.execute("""
+                    SELECT behavior_name, category, start_time 
+                    FROM active_states 
+                    WHERE individual_id = ?
+                    ORDER BY start_time DESC
+                """, (individual_id,))
+            else:
+                cursor = conn.execute("""
+                    SELECT behavior_name, category, start_time 
+                    FROM active_states 
+                    ORDER BY start_time DESC
+                """)
+            return cursor.fetchall()
     
     def get_all_observations(self, individual_id: int = None) -> pd.DataFrame:
         """Get all behavior observations as a DataFrame."""
-        with sqlite3.connect(self.db_path) as conn:
+        with self._connect() as conn:
             if individual_id is not None:
                 df = pd.read_sql_query("""
                     SELECT * FROM behaviors 
@@ -300,7 +284,7 @@ class BehaviorDatabase:
     def get_observations_by_date_range(self, start_date: str, end_date: str, 
                                       individual_id: int = None) -> pd.DataFrame:
         """Get observations within a date range."""
-        with sqlite3.connect(self.db_path) as conn:
+        with self._connect() as conn:
             if individual_id is not None:
                 df = pd.read_sql_query("""
                     SELECT * FROM behaviors 
@@ -332,13 +316,8 @@ class BehaviorDatabase:
     def delete_observation(self, observation_id: int) -> bool:
         """Delete a specific observation."""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute("DELETE FROM behaviors WHERE id = ?", (observation_id,))
-            
-            conn.commit()
-            conn.close()
+            with self._connect() as conn:
+                conn.execute("DELETE FROM behaviors WHERE id = ?", (observation_id,))
             return True
         except Exception as e:
             print(f"Error deleting observation: {e}")
@@ -350,18 +329,13 @@ class BehaviorDatabase:
                              notes: str = "") -> bool:
         """Record a cognitive test result."""
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            
-            cursor.execute("""
-                INSERT INTO cognitive_tests (individual_id, test_type, timestamp, 
-                                           duration_seconds, score, notes)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (individual_id, test_type, datetime.now().isoformat(), 
-                  duration_seconds, score, notes))
-            
-            conn.commit()
-            conn.close()
+            with self._connect() as conn:
+                conn.execute("""
+                    INSERT INTO cognitive_tests (individual_id, test_type, timestamp, 
+                                               duration_seconds, score, notes)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (individual_id, test_type, datetime.now().isoformat(), 
+                      duration_seconds, score, notes))
             return True
         except Exception as e:
             print(f"Error recording cognitive test: {e}")
@@ -369,7 +343,7 @@ class BehaviorDatabase:
     
     def get_cognitive_tests(self, individual_id: int = None) -> pd.DataFrame:
         """Get cognitive test results."""
-        with sqlite3.connect(self.db_path) as conn:
+        with self._connect() as conn:
             if individual_id is not None:
                 df = pd.read_sql_query("""
                     SELECT * FROM cognitive_tests 

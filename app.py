@@ -6,7 +6,6 @@ A Streamlit application for tracking and analyzing dog behavior.
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from database import BehaviorDatabase
 from utils import compute_age
@@ -150,15 +149,15 @@ if page == "👤 Profils":
                         st.markdown(f"**Date de naissance:** {birth_date}")
                         st.markdown(f"**Âge:** {age_years} ans, {age_months} mois")
                     else:
-                        st.markdown(f"**Date de naissance:** Non spécifiée")
+                        st.markdown("**Date de naissance:** Non spécifiée")
                 
                 with col3:
                     neutered_text = "Oui" if individual['neutered'] else "Non"
                     st.markdown(f"**Stérilisé(e):** {neutered_text}")
                     
-                    if st.button(f"🗑️ Supprimer", key=f"del_{individual['id']}", type="secondary"):
+                    if st.button("🗑️ Supprimer", key=f"del_{individual['id']}", type="secondary"):
                         if db.delete_individual(individual['id']):
-                            st.success(f"✅ Profil supprimé")
+                            st.success("✅ Profil supprimé")
                             st.rerun()
                         else:
                             st.error("❌ Erreur lors de la suppression")

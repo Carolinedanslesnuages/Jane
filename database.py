@@ -7,7 +7,6 @@ import sqlite3
 import pandas as pd
 from datetime import datetime
 from typing import Optional, List, Tuple
-import os
 from contextlib import contextmanager
 from xml.sax.saxutils import escape
 from reportlab.lib.pagesizes import A4

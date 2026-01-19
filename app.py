@@ -10,7 +10,7 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
 from database import BehaviorDatabase
-from utils import compute_age
+from utils import APP_VERSION, compute_age
 
 # Page configuration
 st.set_page_config(
@@ -888,7 +888,7 @@ elif page == "📁 Données":
 elif page == "ℹ️ À propos":
     st.title("ℹ️ À propos d'Jane")
     
-    st.markdown("""
+    st.markdown(f"""
     ## 🐕 Jane - Outil d'Observation du Comportement Canin
     
     Jane est une application web locale conçue pour faciliter l'observation et l'analyse
@@ -954,7 +954,7 @@ elif page == "ℹ️ À propos":
     - Personnalisez les visualisations dans le dashboard
     
     ### 📝 Version
-    Jane v1.0.0 - Janvier 2026
+    Jane v{APP_VERSION}
     
     ---
     
@@ -963,5 +963,5 @@ elif page == "ℹ️ À propos":
 
 # Footer
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Jane v1.0.0**")
+st.sidebar.markdown(f"**Jane v{APP_VERSION}**")
 st.sidebar.markdown("🐕 Observation Comportementale Canine")

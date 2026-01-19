@@ -3,6 +3,8 @@
 from datetime import date
 from typing import Optional, Tuple
 
+APP_VERSION = "1.1.0"
+
 
 def compute_age(birth_date: date, today: Optional[date] = None) -> Tuple[int, int]:
     """Return the exact age as (years, months) using calendar arithmetic."""

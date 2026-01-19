@@ -101,6 +101,31 @@ class BehaviorDatabase:
                 )
             """)
     
+            self._migrate(conn)
+    
+    # Columns added after the first release: table -> {column: SQL type}
+    _ADDED_COLUMNS = {
+        "behaviors": {
+            "individual_id": "INTEGER",
+            "location": "TEXT",
+            "weather": "TEXT",
+            "stimuli": "TEXT",
+        },
+        "active_states": {
+            "individual_id": "INTEGER",
+        },
+    }
+    SCHEMA_VERSION = 1
+    
+    def _migrate(self, conn):
+        """Add columns missing from databases created by older versions."""
+        for table, columns in self._ADDED_COLUMNS.items():
+            existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+            for column, sql_type in columns.items():
+                if column not in existing:
+                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {sql_type}")
+        conn.execute(f"PRAGMA user_version = {self.SCHEMA_VERSION}")
+    
     # Individual management methods
     def add_individual(self, name: str, breed: str = "", birth_date: str = None, 
                       sex: str = "", neutered: bool = False) -> bool:

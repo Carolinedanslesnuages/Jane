@@ -29,6 +29,7 @@ class BehaviorDatabase:
     def _connect(self):
         """Open a connection, commit on success, roll back on error, always close."""
         conn = sqlite3.connect(self.db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
         try:
             yield conn
             conn.commit()
@@ -70,7 +71,7 @@ class BehaviorDatabase:
                     location TEXT,
                     weather TEXT,
                     stimuli TEXT,
-                    FOREIGN KEY (individual_id) REFERENCES individuals(id)
+                    FOREIGN KEY (individual_id) REFERENCES individuals(id) ON DELETE CASCADE
                 )
             """)
             
@@ -82,7 +83,7 @@ class BehaviorDatabase:
                     category TEXT NOT NULL,
                     start_time DATETIME NOT NULL,
                     individual_id INTEGER,
-                    FOREIGN KEY (individual_id) REFERENCES individuals(id)
+                    FOREIGN KEY (individual_id) REFERENCES individuals(id) ON DELETE CASCADE
                 )
             """)
             
@@ -96,7 +97,7 @@ class BehaviorDatabase:
                     duration_seconds REAL,
                     score REAL,
                     notes TEXT,
-                    FOREIGN KEY (individual_id) REFERENCES individuals(id)
+                    FOREIGN KEY (individual_id) REFERENCES individuals(id) ON DELETE CASCADE
                 )
             """)
     
@@ -146,6 +147,10 @@ class BehaviorDatabase:
         """Delete an individual."""
         try:
             with self._connect() as conn:
+                # Delete dependent rows explicitly so databases created before
+                # ON DELETE CASCADE existed are cleaned up as well.
+                for table in ("behaviors", "active_states", "cognitive_tests"):
+                    conn.execute(f"DELETE FROM {table} WHERE individual_id = ?", (individual_id,))
                 conn.execute("DELETE FROM individuals WHERE id = ?", (individual_id,))
             return True
         except Exception as e:

@@ -9,6 +9,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from database import BehaviorDatabase
+from utils import compute_age
 
 # Page configuration
 st.set_page_config(
@@ -145,9 +146,7 @@ if page == "👤 Profils":
                     birth_date = individual['birth_date']
                     if birth_date:
                         birth_dt = datetime.strptime(birth_date, '%Y-%m-%d')
-                        age_days = (datetime.now() - birth_dt).days
-                        age_years = age_days // 365
-                        age_months = (age_days % 365) // 30
+                        age_years, age_months = compute_age(birth_dt.date())
                         st.markdown(f"**Date de naissance:** {birth_date}")
                         st.markdown(f"**Âge:** {age_years} ans, {age_months} mois")
                     else:

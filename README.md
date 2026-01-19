@@ -1,10 +1,12 @@
-# EthoLog 🐕
+# Jane 🐕
 
 Application web locale pour l'observation et l'analyse du comportement canin dans un contexte d'étude éthologique.
 
+> Jane est nommée en hommage à Jane Goodall, pionnière de l'observation patiente du comportement animal.
+
 ## 📋 Description
 
-EthoLog est un outil d'observation scientifique professionnel conçu pour les éthologues, chercheurs et éleveurs souhaitant suivre et analyser le comportement de leurs animaux. L'application permet d'enregistrer des observations en temps réel, d'effectuer des tests cognitifs, de visualiser des statistiques comportementales avancées et d'exporter des rapports professionnels.
+Jane est un outil d'observation scientifique professionnel conçu pour les éthologues, chercheurs et éleveurs souhaitant suivre et analyser le comportement de leurs animaux. L'application permet d'enregistrer des observations en temps réel, d'effectuer des tests cognitifs, de visualiser des statistiques comportementales avancées et d'exporter des rapports professionnels.
 
 ## ✨ Fonctionnalités
 
@@ -79,8 +81,8 @@ Visualisations interactives avec Plotly:
 
 1. **Cloner le dépôt**
 ```bash
-git clone https://github.com/Carolinedanslesnuages/EthoLog.git
-cd EthoLog
+git clone https://github.com/Carolinedanslesnuages/Jane.git
+cd Jane
 ```
 
 2. **Installer les dépendances**
@@ -136,7 +138,7 @@ L'application s'ouvrira automatiquement dans votre navigateur par défaut à l'a
 ## 🛠️ Structure du Projet
 
 ```
-EthoLog/
+Jane/
 ├── app.py              # Application Streamlit principale
 ├── database.py         # Module de gestion de la base de données
 ├── requirements.txt    # Dépendances Python
@@ -202,7 +204,7 @@ Le rapport PDF professionnel inclut:
 
 ## 🔬 Applications Scientifiques
 
-EthoLog est particulièrement adapté pour:
+Jane est particulièrement adapté pour:
 - **Recherche en éthologie**: Études comportementales systématiques
 - **Élevage canin**: Suivi des lignées et sélection comportementale
 - **Vétérinaires**: Évaluation du bien-être et détection de problèmes comportementaux

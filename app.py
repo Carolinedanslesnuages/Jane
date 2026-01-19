@@ -1,5 +1,5 @@
 """
-EthoLog - Dog Behavior Observation Tool
+Jane - Dog Behavior Observation Tool
 A Streamlit application for tracking and analyzing dog behavior.
 """
 
@@ -12,7 +12,7 @@ from database import BehaviorDatabase
 
 # Page configuration
 st.set_page_config(
-    page_title="EthoLog - Observation de Comportement Canin",
+    page_title="Jane - Observation de Comportement Canin",
     page_icon="🐕",
     layout="wide"
 )
@@ -69,7 +69,7 @@ ETHOGRAM = {
 }
 
 # Sidebar navigation
-st.sidebar.title("🐕 EthoLog")
+st.sidebar.title("🐕 Jane")
 st.sidebar.markdown("---")
 
 page = st.sidebar.radio(
@@ -775,7 +775,7 @@ elif page == "📁 Données":
     with col1:
         export_filename = st.text_input(
             "Nom du fichier d'export",
-            value=f"etholog_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            value=f"jane_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         )
     
     with col2:
@@ -896,12 +896,12 @@ elif page == "📁 Données":
 # ABOUT PAGE
 # ============================================================================
 elif page == "ℹ️ À propos":
-    st.title("ℹ️ À propos d'EthoLog")
+    st.title("ℹ️ À propos d'Jane")
     
     st.markdown("""
-    ## 🐕 EthoLog - Outil d'Observation du Comportement Canin
+    ## 🐕 Jane - Outil d'Observation du Comportement Canin
     
-    EthoLog est une application web locale conçue pour faciliter l'observation et l'analyse
+    Jane est une application web locale conçue pour faciliter l'observation et l'analyse
     du comportement des chiots et chiens dans un contexte d'étude éthologique.
     
     ### 📋 Fonctionnalités
@@ -964,7 +964,7 @@ elif page == "ℹ️ À propos":
     - Personnalisez les visualisations dans le dashboard
     
     ### 📝 Version
-    EthoLog v1.0.0 - Janvier 2026
+    Jane v1.0.0 - Janvier 2026
     
     ---
     
@@ -973,5 +973,5 @@ elif page == "ℹ️ À propos":
 
 # Footer
 st.sidebar.markdown("---")
-st.sidebar.markdown("**EthoLog v1.0.0**")
+st.sidebar.markdown("**Jane v1.0.0**")
 st.sidebar.markdown("🐕 Observation Comportementale Canine")

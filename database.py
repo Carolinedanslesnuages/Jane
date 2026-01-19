@@ -1,5 +1,5 @@
 """
-Database module for EthoLog application.
+Database module for Jane application.
 Handles all database operations for behavior tracking.
 """
 
@@ -318,7 +318,7 @@ class BehaviorDatabase:
         
         return df
     
-    def export_to_csv(self, filepath: str = "etholog_export.csv") -> bool:
+    def export_to_csv(self, filepath: str = "jane_export.csv") -> bool:
         """Export all observations to CSV file."""
         try:
             df = self.get_all_observations()
@@ -412,7 +412,7 @@ class BehaviorDatabase:
                 alignment=1  # Center
             )
             
-            elements.append(Paragraph("🐕 Bilan Comportemental EthoLog", title_style))
+            elements.append(Paragraph("🐕 Bilan Comportemental Jane", title_style))
             elements.append(Spacer(1, 0.3*inch))
             
             # Individual and period info
@@ -561,7 +561,7 @@ class BehaviorDatabase:
                 elements.append(Spacer(1, 0.5*inch))
                 elements.append(Paragraph("_______________", styles['Normal']))
                 elements.append(Paragraph(
-                    "Rapport généré par EthoLog - Outil d'observation du comportement canin",
+                    "Rapport généré par Jane - Outil d'observation du comportement canin",
                     ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, textColor=colors.grey)
                 ))
             

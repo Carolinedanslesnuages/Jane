@@ -44,5 +44,5 @@ Thumbs.db
 *.log
 
 # Exports
-etholog_export_*.csv
+jane_export_*.csv
 bilan_comportemental_*.pdf

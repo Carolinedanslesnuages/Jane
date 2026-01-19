@@ -8,6 +8,7 @@ import pandas as pd
 from datetime import datetime
 from typing import Optional, List, Tuple
 import os
+from xml.sax.saxutils import escape
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -417,7 +418,7 @@ class BehaviorDatabase:
             
             # Individual and period info
             info_style = styles['Normal']
-            elements.append(Paragraph(f"<b>Individu:</b> {individual_name}", info_style))
+            elements.append(Paragraph(f"<b>Individu:</b> {escape(individual_name)}", info_style))
             elements.append(Paragraph(f"<b>Date du rapport:</b> {datetime.now().strftime('%d/%m/%Y %H:%M')}", info_style))
             
             if start_date and end_date:

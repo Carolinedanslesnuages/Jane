@@ -496,14 +496,13 @@ class BehaviorDatabase:
                         ['Comportement le plus fréquent', stress_df['behavior_name'].value_counts().index[0] if not stress_df.empty else 'N/A'],
                     ]
                     
-                    # Add context analysis if available
-                    if 'location' in stress_df.columns and stress_df['location'].notna().any():
-                        top_location = stress_df[stress_df['location'] != ''].groupby('location').size().idxmax()
-                        stress_summary.append(['Lieu le plus stressant', top_location])
-                    
-                    if 'stimuli' in stress_df.columns and stress_df['stimuli'].notna().any():
-                        top_stimuli = stress_df[stress_df['stimuli'] != ''].groupby('stimuli').size().idxmax()
-                        stress_summary.append(['Stimuli le plus stressant', top_stimuli])
+                    # Add context analysis if available (ignore empty values)
+                    for column, label in (('location', 'Lieu le plus stressant'),
+                                          ('stimuli', 'Stimuli le plus stressant')):
+                        values = stress_df[column].dropna()
+                        values = values[values != '']
+                        if not values.empty:
+                            stress_summary.append([label, values.value_counts().index[0]])
                     
                     stress_table = Table(stress_summary, colWidths=[3*inch, 2*inch])
                     stress_table.setStyle(TableStyle([

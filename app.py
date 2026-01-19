@@ -421,7 +421,10 @@ elif page == "🧪 Tests Cognitifs":
         with col2:
             if st.button("⏹️ Arrêter", type="secondary", use_container_width=True):
                 if st.session_state.test_start_time:
-                    st.session_state.test_duration = (datetime.now() - st.session_state.test_start_time).total_seconds()
+                    measured = (datetime.now() - st.session_state.test_start_time).total_seconds()
+                    st.session_state.test_duration = measured
+                    # The number input is keyed: its value must be set through its key
+                    st.session_state.duration_input = round(measured, 1)
                     st.session_state.test_start_time = None
                     st.rerun()
         
@@ -429,6 +432,7 @@ elif page == "🧪 Tests Cognitifs":
             if st.button("🔄 Réinitialiser", use_container_width=True):
                 st.session_state.test_start_time = None
                 st.session_state.test_duration = None
+                st.session_state.duration_input = 0.0
                 st.rerun()
         
         # Manual entry of duration and score
@@ -441,7 +445,7 @@ elif page == "🧪 Tests Cognitifs":
             duration_input = st.number_input(
                 "Durée (secondes)",
                 min_value=0.0,
-                value=st.session_state.get('test_duration', 0.0),
+                value=0.0,
                 step=0.1,
                 key="duration_input"
             )

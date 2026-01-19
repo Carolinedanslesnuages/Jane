@@ -67,6 +67,7 @@ class BehaviorDatabase:
                     timestamp DATETIME NOT NULL,
                     duration_seconds REAL,
                     notes TEXT,
+                    start_time DATETIME,
                     individual_id INTEGER,
                     location TEXT,
                     weather TEXT,
@@ -106,6 +107,7 @@ class BehaviorDatabase:
     # Columns added after the first release: table -> {column: SQL type}
     _ADDED_COLUMNS = {
         "behaviors": {
+            "start_time": "DATETIME",
             "individual_id": "INTEGER",
             "location": "TEXT",
             "weather": "TEXT",
@@ -261,10 +263,11 @@ class BehaviorDatabase:
                 # Record the completed observation
                 cursor.execute("""
                     INSERT INTO behaviors (behavior_name, category, observation_type, timestamp, 
-                                         duration_seconds, notes, individual_id, location, weather, stimuli)
-                    VALUES (?, ?, 'state', ?, ?, ?, ?, ?, ?, ?)
-                """, (behavior_name, category, end_dt.isoformat(), duration, notes, 
-                      individual_id, location, weather, stimuli))
+                                         start_time, duration_seconds, notes, individual_id,
+                                         location, weather, stimuli)
+                    VALUES (?, ?, 'state', ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (behavior_name, category, end_dt.isoformat(), start_dt.isoformat(), duration,
+                      notes, individual_id, location, weather, stimuli))
                 
                 # Remove from active states
                 cursor.execute("DELETE FROM active_states WHERE id = ?", (active_id,))
@@ -308,6 +311,7 @@ class BehaviorDatabase:
         
         if not df.empty:
             df['timestamp'] = pd.to_datetime(df['timestamp'])
+            df['start_time'] = pd.to_datetime(df['start_time'])
         
         return df
     
@@ -318,18 +322,19 @@ class BehaviorDatabase:
             if individual_id is not None:
                 df = pd.read_sql_query("""
                     SELECT * FROM behaviors 
-                    WHERE DATE(timestamp) BETWEEN ? AND ? AND individual_id = ?
+                    WHERE DATE(COALESCE(start_time, timestamp)) BETWEEN ? AND ? AND individual_id = ?
                     ORDER BY timestamp DESC
                 """, conn, params=(start_date, end_date, individual_id))
             else:
                 df = pd.read_sql_query("""
                     SELECT * FROM behaviors 
-                    WHERE DATE(timestamp) BETWEEN ? AND ?
+                    WHERE DATE(COALESCE(start_time, timestamp)) BETWEEN ? AND ?
                     ORDER BY timestamp DESC
                 """, conn, params=(start_date, end_date))
         
         if not df.empty:
             df['timestamp'] = pd.to_datetime(df['timestamp'])
+            df['start_time'] = pd.to_datetime(df['start_time'])
         
         return df
     

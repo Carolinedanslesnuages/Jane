@@ -749,7 +749,8 @@ elif page == "📊 Dashboard":
         st.subheader("📅 Chronologie d'Activité")
         
         # Group by date and category
-        df['date'] = df['timestamp'].dt.date
+        # A state belongs to the day it started, not the day it ended
+        df['date'] = df['start_time'].fillna(df['timestamp']).dt.date
         timeline_data = df.groupby(['date', 'category']).size().reset_index(name='count')
         
         fig_timeline = px.bar(

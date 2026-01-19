@@ -395,9 +395,12 @@ class BehaviorDatabase:
         
         return df
     
-    def export_behavioral_report_pdf(self, filepath: str, individual_id: int = None, 
+    def export_behavioral_report_pdf(self, filepath, individual_id: int = None, 
                                      start_date: str = None, end_date: str = None) -> bool:
-        """Export a professional behavioral assessment report as PDF."""
+        """Export a professional behavioral assessment report as PDF.
+        
+        `filepath` may be a path or a binary file-like object (e.g. io.BytesIO).
+        """
         try:
             # Get individual info if specified
             individual_name = "Tous les individus"

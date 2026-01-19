@@ -3,6 +3,8 @@ Jane - Dog Behavior Observation Tool
 A Streamlit application for tracking and analyzing dog behavior.
 """
 
+import io
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -773,60 +775,43 @@ elif page == "📁 Données":
     st.title("📁 Gestion des Données")
     
     st.markdown("### 📥 Export des Données")
-    st.markdown("Exportez toutes vos observations au format CSV pour les analyser avec R ou d'autres outils.")
+    st.markdown("Exportez vos observations au format CSV pour les analyser avec R ou d'autres outils.")
     
-    col1, col2, col3 = st.columns([2, 1, 1])
+    stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    col1, col2 = st.columns(2)
     
     with col1:
-        export_filename = st.text_input(
-            "Nom du fichier d'export",
-            value=f"jane_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        # Built in memory: nothing is written to the server's disk
+        st.download_button(
+            label="📥 Exporter en CSV",
+            data=db.get_all_observations().to_csv(index=False),
+            file_name=f"jane_export_{stamp}.csv",
+            mime="text/csv",
+            type="primary",
+            width="stretch"
         )
     
     with col2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("📥 Exporter en CSV", type="primary", width="stretch"):
-            if db.export_to_csv(export_filename):
-                st.success(f"✅ Données exportées vers: {export_filename}")
-                
-                # Provide download link
-                try:
-                    with open(export_filename, 'r') as f:
-                        st.download_button(
-                            label="⬇️ Télécharger le fichier",
-                            data=f.read(),
-                            file_name=export_filename,
-                            mime="text/csv"
-                        )
-                except FileNotFoundError:
-                    st.error("❌ Fichier d'export introuvable")
-            else:
-                st.error("❌ Erreur lors de l'export")
-    
-    with col3:
-        st.markdown("<br>", unsafe_allow_html=True)
-        pdf_filename = f"bilan_comportemental_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        if st.button("📄 Rapport PDF", type="primary", width="stretch"):
+        if st.button("📄 Générer le rapport PDF", type="primary", width="stretch"):
             # Date range for PDF report
             start_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
             end_date = datetime.now().strftime('%Y-%m-%d')
             
-            if db.export_behavioral_report_pdf(pdf_filename, selected_individual_id, start_date, end_date):
-                st.success(f"✅ Rapport PDF généré: {pdf_filename}")
-                
-                # Provide download link
-                try:
-                    with open(pdf_filename, 'rb') as f:
-                        st.download_button(
-                            label="⬇️ Télécharger le rapport",
-                            data=f.read(),
-                            file_name=pdf_filename,
-                            mime="application/pdf"
-                        )
-                except FileNotFoundError:
-                    st.error("❌ Fichier PDF introuvable")
+            buffer = io.BytesIO()
+            if db.export_behavioral_report_pdf(buffer, selected_individual_id, start_date, end_date):
+                st.session_state.pdf_report = buffer.getvalue()
             else:
+                st.session_state.pdf_report = None
                 st.error("❌ Erreur lors de la génération du PDF")
+        
+        if st.session_state.get('pdf_report'):
+            st.download_button(
+                label="⬇️ Télécharger le rapport",
+                data=st.session_state.pdf_report,
+                file_name=f"bilan_comportemental_{stamp}.pdf",
+                mime="application/pdf",
+                width="stretch"
+            )
     
     st.markdown("---")
     

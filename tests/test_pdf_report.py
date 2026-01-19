@@ -25,3 +25,12 @@ def test_pdf_with_cognitive_tests_without_score(db, tmp_path):
     db.record_event("Dormir", "Repos", individual_id=1)
     db.record_cognitive_test(1, "Test du Détour", 12.5, None)
     assert db.export_behavioral_report_pdf(str(tmp_path / "tests.pdf"), 1)
+
+
+def test_pdf_can_be_written_to_memory(db):
+    import io
+
+    db.record_event("Aboyer", "Stress", individual_id=1)
+    buffer = io.BytesIO()
+    assert db.export_behavioral_report_pdf(buffer, 1)
+    assert buffer.getvalue().startswith(b"%PDF")

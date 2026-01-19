@@ -413,7 +413,7 @@ class BehaviorDatabase:
                 alignment=1  # Center
             )
             
-            elements.append(Paragraph("🐕 Bilan Comportemental Jane", title_style))
+            elements.append(Paragraph("Bilan Comportemental Jane", title_style))
             elements.append(Spacer(1, 0.3*inch))
             
             # Individual and period info
@@ -436,7 +436,7 @@ class BehaviorDatabase:
                 elements.append(Paragraph("Aucune donnée disponible pour cette période.", styles['Normal']))
             else:
                 # Summary statistics
-                elements.append(Paragraph("📊 Résumé Statistique", styles['Heading2']))
+                elements.append(Paragraph("Résumé Statistique", styles['Heading2']))
                 elements.append(Spacer(1, 0.1*inch))
                 
                 summary_data = [
@@ -462,7 +462,7 @@ class BehaviorDatabase:
                 elements.append(Spacer(1, 0.3*inch))
                 
                 # Behavior category distribution
-                elements.append(Paragraph("📈 Répartition par Catégorie", styles['Heading2']))
+                elements.append(Paragraph("Répartition par Catégorie", styles['Heading2']))
                 elements.append(Spacer(1, 0.1*inch))
                 
                 category_counts = df.groupby('category').size().reset_index(name='count')
@@ -488,7 +488,7 @@ class BehaviorDatabase:
                 # Stress analysis
                 stress_df = df[df['category'] == 'Stress']
                 if not stress_df.empty:
-                    elements.append(Paragraph("⚠️ Analyse des Comportements de Stress", styles['Heading2']))
+                    elements.append(Paragraph("Analyse des Comportements de Stress", styles['Heading2']))
                     elements.append(Spacer(1, 0.1*inch))
                     
                     stress_summary = [
@@ -525,7 +525,7 @@ class BehaviorDatabase:
                     tests_df = self.get_cognitive_tests(individual_id)
                     if not tests_df.empty:
                         elements.append(PageBreak())
-                        elements.append(Paragraph("🧪 Résultats des Tests Cognitifs", styles['Heading2']))
+                        elements.append(Paragraph("Résultats des Tests Cognitifs", styles['Heading2']))
                         elements.append(Spacer(1, 0.1*inch))
                         
                         test_data = [['Test', 'Durée Moyenne (s)', 'Score Moyen', 'Nb de Tests']]

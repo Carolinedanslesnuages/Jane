@@ -46,3 +46,6 @@ Thumbs.db
 # Exports
 jane_export_*.csv
 bilan_comportemental_*.pdf
+
+# Tests
+.pytest_cache/

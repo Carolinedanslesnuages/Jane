@@ -5,6 +5,7 @@ from datetime import datetime
 import plotly.express as px
 import streamlit as st
 
+from charts import style
 from ui import page_header
 
 
@@ -122,44 +123,32 @@ def render(db, individuals_df, selected_individual_id):
         
         
         # Display test history
-        st.subheader(f"📊 Historique des Tests - {test_individual_name}")
+        st.subheader(f"Historique de {test_individual_name}")
         
         tests_df = db.get_cognitive_tests(test_individual_id)
         
         if not tests_df.empty:
             # Summary statistics
             col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                st.metric("Total de tests", len(tests_df))
-            with col2:
-                avg_duration = tests_df['duration_seconds'].mean()
-                st.metric("Durée moyenne", f"{avg_duration:.1f}s")
-            with col3:
-                if tests_df['score'].notna().any():
-                    avg_score = tests_df['score'].mean()
-                    st.metric("Score moyen", f"{avg_score:.1f}/10")
-            
-            st.markdown("---")
+            col1.metric("Tests réalisés", len(tests_df))
+            col2.metric("Durée moyenne", f"{tests_df['duration_seconds'].mean():.1f} s")
+            if tests_df['score'].notna().any():
+                col3.metric("Score moyen", f"{tests_df['score'].mean():.1f} / 10")
+            else:
+                col3.metric("Score moyen", "Non renseigné")
             
             # Detailed results table
-            display_tests = tests_df.copy()
-            display_tests['timestamp'] = display_tests['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
-            display_tests = display_tests[['timestamp', 'test_type', 'duration_seconds', 'score', 'notes']]
-            display_tests.columns = ['Date', 'Test', 'Durée (s)', 'Score', 'Notes']
+            display_tests = tests_df[['timestamp', 'test_type', 'duration_seconds', 'score', 'notes']].copy()
+            display_tests['timestamp'] = display_tests['timestamp'].dt.strftime('%d/%m/%Y %H:%M')
+            display_tests.columns = ['Date', 'Épreuve', 'Durée (s)', 'Score', 'Notes']
+            st.dataframe(display_tests, width="stretch", hide_index=True)
             
-            st.dataframe(display_tests, width="stretch")
-            
-            # Comparison chart if multiple tests
+            # Progress chart if multiple tests
             if len(tests_df) > 1:
-                st.markdown("---")
-                st.subheader("📈 Évolution des Performances")
-                
                 fig = px.line(tests_df, x='timestamp', y='duration_seconds', 
                             color='test_type', markers=True,
-                            title="Évolution des Durées par Type de Test",
-                            labels={'timestamp': 'Date', 'duration_seconds': 'Durée (s)', 'test_type': 'Type de Test'})
-                st.plotly_chart(fig, use_container_width=True)
+                            labels={'timestamp': '', 'duration_seconds': 'Durée (s)', 'test_type': 'Épreuve'})
+                st.plotly_chart(style(fig, "Évolution des durées"), use_container_width=True)
         else:
             st.info(f"Aucun test enregistré pour {test_individual_name}.")
         

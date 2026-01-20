@@ -38,56 +38,55 @@ def render(db, individuals_df, selected_individual_id):
     else:
         st.caption("Démarrer puis arrêter mesure la durée d'un comportement, par exemple le sommeil.")
     
-    # Scan Sampling Module
-    st.subheader("⏱️ Scan Sampling (Échantillonnage par Intervalle)")
+    # Scan sampling (interval sampling)
+    with st.expander("Échantillonnage par intervalle (scan)"):
+        col1, col2, col3 = st.columns(3)
     
-    col1, col2, col3 = st.columns(3)
+        with col1:
+            scan_interval = st.selectbox(
+                "Intervalle de scan",
+                [2, 5, 10, 15, 30],
+                index=1,
+                help="Intervalle en minutes entre chaque scan"
+            )
     
-    with col1:
-        scan_interval = st.selectbox(
-            "Intervalle de scan",
-            [2, 5, 10, 15, 30],
-            index=1,
-            help="Intervalle en minutes entre chaque scan"
-        )
-    
-    with col2:
-        # Initialize scan timer state
-        if 'scan_active' not in st.session_state:
-            st.session_state.scan_active = False
-        if 'scan_start_time' not in st.session_state:
-            st.session_state.scan_start_time = None
-        if 'last_scan_alert' not in st.session_state:
-            st.session_state.last_scan_alert = None
-        
-        if not st.session_state.scan_active:
-            if st.button("▶️ Démarrer Scan Sampling", type="primary", width="stretch"):
-                st.session_state.scan_active = True
-                st.session_state.scan_start_time = datetime.now()
-                st.session_state.last_scan_alert = datetime.now()
-                st.rerun()
-        else:
-            if st.button("⏹️ Arrêter Scan Sampling", type="secondary", width="stretch"):
+        with col2:
+            # Initialize scan timer state
+            if 'scan_active' not in st.session_state:
                 st.session_state.scan_active = False
+            if 'scan_start_time' not in st.session_state:
                 st.session_state.scan_start_time = None
+            if 'last_scan_alert' not in st.session_state:
                 st.session_state.last_scan_alert = None
-                st.rerun()
-    
-    with col3:
-        if st.session_state.scan_active:
-            elapsed = (datetime.now() - st.session_state.last_scan_alert).total_seconds()
-            next_scan_in = (scan_interval * 60) - elapsed
-            
-            if next_scan_in <= 0:
-                st.warning("🔔 **Temps de Scanner!**")
-                st.session_state.last_scan_alert = datetime.now()
-                # Auto-play sound would require JavaScript, so we use visual notification
+        
+            if not st.session_state.scan_active:
+                if st.button("Démarrer le scan", type="primary", width="stretch"):
+                    st.session_state.scan_active = True
+                    st.session_state.scan_start_time = datetime.now()
+                    st.session_state.last_scan_alert = datetime.now()
+                    st.rerun()
             else:
-                minutes = int(next_scan_in // 60)
-                seconds = int(next_scan_in % 60)
-                st.info(f"⏱️ Prochain scan: {minutes}m {seconds}s")
+                if st.button("Arrêter le scan", type="secondary", width="stretch"):
+                    st.session_state.scan_active = False
+                    st.session_state.scan_start_time = None
+                    st.session_state.last_scan_alert = None
+                    st.rerun()
     
-    st.markdown("---")
+        with col3:
+            if st.session_state.scan_active:
+                elapsed = (datetime.now() - st.session_state.last_scan_alert).total_seconds()
+                next_scan_in = (scan_interval * 60) - elapsed
+            
+                if next_scan_in <= 0:
+                    st.warning("Il est temps de scanner.")
+                    st.session_state.last_scan_alert = datetime.now()
+                    # Auto-play sound would require JavaScript, so we use visual notification
+                else:
+                    minutes = int(next_scan_in // 60)
+                    seconds = int(next_scan_in % 60)
+                    st.info(f"Prochain scan dans {minutes} min {seconds:02d} s")
+    
+    
     
     # Context fields
     st.subheader("📍 Contexte de l'Observation")

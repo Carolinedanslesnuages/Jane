@@ -12,7 +12,7 @@ from views import about, cognitive_tests, dashboard, data, observation, profiles
 
 # Page configuration
 st.set_page_config(
-    page_title="Jane - Observation de Comportement Canin",
+    page_title="Jane · carnet d'observation canine",
     page_icon="🐕",
     layout="wide"
 )

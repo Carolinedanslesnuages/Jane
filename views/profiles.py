@@ -4,13 +4,13 @@ from datetime import datetime
 
 import streamlit as st
 
+from ui import page_header
 from utils import compute_age
 
 
 def render(db, individuals_df, selected_individual_id):
     """Render the page."""
-    st.title("👤 Gestion des Profils Individuels")
-    st.markdown("Gérez les profils de vos chiens pour un suivi personnalisé.")
+    page_header("Profils", "Les chiens suivis, avec leurs informations de base.")
     
     st.markdown("---")
     

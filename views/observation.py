@@ -1,13 +1,12 @@
-"""📝 Observation page."""
+"""Observation page."""
 
 from datetime import datetime
 
-import pandas as pd
 import streamlit as st
 
-from ui import page_header
-
 from ethogram import CATEGORY_COLORS, ETHOGRAM
+from tables import observations_for_display
+from ui import page_header
 
 
 def render(db, individuals_df, selected_individual_id):
@@ -148,26 +147,15 @@ def render(db, individuals_df, selected_individual_id):
                                     st.error("Ce comportement est déjà en cours.")
     
     # Recent observations
-    st.subheader("📋 Observations Récentes")
+    st.subheader("Dernières observations")
     recent_df = db.get_all_observations(selected_individual_id)
     
     if not recent_df.empty:
-        # Display only the 10 most recent
-        cols_to_display = ['timestamp', 'behavior_name', 'category', 'observation_type', 'duration_seconds']
-        if 'location' in recent_df.columns:
-            cols_to_display.append('location')
-        
-        display_df = recent_df.head(10)[cols_to_display]
-        display_df['timestamp'] = display_df['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
-        display_df['duration_seconds'] = display_df['duration_seconds'].apply(
-            lambda x: f"{int(x)}s" if pd.notna(x) else "N/A"
+        table = observations_for_display(
+            recent_df,
+            columns=["timestamp", "behavior_name", "category", "observation_type", "duration_seconds", "location"],
+            limit=10
         )
-        
-        col_names = ['Horodatage', 'Comportement', 'Catégorie', 'Type', 'Durée']
-        if 'location' in display_df.columns:
-            col_names.append('Lieu')
-        display_df.columns = col_names
-        
-        st.dataframe(display_df, width="stretch")
+        st.dataframe(table, width="stretch", hide_index=True)
     else:
         st.info("Aucune observation enregistrée pour le moment.")

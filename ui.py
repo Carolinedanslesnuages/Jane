@@ -11,8 +11,16 @@ _LAYOUT_CSS = """
 footer { visibility: hidden; }
 """
 
+_TYPOGRAPHY_CSS = """
+h1 { letter-spacing: -0.01em; margin-bottom: 0.25rem; }
+h2, h3 { letter-spacing: -0.005em; }
+h3 { margin-top: 1.25rem; }
+[data-testid="stCaptionContainer"] { color: #6B665A; }
+hr { margin: 1.5rem 0; border-color: #D9D0BA; }
+"""
+
 
 def inject_style():
     """Inject the application stylesheet once per run."""
-    css = _LAYOUT_CSS
+    css = _LAYOUT_CSS + _TYPOGRAPHY_CSS
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)

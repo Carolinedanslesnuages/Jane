@@ -30,10 +30,16 @@ db = get_database()
 st.sidebar.title("🐕 Jane")
 st.sidebar.markdown("---")
 
-page = st.sidebar.radio(
-    "Navigation",
-    ["👤 Profils", "📝 Observation", "🧪 Tests Cognitifs", "📊 Dashboard", "📁 Données", "ℹ️ À propos"]
-)
+PAGES = {
+    "Profils": profiles,
+    "Observation": observation,
+    "Tests cognitifs": cognitive_tests,
+    "Tableau de bord": dashboard,
+    "Données": data,
+    "À propos": about,
+}
+
+page = st.sidebar.radio("Navigation", list(PAGES), label_visibility="collapsed")
 
 # Individual selector in sidebar (if individuals exist)
 individuals_df = db.get_all_individuals()
@@ -49,14 +55,6 @@ if not individuals_df.empty:
         selected_individual_id = individuals_df[individuals_df['name'] == selected_individual]['id'].iloc[0]
         st.sidebar.info(f"Observations filtrées pour: **{selected_individual}**")
 
-PAGES = {
-    "👤 Profils": profiles,
-    "📝 Observation": observation,
-    "🧪 Tests Cognitifs": cognitive_tests,
-    "📊 Dashboard": dashboard,
-    "📁 Données": data,
-    "ℹ️ À propos": about,
-}
 PAGES[page].render(db, individuals_df, selected_individual_id)
 
 # Footer

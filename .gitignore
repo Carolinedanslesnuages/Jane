@@ -40,7 +40,7 @@ wheels/
 Thumbs.db
 
 # Streamlit
-.streamlit/
+.streamlit/secrets.toml
 *.log
 
 # Exports

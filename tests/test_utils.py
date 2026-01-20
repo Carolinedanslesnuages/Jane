@@ -11,3 +11,9 @@ def test_exact_age():
 
 def test_leap_day_birthday():
     assert compute_age(date(2024, 2, 29), date(2026, 2, 28)) == (1, 11)
+
+
+def test_every_category_has_a_colour():
+    from ethogram import CATEGORY_COLORS, ETHOGRAM
+
+    assert set(CATEGORY_COLORS) == set(ETHOGRAM)

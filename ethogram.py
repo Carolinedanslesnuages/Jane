@@ -42,3 +42,13 @@ ETHOGRAM = {
         "Renifler avant élimination"
     ]
 }
+
+# Accent colour of each category (names accepted by st.badge)
+CATEGORY_COLORS = {
+    "Exploration": "blue",
+    "Jeu": "orange",
+    "Repos": "violet",
+    "Social": "green",
+    "Stress": "red",
+    "Élimination": "gray",
+}

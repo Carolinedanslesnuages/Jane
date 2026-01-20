@@ -17,14 +17,15 @@ def render(db, individuals_df, selected_individual_id):
     # Display active states
     active_states = db.get_active_states(selected_individual_id)
     if active_states:
-        st.info(f"🔴 **États actifs en cours:** {len(active_states)}")
-        for behavior, category, start_time in active_states:
-            start_dt = datetime.fromisoformat(start_time)
-            duration = datetime.now() - start_dt
-            minutes = int(duration.total_seconds() // 60)
-            seconds = int(duration.total_seconds() % 60)
-            st.markdown(f"- **{behavior}** ({category}) - {minutes}m {seconds}s")
-        st.markdown("---")
+        with st.container(border=True):
+            st.markdown(f"**En cours** ({len(active_states)})")
+            for behavior, category, start_time in active_states:
+                elapsed = datetime.now() - datetime.fromisoformat(start_time)
+                total_seconds = int(elapsed.total_seconds())
+                name_col, category_col, time_col = st.columns([3, 2, 1])
+                name_col.write(behavior)
+                category_col.caption(category)
+                time_col.write(f"{total_seconds // 60} min {total_seconds % 60:02d} s")
     
     # Mode selection
     observation_mode = st.radio(

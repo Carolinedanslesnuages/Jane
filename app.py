@@ -46,14 +46,12 @@ individuals_df = db.get_all_individuals()
 selected_individual_id = None
 
 if not individuals_df.empty:
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("🐕 Individu")
-    individual_names = ["Tous"] + individuals_df['name'].tolist()
-    selected_individual = st.sidebar.selectbox("Sélectionner:", individual_names)
+    st.sidebar.divider()
+    individual_names = ["Tous les chiens"] + individuals_df['name'].tolist()
+    selected_individual = st.sidebar.selectbox("Chien suivi", individual_names)
     
-    if selected_individual != "Tous":
+    if selected_individual != "Tous les chiens":
         selected_individual_id = individuals_df[individuals_df['name'] == selected_individual]['id'].iloc[0]
-        st.sidebar.info(f"Observations filtrées pour: **{selected_individual}**")
 
 PAGES[page].render(db, individuals_df, selected_individual_id)
 

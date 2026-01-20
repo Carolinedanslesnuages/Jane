@@ -119,10 +119,10 @@ def render(db, individuals_df, selected_individual_id):
                         if st.button(behavior, key=button_key, width="stretch"):
                             if db.record_event(behavior, category, notes, selected_individual_id, 
                                              location, weather, stimuli):
-                                st.success(f"✅ {behavior} enregistré!")
+                                st.toast(f"{behavior} enregistré.")
                                 st.rerun()
                             else:
-                                st.error("❌ Erreur lors de l'enregistrement")
+                                st.error("L'enregistrement a échoué.")
                     
                     else:  # Mode État
                         # Check if this behavior is currently active
@@ -135,17 +135,17 @@ def render(db, individuals_df, selected_individual_id):
                             if st.button(f"Arrêter · {behavior}", key=button_key, width="stretch", type="primary"):
                                 if db.stop_state(behavior, category, notes, selected_individual_id,
                                                location, weather, stimuli):
-                                    st.success(f"✅ {behavior} terminé et enregistré!")
+                                    st.toast(f"{behavior} terminé et enregistré.")
                                     st.rerun()
                                 else:
-                                    st.error("❌ Erreur lors de l'arrêt")
+                                    st.error("L'arrêt a échoué.")
                         else:
                             if st.button(f"Démarrer · {behavior}", key=button_key, width="stretch"):
                                 if db.start_state(behavior, category, selected_individual_id):
-                                    st.success(f"🔴 Enregistrement de {behavior} démarré!")
+                                    st.toast(f"{behavior} démarré.")
                                     st.rerun()
                                 else:
-                                    st.error("❌ Ce comportement est déjà en cours d'enregistrement")
+                                    st.error("Ce comportement est déjà en cours.")
     
     # Recent observations
     st.subheader("📋 Observations Récentes")

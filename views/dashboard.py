@@ -191,12 +191,10 @@ def render(db, individuals_df, selected_individual_id):
         else:
             st.info("Aucun comportement de stress enregistré pour cette période.")
         
-        st.markdown("---")
-        
         # ====================================================================
         # ACTIVITY TIMELINE
         # ====================================================================
-        st.subheader("📅 Chronologie d'Activité")
+        st.subheader("Activité quotidienne")
         
         # Group by date and category
         # A state belongs to the day it started, not the day it ended
@@ -208,8 +206,7 @@ def render(db, individuals_df, selected_individual_id):
             x='date',
             y='count',
             color='category',
-            title="Activité Quotidienne par Catégorie",
-            labels={'date': 'Date', 'count': 'Nombre d\'observations', 'category': 'Catégorie'},
-            color_discrete_sequence=px.colors.qualitative.Set3
+            labels={'date': '', 'count': 'Observations', 'category': 'Catégorie'},
+            color_discrete_map=CATEGORY_COLORS_HEX
         )
-        st.plotly_chart(fig_timeline, use_container_width=True)
+        st.plotly_chart(style(fig_timeline, "Observations par jour et par catégorie"), use_container_width=True)

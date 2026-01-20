@@ -114,7 +114,7 @@ def render(db, individuals_df, selected_individual_id):
         # ====================================================================
         # STRESS BEHAVIOR ANALYSIS
         # ====================================================================
-        st.subheader("⚠️ Analyse des Comportements de Stress")
+        st.subheader("Stress")
         
         stress_df = df[df['category'] == 'Stress'].copy()
         
@@ -128,12 +128,11 @@ def render(db, individuals_df, selected_individual_id):
                 stress_by_date,
                 x='date',
                 y='count',
-                title="Évolution de la Fréquence des Comportements de Stress",
-                labels={'date': 'Date', 'count': 'Nombre de comportements'},
-                markers=True
+                labels={'date': '', 'count': 'Comportements'},
+                markers=True,
+                color_discrete_sequence=[CATEGORY_COLORS_HEX['Stress']]
             )
-            fig_stress.update_layout(xaxis_title="Date", yaxis_title="Fréquence")
-            st.plotly_chart(fig_stress, use_container_width=True)
+            st.plotly_chart(style(fig_stress, "Fréquence du stress par jour"), use_container_width=True)
             
             # Breakdown by specific stress behaviors
             col1, col2 = st.columns(2)
@@ -146,22 +145,19 @@ def render(db, individuals_df, selected_individual_id):
                     stress_by_behavior,
                     x='behavior_name',
                     y='count',
-                    title="Comportements de Stress les Plus Fréquents",
-                    labels={'behavior_name': 'Comportement', 'count': 'Occurrences'},
-                    color='count',
-                    color_continuous_scale='Reds'
+                    labels={'behavior_name': '', 'count': 'Occurrences'},
+                    color_discrete_sequence=[CATEGORY_COLORS_HEX['Stress']]
                 )
-                st.plotly_chart(fig_stress_detail, use_container_width=True)
+                st.plotly_chart(style(fig_stress_detail, "Signes de stress les plus fréquents"), use_container_width=True)
             
             with col2:
                 # Summary statistics
-                st.markdown("**📈 Statistiques de Stress**")
-                st.metric("Total de comportements de stress", len(stress_df))
+                st.metric("Total", len(stress_df))
                 st.metric("Moyenne par jour", f"{len(stress_df) / max(1, (end_date - start_date).days + 1):.1f}")
                 
                 most_common = stress_by_behavior.iloc[0] if not stress_by_behavior.empty else None
                 if most_common is not None:
-                    st.metric("Comportement le plus fréquent", most_common['behavior_name'])
+                    st.metric("Le plus fréquent", most_common['behavior_name'])
             
             # Stress correlation analysis
             st.markdown("---")

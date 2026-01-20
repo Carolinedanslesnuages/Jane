@@ -60,11 +60,13 @@ def render(db, individuals_df, selected_individual_id):
                 
                 st.markdown(f"**Stérilisé(e) :** {'Oui' if individual['neutered'] else 'Non'}")
                 
-                if st.button("Supprimer", key=f"del_{individual['id']}", type="secondary"):
-                    if db.delete_individual(individual['id']):
-                        st.toast("Profil supprimé.")
-                        st.rerun()
-                    else:
-                        st.error("La suppression a échoué.")
+                with st.popover("Supprimer"):
+                    st.write(f"Supprimer {individual['name']} efface aussi toutes ses observations et ses tests. Cette action est définitive.")
+                    if st.button("Confirmer la suppression", key=f"del_{individual['id']}", type="primary"):
+                        if db.delete_individual(individual['id']):
+                            st.toast("Profil supprimé.")
+                            st.rerun()
+                        else:
+                            st.error("La suppression a échoué.")
     else:
         st.info("Aucun chien enregistré. Ajoutez le premier ci-dessus.")

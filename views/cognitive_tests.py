@@ -5,7 +5,7 @@ from datetime import datetime
 import plotly.express as px
 import streamlit as st
 
-from charts import style
+from charts import ACCENT, style
 from ui import page_header
 
 
@@ -154,8 +154,7 @@ def render(db, individuals_df, selected_individual_id):
         
         # Comparison between individuals
         if len(individuals_df) > 1:
-            st.markdown("---")
-            st.subheader("🔬 Comparaison entre Individus")
+            st.subheader("Comparaison entre chiens")
             
             all_tests = db.get_cognitive_tests()
             
@@ -165,7 +164,7 @@ def render(db, individuals_df, selected_individual_id):
                                            left_on='individual_id', right_on='id', how='left')
                 
                 comparison_test = st.selectbox(
-                    "Sélectionner un type de test à comparer:",
+                    "Épreuve à comparer",
                     all_tests['test_type'].unique(),
                     key="comparison_test"
                 )
@@ -182,13 +181,13 @@ def render(db, individuals_df, selected_individual_id):
                     
                     with col1:
                         fig_dur = px.bar(avg_by_individual, x='name', y='duration_seconds',
-                                       title=f"Durée Moyenne - {comparison_test}",
-                                       labels={'name': 'Individu', 'duration_seconds': 'Durée (s)'})
-                        st.plotly_chart(fig_dur, use_container_width=True)
+                                       labels={'name': '', 'duration_seconds': 'Durée (s)'},
+                                       color_discrete_sequence=[ACCENT])
+                        st.plotly_chart(style(fig_dur, "Durée moyenne"), use_container_width=True)
                     
                     with col2:
                         if avg_by_individual['score'].notna().any():
                             fig_score = px.bar(avg_by_individual, x='name', y='score',
-                                             title=f"Score Moyen - {comparison_test}",
-                                             labels={'name': 'Individu', 'score': 'Score'})
-                            st.plotly_chart(fig_score, use_container_width=True)
+                                             labels={'name': '', 'score': 'Score'},
+                                             color_discrete_sequence=[ACCENT])
+                            st.plotly_chart(style(fig_score, "Score moyen"), use_container_width=True)

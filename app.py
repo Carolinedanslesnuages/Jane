@@ -6,6 +6,7 @@ A Streamlit application for tracking and analyzing dog behavior.
 import streamlit as st
 
 from database import BehaviorDatabase
+from ui import inject_style
 from utils import APP_VERSION
 from views import about, cognitive_tests, dashboard, data, observation, profiles
 
@@ -15,6 +16,8 @@ st.set_page_config(
     page_icon="🐕",
     layout="wide"
 )
+
+inject_style()
 
 # Initialize database
 @st.cache_resource

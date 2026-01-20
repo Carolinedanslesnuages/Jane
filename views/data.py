@@ -6,11 +6,13 @@ from datetime import datetime, timedelta
 import pandas as pd
 import streamlit as st
 
+from ui import page_header
+
 
 
 def render(db, individuals_df, selected_individual_id):
     """Render the page."""
-    st.title("📁 Gestion des Données")
+    page_header("Données", "Exports et liste complète des observations.")
     
     st.markdown("### 📥 Export des Données")
     st.markdown("Exportez vos observations au format CSV pour les analyser avec R ou d'autres outils.")

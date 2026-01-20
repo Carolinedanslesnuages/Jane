@@ -56,6 +56,5 @@ if not individuals_df.empty:
 PAGES[page].render(db, individuals_df, selected_individual_id)
 
 # Footer
-st.sidebar.markdown("---")
-st.sidebar.markdown(f"**Jane v{APP_VERSION}**")
-st.sidebar.markdown("🐕 Observation Comportementale Canine")
+st.sidebar.divider()
+st.sidebar.caption(f"Jane v{APP_VERSION}")

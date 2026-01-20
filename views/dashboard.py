@@ -159,36 +159,35 @@ def render(db, individuals_df, selected_individual_id):
                 if most_common is not None:
                     st.metric("Le plus fréquent", most_common['behavior_name'])
             
-            # Stress correlation analysis
-            st.markdown("---")
-            st.markdown("**🔍 Corrélations de Stress**")
-            
-            # Correlation with time of day
-            if 'timestamp' in stress_df.columns:
+            # Context of the stress signs: time of day, stimuli, location
+            with st.expander("Contextes du stress", expanded=True):
+                hour_col, stimuli_col, location_col = st.columns(3)
+                stress_color = CATEGORY_COLORS_HEX['Stress']
+                
                 stress_df['hour'] = stress_df['timestamp'].dt.hour
                 stress_by_hour = stress_df.groupby('hour').size().reset_index(name='count')
-                
                 fig_hour = px.bar(stress_by_hour, x='hour', y='count',
-                                title="Comportements de Stress par Heure de la Journée",
-                                labels={'hour': 'Heure', 'count': 'Nombre de comportements'})
-                st.plotly_chart(fig_hour, use_container_width=True)
-            
-            # Correlation with stimuli if available
-            if 'stimuli' in stress_df.columns and stress_df['stimuli'].notna().any():
-                stimuli_counts = stress_df[stress_df['stimuli'] != ''].groupby('stimuli').size().reset_index(name='count')
+                                labels={'hour': 'Heure', 'count': 'Comportements'},
+                                color_discrete_sequence=[stress_color])
+                hour_col.plotly_chart(style(fig_hour, "Par heure"), use_container_width=True)
+                
+                stimuli_counts = stress_df[stress_df['stimuli'].fillna('') != ''].groupby('stimuli').size().reset_index(name='count')
                 if not stimuli_counts.empty:
-                    fig_stimuli = px.pie(stimuli_counts, values='count', names='stimuli',
-                                       title="Stress en Fonction des Stimuli")
-                    st.plotly_chart(fig_stimuli, use_container_width=True)
-            
-            # Correlation with location if available
-            if 'location' in stress_df.columns and stress_df['location'].notna().any():
-                location_counts = stress_df[stress_df['location'] != ''].groupby('location').size().reset_index(name='count')
+                    fig_stimuli = px.bar(stimuli_counts, x='stimuli', y='count',
+                                       labels={'stimuli': '', 'count': 'Occurrences'},
+                                       color_discrete_sequence=[stress_color])
+                    stimuli_col.plotly_chart(style(fig_stimuli, "Par stimulus"), use_container_width=True)
+                else:
+                    stimuli_col.caption("Aucun stimulus renseigné.")
+                
+                location_counts = stress_df[stress_df['location'].fillna('') != ''].groupby('location').size().reset_index(name='count')
                 if not location_counts.empty:
                     fig_location = px.bar(location_counts, x='location', y='count',
-                                        title="Stress en Fonction du Lieu",
-                                        labels={'location': 'Lieu', 'count': 'Occurrences'})
-                    st.plotly_chart(fig_location, use_container_width=True)
+                                        labels={'location': '', 'count': 'Occurrences'},
+                                        color_discrete_sequence=[stress_color])
+                    location_col.plotly_chart(style(fig_location, "Par lieu"), use_container_width=True)
+                else:
+                    location_col.caption("Aucun lieu renseigné.")
         else:
             st.info("Aucun comportement de stress enregistré pour cette période.")
         

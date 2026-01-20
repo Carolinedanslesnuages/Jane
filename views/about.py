@@ -3,12 +3,13 @@
 
 import streamlit as st
 
+from ui import page_header
 from utils import APP_VERSION
 
 
 def render(db, individuals_df, selected_individual_id):
     """Render the page."""
-    st.title("ℹ️ À propos d'Jane")
+    page_header("À propos de Jane", "Un carnet de terrain pour l'observation du comportement canin.")
     
     st.markdown(f"""
     ## 🐕 Jane - Outil d'Observation du Comportement Canin

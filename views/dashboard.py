@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import plotly.express as px
 import streamlit as st
 
+from charts import CATEGORY_COLORS_HEX, style
 from ethogram import ETHOGRAM
 from tables import format_duration
 from ui import page_header
@@ -53,7 +54,7 @@ def render(db, individuals_df, selected_individual_id):
         # ====================================================================
         # TIME BUDGET ANALYSIS
         # ====================================================================
-        st.subheader("⏱️ Budget-Temps Journalier")
+        st.subheader("Budget-temps")
         
         # Calculate time spent per category
         # For events, we count occurrences; for states, we sum durations
@@ -84,11 +85,12 @@ def render(db, individuals_df, selected_individual_id):
                 fig_duration = px.pie(
                     values=list(duration_data.values()),
                     names=list(duration_data.keys()),
-                    title="Répartition du Temps (États mesurés)",
-                    color_discrete_sequence=px.colors.qualitative.Set3
+                    color=list(duration_data.keys()),
+                    color_discrete_map=CATEGORY_COLORS_HEX,
+                    hole=0.55
                 )
-                fig_duration.update_traces(textposition='inside', textinfo='percent+label')
-                st.plotly_chart(fig_duration, use_container_width=True)
+                fig_duration.update_traces(textposition='outside', textinfo='percent+label')
+                st.plotly_chart(style(fig_duration, "Répartition du temps mesuré"), use_container_width=True)
             else:
                 st.info("Aucune donnée de durée disponible (utilisez le mode État)")
         
@@ -100,16 +102,14 @@ def render(db, individuals_df, selected_individual_id):
                 fig_events = px.bar(
                     x=list(event_data.keys()),
                     y=list(event_data.values()),
-                    title="Nombre d'Événements par Catégorie",
-                    labels={'x': 'Catégorie', 'y': 'Nombre d\'événements'},
+                    labels={'x': '', 'y': 'Événements'},
                     color=list(event_data.keys()),
-                    color_discrete_sequence=px.colors.qualitative.Set3
+                    color_discrete_map=CATEGORY_COLORS_HEX
                 )
-                st.plotly_chart(fig_events, use_container_width=True)
+                fig_events.update_layout(showlegend=False)
+                st.plotly_chart(style(fig_events, "Événements par catégorie"), use_container_width=True)
             else:
                 st.info("Aucun événement enregistré")
-        
-        st.markdown("---")
         
         # ====================================================================
         # STRESS BEHAVIOR ANALYSIS

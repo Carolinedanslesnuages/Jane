@@ -3,9 +3,9 @@
 import io
 from datetime import datetime, timedelta
 
-import pandas as pd
 import streamlit as st
 
+from tables import observations_for_display
 from ui import page_header
 
 
@@ -54,49 +54,14 @@ def render(db, individuals_df, selected_individual_id):
                     width="stretch"
                 )
     
-    st.markdown("---")
-    
     # Display all data
-    st.markdown("### 📊 Toutes les Observations")
+    st.subheader("Observations")
     
     all_data = db.get_all_observations(selected_individual_id)
     
     if not all_data.empty:
-        st.info(f"Total: {len(all_data)} observations")
-        
-        # Format for display
-        display_df = all_data.copy()
-        display_df['timestamp'] = display_df['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
-        display_df['duration_seconds'] = display_df['duration_seconds'].apply(
-            lambda x: f"{int(x)}s" if pd.notna(x) else "N/A"
-        )
-        
-        # Select columns to display based on what's available
-        base_cols = ['id', 'timestamp', 'behavior_name', 'category', 'observation_type', 'duration_seconds', 'notes']
-        display_cols = [col for col in base_cols if col in display_df.columns]
-        
-        # Add context columns if available
-        if 'location' in display_df.columns:
-            display_cols.append('location')
-        if 'weather' in display_df.columns:
-            display_cols.append('weather')
-        if 'stimuli' in display_df.columns:
-            display_cols.append('stimuli')
-        
-        display_df = display_df[display_cols]
-        
-        # Rename columns for French display
-        col_names = ['ID', 'Horodatage', 'Comportement', 'Catégorie', 'Type', 'Durée', 'Notes']
-        if 'location' in display_cols:
-            col_names.append('Lieu')
-        if 'weather' in display_cols:
-            col_names.append('Météo')
-        if 'stimuli' in display_cols:
-            col_names.append('Stimuli')
-        
-        display_df.columns = col_names
-        
-        st.dataframe(display_df, width="stretch", height=400)
+        st.caption(f"{len(all_data)} observations")
+        st.dataframe(observations_for_display(all_data), width="stretch", height=400, hide_index=True)
         
         # Option to delete observations
         st.markdown("---")

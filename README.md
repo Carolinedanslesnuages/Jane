@@ -152,7 +152,11 @@ Jane/
 ├── views/              # Une page par module (profils, observation, tests, dashboard, données, à propos)
 ├── ethogram.py         # Catégories et comportements de l'éthogramme
 ├── database.py         # Base de données SQLite et rapport PDF
+├── ui.py               # Style partagé (CSS, en-têtes de page)
+├── charts.py           # Style et palette des graphiques
+├── tables.py           # Mise en forme des tableaux d'observations
 ├── utils.py            # Utilitaires (âge, version)
+├── .streamlit/         # Thème (config.toml)
 ├── tests/              # Tests pytest
 ├── requirements.txt    # Dépendances Python
 ├── requirements-dev.txt # Dépendances de développement
@@ -160,6 +164,15 @@ Jane/
 ├── README.md           # Documentation
 └── etholog.db          # Base de données SQLite (créée au premier lancement)
 ```
+
+## 🧪 Développement
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+pytest
+```
+
+Les tests couvrent la base de données, la migration des anciennes bases, le rapport PDF, les tableaux, les graphiques et le rendu de chaque page de l'interface.
 
 ## 🔧 Personnalisation
 

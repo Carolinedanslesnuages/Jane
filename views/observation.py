@@ -7,7 +7,7 @@ import streamlit as st
 
 from ui import page_header
 
-from ethogram import ETHOGRAM
+from ethogram import CATEGORY_COLORS, ETHOGRAM
 
 
 def render(db, individuals_df, selected_individual_id):
@@ -103,70 +103,49 @@ def render(db, individuals_df, selected_individual_id):
             notes = st.text_input("Notes", key="notes_input")
     
     # Ethogram buttons organized by category
-    st.subheader("Éthogramme")
-    
-    # Create columns for categories
-    num_cols = 3
     categories = list(ETHOGRAM.keys())
     
-    for i in range(0, len(categories), num_cols):
-        cols = st.columns(num_cols)
+    for i in range(0, len(categories), 3):
+        cols = st.columns(3)
         
-        for j, col in enumerate(cols):
-            if i + j < len(categories):
-                category = categories[i + j]
+        for col, category in zip(cols, categories[i:i + 3]):
+            with col.container(border=True):
+                st.badge(category, color=CATEGORY_COLORS.get(category, "gray"))
                 
-                with col:
-                    st.markdown(f"### {category}")
+                for behavior in ETHOGRAM[category]:
+                    button_key = f"{behavior}_{category}_{observation_mode}"
                     
-                    # Color coding for different categories
-                    category_colors = {
-                        "Exploration": "🔍",
-                        "Jeu": "🎾",
-                        "Repos": "😴",
-                        "Social": "🤝",
-                        "Stress": "⚠️",
-                        "Élimination": "🚽"
-                    }
+                    if observation_mode == "Événement":
+                        if st.button(behavior, key=button_key, width="stretch"):
+                            if db.record_event(behavior, category, notes, selected_individual_id, 
+                                             location, weather, stimuli):
+                                st.success(f"✅ {behavior} enregistré!")
+                                st.rerun()
+                            else:
+                                st.error("❌ Erreur lors de l'enregistrement")
                     
-                    icon = category_colors.get(category, "•")
-                    
-                    for behavior in ETHOGRAM[category]:
-                        button_key = f"{behavior}_{category}_{observation_mode}"
+                    else:  # Mode État
+                        # Check if this behavior is currently active
+                        is_active = any(
+                            b == behavior and c == category 
+                            for b, c, _ in active_states
+                        )
                         
-                        if observation_mode == "Événement":
-                            if st.button(f"{icon} {behavior}", key=button_key, width="stretch"):
-                                if db.record_event(behavior, category, notes, selected_individual_id, 
-                                                 location, weather, stimuli):
-                                    st.success(f"✅ {behavior} enregistré!")
+                        if is_active:
+                            if st.button(f"Arrêter · {behavior}", key=button_key, width="stretch", type="primary"):
+                                if db.stop_state(behavior, category, notes, selected_individual_id,
+                                               location, weather, stimuli):
+                                    st.success(f"✅ {behavior} terminé et enregistré!")
                                     st.rerun()
                                 else:
-                                    st.error("❌ Erreur lors de l'enregistrement")
-                        
-                        else:  # Mode État
-                            # Check if this behavior is currently active
-                            is_active = any(
-                                b == behavior and c == category 
-                                for b, c, _ in active_states
-                            )
-                            
-                            if is_active:
-                                if st.button(f"⏹️ STOP {behavior}", key=button_key, width="stretch", type="primary"):
-                                    if db.stop_state(behavior, category, notes, selected_individual_id,
-                                                   location, weather, stimuli):
-                                        st.success(f"✅ {behavior} terminé et enregistré!")
-                                        st.rerun()
-                                    else:
-                                        st.error("❌ Erreur lors de l'arrêt")
-                            else:
-                                if st.button(f"▶️ START {behavior}", key=button_key, width="stretch"):
-                                    if db.start_state(behavior, category, selected_individual_id):
-                                        st.success(f"🔴 Enregistrement de {behavior} démarré!")
-                                        st.rerun()
-                                    else:
-                                        st.error("❌ Ce comportement est déjà en cours d'enregistrement")
-    
-    st.markdown("---")
+                                    st.error("❌ Erreur lors de l'arrêt")
+                        else:
+                            if st.button(f"Démarrer · {behavior}", key=button_key, width="stretch"):
+                                if db.start_state(behavior, category, selected_individual_id):
+                                    st.success(f"🔴 Enregistrement de {behavior} démarré!")
+                                    st.rerun()
+                                else:
+                                    st.error("❌ Ce comportement est déjà en cours d'enregistrement")
     
     # Recent observations
     st.subheader("📋 Observations Récentes")

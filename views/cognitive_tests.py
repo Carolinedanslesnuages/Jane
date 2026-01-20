@@ -44,85 +44,82 @@ def render(db, individuals_df, selected_individual_id):
             
             st.caption(test_types[selected_test])
         
-        # Test execution
-        st.subheader("⏱️ Exécution du Test")
+        # Stopwatch and result, in one card
+        with st.container(border=True):
+            st.markdown("**Chronomètre**")
+            col1, col2, col3 = st.columns(3)
         
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            # Timer functionality
-            if 'test_start_time' not in st.session_state:
-                st.session_state.test_start_time = None
-            
-            if st.button("▶️ Démarrer le Chronomètre", type="primary", width="stretch"):
-                st.session_state.test_start_time = datetime.now()
-                st.rerun()
-            
-            if st.session_state.test_start_time:
-                elapsed = (datetime.now() - st.session_state.test_start_time).total_seconds()
-                st.metric("Temps écoulé", f"{elapsed:.1f}s")
-        
-        with col2:
-            if st.button("⏹️ Arrêter", type="secondary", width="stretch"):
-                if st.session_state.test_start_time:
-                    measured = (datetime.now() - st.session_state.test_start_time).total_seconds()
-                    st.session_state.test_duration = measured
-                    # The number input is keyed: its value must be set through its key
-                    st.session_state.duration_input = round(measured, 1)
+            with col1:
+                # Timer functionality
+                if 'test_start_time' not in st.session_state:
                     st.session_state.test_start_time = None
+            
+                if st.button("Démarrer le chronomètre", type="primary", width="stretch"):
+                    st.session_state.test_start_time = datetime.now()
                     st.rerun()
+            
+                if st.session_state.test_start_time:
+                    elapsed = (datetime.now() - st.session_state.test_start_time).total_seconds()
+                    st.metric("Temps écoulé", f"{elapsed:.1f} s")
         
-        with col3:
-            if st.button("🔄 Réinitialiser", width="stretch"):
-                st.session_state.test_start_time = None
-                st.session_state.test_duration = None
-                st.session_state.duration_input = 0.0
-                st.rerun()
+            with col2:
+                if st.button("Arrêter", type="secondary", width="stretch"):
+                    if st.session_state.test_start_time:
+                        measured = (datetime.now() - st.session_state.test_start_time).total_seconds()
+                        st.session_state.test_duration = measured
+                        # The number input is keyed: its value must be set through its key
+                        st.session_state.duration_input = round(measured, 1)
+                        st.session_state.test_start_time = None
+                        st.rerun()
         
-        # Manual entry of duration and score
-        st.markdown("---")
-        st.subheader("📝 Enregistrement du Résultat")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            duration_input = st.number_input(
-                "Durée (secondes)",
-                min_value=0.0,
-                value=0.0,
-                step=0.1,
-                key="duration_input"
-            )
-        
-        with col2:
-            with_score = st.checkbox("Renseigner un score", key="with_score")
-            score_input = st.number_input(
-                "Score (0-10)",
-                min_value=0.0,
-                max_value=10.0,
-                value=5.0,
-                step=0.5,
-                key="score_input",
-                disabled=not with_score
-            )
-        
-        with col3:
-            test_notes = st.text_area("Notes", key="test_notes", height=100)
-        
-        if st.button("💾 Enregistrer le Test", type="primary"):
-            if duration_input > 0:
-                if db.record_cognitive_test(test_individual_id, selected_test, 
-                                          duration_input, score_input if with_score else None, test_notes):
-                    st.success(f"✅ Test '{selected_test}' enregistré pour {test_individual_name}!")
+            with col3:
+                if st.button("Réinitialiser", width="stretch"):
                     st.session_state.test_start_time = None
                     st.session_state.test_duration = None
+                    st.session_state.duration_input = 0.0
                     st.rerun()
-                else:
-                    st.error("❌ Erreur lors de l'enregistrement")
-            else:
-                st.error("❌ La durée doit être supérieure à 0")
         
-        st.markdown("---")
+            st.divider()
+            st.markdown("**Résultat**")
+            col1, col2, col3 = st.columns(3)
+        
+            with col1:
+                duration_input = st.number_input(
+                    "Durée (secondes)",
+                    min_value=0.0,
+                    value=0.0,
+                    step=0.1,
+                    key="duration_input"
+                )
+        
+            with col2:
+                with_score = st.checkbox("Renseigner un score", key="with_score")
+                score_input = st.number_input(
+                    "Score (0-10)",
+                    min_value=0.0,
+                    max_value=10.0,
+                    value=5.0,
+                    step=0.5,
+                    key="score_input",
+                    disabled=not with_score
+                )
+        
+            with col3:
+                test_notes = st.text_area("Notes", key="test_notes", height=100)
+        
+            if st.button("Enregistrer le test", type="primary"):
+                if duration_input > 0:
+                    if db.record_cognitive_test(test_individual_id, selected_test, 
+                                              duration_input, score_input if with_score else None, test_notes):
+                        st.toast(f"{selected_test} enregistré pour {test_individual_name}.")
+                        st.session_state.test_start_time = None
+                        st.session_state.test_duration = None
+                        st.rerun()
+                    else:
+                        st.error("L'enregistrement a échoué.")
+                else:
+                    st.error("La durée doit être supérieure à 0.")
+        
         
         # Display test history
         st.subheader(f"📊 Historique des Tests - {test_individual_name}")

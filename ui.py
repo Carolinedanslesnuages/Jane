@@ -24,3 +24,10 @@ def inject_style():
     """Inject the application stylesheet once per run."""
     css = _LAYOUT_CSS + _TYPOGRAPHY_CSS
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+
+
+def page_header(title: str, subtitle: str = ""):
+    """Title and one-line description shown at the top of every page."""
+    st.title(title)
+    if subtitle:
+        st.caption(subtitle)

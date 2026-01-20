@@ -27,8 +27,8 @@ def get_database():
 db = get_database()
 
 # Sidebar navigation
-st.sidebar.title("🐕 Jane")
-st.sidebar.markdown("---")
+st.sidebar.title("Jane")
+st.sidebar.caption("Carnet d'observation du comportement canin")
 
 PAGES = {
     "Profils": profiles,

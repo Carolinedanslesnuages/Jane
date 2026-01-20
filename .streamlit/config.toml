@@ -7,3 +7,10 @@ textColor = "#2B2A26"
 font = "sans-serif"
 headingFont = "serif"
 headingFontWeights = [600, 600, 600, 600, 600, 600]
+baseRadius = "0.6rem"
+buttonRadius = "0.6rem"
+borderColor = "#D9D0BA"
+showWidgetBorder = true
+
+[client]
+toolbarMode = "minimal"

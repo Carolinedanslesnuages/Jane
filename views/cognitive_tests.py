@@ -1,4 +1,4 @@
-"""🧪 Tests Cognitifs page."""
+"""Cognitive tests page."""
 
 from datetime import datetime
 
@@ -15,37 +15,34 @@ def render(db, individuals_df, selected_individual_id):
     
     # Check if individuals exist
     if individuals_df.empty:
-        st.warning("⚠️ Veuillez d'abord créer un profil dans la section 'Profils' avant d'effectuer des tests.")
+        st.info("Créez d'abord un chien dans la page Profils pour pouvoir enregistrer des tests.")
     else:
-        # Select individual for testing
-        st.subheader("🐕 Sélection de l'Individu")
-        test_individual_name = st.selectbox(
-            "Choisir le chien à tester:",
-            individuals_df['name'].tolist(),
-            key="test_individual_select"
-        )
-        test_individual_id = individuals_df[individuals_df['name'] == test_individual_name]['id'].iloc[0]
-        
-        st.markdown("---")
-        
-        # Test selection
-        st.subheader("🎯 Type de Test")
-        
-        test_types = {
-            "Permanence de l'Objet": "Capacité à suivre une récompense cachée sous un gobelet (mémoire de travail)",
-            "Test du Détour": "Capacité à contourner une barrière transparente pour atteindre un objectif (résolution spatiale)",
-            "Test de Manipulation": "Temps pour se libérer d'une couverture ou ouvrir un dispositif simple (persévérance)"
-        }
-        
-        selected_test = st.selectbox(
-            "Sélectionner un test:",
-            list(test_types.keys()),
-            key="test_type_select"
-        )
-        
-        st.info(f"📖 **Description:** {test_types[selected_test]}")
-        
-        st.markdown("---")
+        # Dog and test selection
+        with st.container(border=True):
+            choose_dog, choose_test = st.columns(2)
+            
+            with choose_dog:
+                test_individual_name = st.selectbox(
+                    "Chien testé",
+                    individuals_df['name'].tolist(),
+                    key="test_individual_select"
+                )
+            test_individual_id = individuals_df[individuals_df['name'] == test_individual_name]['id'].iloc[0]
+            
+            test_types = {
+                "Permanence de l'Objet": "Capacité à suivre une récompense cachée sous un gobelet (mémoire de travail)",
+                "Test du Détour": "Capacité à contourner une barrière transparente pour atteindre un objectif (résolution spatiale)",
+                "Test de Manipulation": "Temps pour se libérer d'une couverture ou ouvrir un dispositif simple (persévérance)"
+            }
+            
+            with choose_test:
+                selected_test = st.selectbox(
+                    "Épreuve",
+                    list(test_types.keys()),
+                    key="test_type_select"
+                )
+            
+            st.caption(test_types[selected_test])
         
         # Test execution
         st.subheader("⏱️ Exécution du Test")

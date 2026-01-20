@@ -1,4 +1,4 @@
-"""📁 Données page."""
+"""Data page."""
 
 import io
 from datetime import datetime, timedelta
@@ -14,44 +14,45 @@ def render(db, individuals_df, selected_individual_id):
     """Render the page."""
     page_header("Données", "Exports et liste complète des observations.")
     
-    st.markdown("### 📥 Export des Données")
-    st.markdown("Exportez vos observations au format CSV pour les analyser avec R ou d'autres outils.")
-    
-    stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Built in memory: nothing is written to the server's disk
-        st.download_button(
-            label="📥 Exporter en CSV",
-            data=db.get_all_observations().to_csv(index=False),
-            file_name=f"jane_export_{stamp}.csv",
-            mime="text/csv",
-            type="primary",
-            width="stretch"
-        )
-    
-    with col2:
-        if st.button("📄 Générer le rapport PDF", type="primary", width="stretch"):
-            # Date range for PDF report
-            start_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
-            end_date = datetime.now().strftime('%Y-%m-%d')
-            
-            buffer = io.BytesIO()
-            if db.export_behavioral_report_pdf(buffer, selected_individual_id, start_date, end_date):
-                st.session_state.pdf_report = buffer.getvalue()
-            else:
-                st.session_state.pdf_report = None
-                st.error("❌ Erreur lors de la génération du PDF")
+    with st.container(border=True):
+        st.subheader("Exports")
+        st.caption("Le CSV se lit avec R, Excel ou tout autre outil d'analyse. Le rapport PDF résume les 30 derniers jours.")
         
-        if st.session_state.get('pdf_report'):
+        stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Built in memory: nothing is written to the server's disk
             st.download_button(
-                label="⬇️ Télécharger le rapport",
-                data=st.session_state.pdf_report,
-                file_name=f"bilan_comportemental_{stamp}.pdf",
-                mime="application/pdf",
+                label="Exporter en CSV",
+                data=db.get_all_observations().to_csv(index=False),
+                file_name=f"jane_export_{stamp}.csv",
+                mime="text/csv",
+                type="primary",
                 width="stretch"
             )
+        
+        with col2:
+            if st.button("Générer le rapport PDF", type="primary", width="stretch"):
+                # Date range for PDF report
+                start_date = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+                end_date = datetime.now().strftime('%Y-%m-%d')
+                
+                buffer = io.BytesIO()
+                if db.export_behavioral_report_pdf(buffer, selected_individual_id, start_date, end_date):
+                    st.session_state.pdf_report = buffer.getvalue()
+                else:
+                    st.session_state.pdf_report = None
+                    st.error("La génération du PDF a échoué.")
+            
+            if st.session_state.get('pdf_report'):
+                st.download_button(
+                    label="Télécharger le rapport",
+                    data=st.session_state.pdf_report,
+                    file_name=f"bilan_comportemental_{stamp}.pdf",
+                    mime="application/pdf",
+                    width="stretch"
+                )
     
     st.markdown("---")
     

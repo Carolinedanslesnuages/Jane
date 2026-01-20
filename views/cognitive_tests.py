@@ -5,12 +5,13 @@ from datetime import datetime
 import plotly.express as px
 import streamlit as st
 
+from ui import page_header
+
 
 
 def render(db, individuals_df, selected_individual_id):
     """Render the page."""
-    st.title("🧪 Tests Cognitifs et Évaluation")
-    st.markdown("Évaluez les capacités cognitives de vos chiens avec des tests scientifiques.")
+    page_header("Tests cognitifs", "Chronométrez et comparez les épreuves de résolution de problème.")
     
     # Check if individuals exist
     if individuals_df.empty:

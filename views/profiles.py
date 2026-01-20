@@ -40,39 +40,31 @@ def render(db, individuals_df, selected_individual_id):
                 else:
                     st.error("Le nom est requis.")
     
-    st.markdown("---")
-    
     # Display existing individuals
-    st.subheader("📋 Profils Existants")
+    st.subheader("Chiens suivis")
     
     if not individuals_df.empty:
-        for _, individual in individuals_df.iterrows():
-            with st.expander(f"🐕 {individual['name']}", expanded=False):
-                col1, col2, col3 = st.columns(3)
+        columns = st.columns(2)
+        for position, (_, individual) in enumerate(individuals_df.iterrows()):
+            with columns[position % 2].container(border=True):
+                st.markdown(f"#### {individual['name']}")
+                st.caption(" · ".join(filter(None, [individual['breed'], individual['sex']])) or "Informations non renseignées")
                 
-                with col1:
-                    st.markdown(f"**Race:** {individual['breed'] or 'Non spécifiée'}")
-                    st.markdown(f"**Sexe:** {individual['sex'] or 'Non spécifié'}")
+                birth_date = individual['birth_date']
+                if birth_date:
+                    birth_dt = datetime.strptime(birth_date, '%Y-%m-%d')
+                    age_years, age_months = compute_age(birth_dt.date())
+                    st.metric("Âge", f"{age_years} ans {age_months} mois", help=f"Né(e) le {birth_date}")
+                else:
+                    st.metric("Âge", "Non renseigné")
                 
-                with col2:
-                    birth_date = individual['birth_date']
-                    if birth_date:
-                        birth_dt = datetime.strptime(birth_date, '%Y-%m-%d')
-                        age_years, age_months = compute_age(birth_dt.date())
-                        st.markdown(f"**Date de naissance:** {birth_date}")
-                        st.markdown(f"**Âge:** {age_years} ans, {age_months} mois")
+                st.markdown(f"**Stérilisé(e) :** {'Oui' if individual['neutered'] else 'Non'}")
+                
+                if st.button("Supprimer", key=f"del_{individual['id']}", type="secondary"):
+                    if db.delete_individual(individual['id']):
+                        st.toast("Profil supprimé.")
+                        st.rerun()
                     else:
-                        st.markdown("**Date de naissance:** Non spécifiée")
-                
-                with col3:
-                    neutered_text = "Oui" if individual['neutered'] else "Non"
-                    st.markdown(f"**Stérilisé(e):** {neutered_text}")
-                    
-                    if st.button("🗑️ Supprimer", key=f"del_{individual['id']}", type="secondary"):
-                        if db.delete_individual(individual['id']):
-                            st.toast("Profil supprimé.")
-                            st.rerun()
-                        else:
-                            st.error("La suppression a échoué.")
+                        st.error("La suppression a échoué.")
     else:
-        st.info("Aucun profil enregistré. Ajoutez votre premier chien ci-dessus!")
+        st.info("Aucun chien enregistré. Ajoutez le premier ci-dessus.")

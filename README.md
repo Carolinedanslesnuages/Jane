@@ -8,6 +8,15 @@ Application web locale pour l'observation et l'analyse du comportement canin dan
 
 Jane est un outil d'observation scientifique professionnel conçu pour les éthologues, chercheurs et éleveurs souhaitant suivre et analyser le comportement de leurs animaux. L'application permet d'enregistrer des observations en temps réel, d'effectuer des tests cognitifs, de visualiser des statistiques comportementales avancées et d'exporter des rapports professionnels.
 
+## 🎨 Apparence
+
+L'interface suit un thème « carnet de terrain » : fond crème, vert forêt, titres en serif et une couleur d'accent par catégorie de comportement.
+
+- Les couleurs, polices et arrondis se règlent dans `.streamlit/config.toml` (redémarrer l'application après modification).
+- Le style complémentaire (largeur, navigation, espacements) est dans `ui.py`.
+- Les graphiques partagent le même style et la même palette dans `charts.py`.
+- Les couleurs des catégories sont déclarées dans `ethogram.py` (pastilles) et `charts.py` (graphiques).
+
 ## ✨ Fonctionnalités
 
 ### 👤 Gestion des Profils Individuels

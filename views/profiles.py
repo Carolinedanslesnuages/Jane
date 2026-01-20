@@ -33,12 +33,12 @@ def render(db, individuals_df, selected_individual_id):
                 if new_name:
                     birth_date_str = new_birth_date.strftime('%Y-%m-%d') if new_birth_date else None
                     if db.add_individual(new_name, new_breed, birth_date_str, new_sex, new_neutered):
-                        st.success(f"✅ Profil '{new_name}' ajouté avec succès!")
+                        st.toast(f"{new_name} a été ajouté.")
                         st.rerun()
                     else:
-                        st.error(f"❌ Un profil nommé '{new_name}' existe déjà")
+                        st.error(f"Un chien nommé {new_name} existe déjà.")
                 else:
-                    st.error("❌ Le nom est requis")
+                    st.error("Le nom est requis.")
     
     st.markdown("---")
     
@@ -70,9 +70,9 @@ def render(db, individuals_df, selected_individual_id):
                     
                     if st.button("🗑️ Supprimer", key=f"del_{individual['id']}", type="secondary"):
                         if db.delete_individual(individual['id']):
-                            st.success("✅ Profil supprimé")
+                            st.toast("Profil supprimé.")
                             st.rerun()
                         else:
-                            st.error("❌ Erreur lors de la suppression")
+                            st.error("La suppression a échoué.")
     else:
         st.info("Aucun profil enregistré. Ajoutez votre premier chien ci-dessus!")

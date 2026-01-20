@@ -5,13 +5,14 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
+from ui import page_header
+
 from ethogram import ETHOGRAM
 
 
 def render(db, individuals_df, selected_individual_id):
     """Render the page."""
-    st.title("📝 Observation en Temps Réel")
-    st.markdown("Enregistrez les comportements de votre chiot en temps réel.")
+    page_header("Observation", "Enregistrez les comportements au fil de l'eau, en événement ou en durée.")
     
     # Display active states
     active_states = db.get_active_states(selected_individual_id)

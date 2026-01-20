@@ -1,13 +1,13 @@
-"""📊 Dashboard page."""
+"""Dashboard page."""
 
 from datetime import datetime, timedelta
 
 import plotly.express as px
 import streamlit as st
 
-from ui import page_header
-
 from ethogram import ETHOGRAM
+from tables import format_duration
+from ui import page_header
 
 
 def render(db, individuals_df, selected_individual_id):
@@ -15,18 +15,17 @@ def render(db, individuals_df, selected_individual_id):
     page_header("Tableau de bord", "Budget-temps, stress et activité sur la période choisie.")
     
     # Date range selector
-    st.subheader("Période d'Analyse")
     col1, col2 = st.columns(2)
     
     with col1:
         start_date = st.date_input(
-            "Date de début",
+            "Du",
             value=datetime.now().date() - timedelta(days=7)
         )
     
     with col2:
         end_date = st.date_input(
-            "Date de fin",
+            "Au",
             value=datetime.now().date()
         )
     
@@ -38,11 +37,18 @@ def render(db, individuals_df, selected_individual_id):
     )
     
     if df.empty:
-        st.warning("Aucune donnée disponible pour cette période.")
+        st.info("Aucune donnée sur cette période. Élargissez les dates ou enregistrez des observations.")
     else:
-        st.success(f"📊 {len(df)} observations analysées")
+        # Key figures
+        stress_count = int((df['category'] == 'Stress').sum())
+        observed_days = df['timestamp'].dt.date.nunique()
+        measured_seconds = df.loc[df['observation_type'] == 'state', 'duration_seconds'].sum()
         
-        st.markdown("---")
+        kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+        kpi1.metric("Observations", len(df))
+        kpi2.metric("Jours observés", observed_days)
+        kpi3.metric("Temps mesuré", format_duration(measured_seconds) or "0 s")
+        kpi4.metric("Signes de stress", stress_count)
         
         # ====================================================================
         # TIME BUDGET ANALYSIS

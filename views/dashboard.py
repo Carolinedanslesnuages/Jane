@@ -5,12 +5,14 @@ from datetime import datetime, timedelta
 import plotly.express as px
 import streamlit as st
 
+from ui import page_header
+
 from ethogram import ETHOGRAM
 
 
 def render(db, individuals_df, selected_individual_id):
     """Render the page."""
-    st.title("📊 Tableau de Bord Analytique")
+    page_header("Tableau de bord", "Budget-temps, stress et activité sur la période choisie.")
     
     # Date range selector
     st.subheader("Période d'Analyse")

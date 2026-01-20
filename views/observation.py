@@ -27,21 +27,15 @@ def render(db, individuals_df, selected_individual_id):
         st.markdown("---")
     
     # Mode selection
-    st.subheader("Mode d'Observation")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.info("**Mode Événement**: Un clic pour enregistrer une action instantanée (ex: aboiement)")
-    with col2:
-        st.success("**Mode État**: Start/Stop pour mesurer la durée d'un comportement (ex: sommeil)")
-    
     observation_mode = st.radio(
-        "Sélectionnez le mode:",
+        "Mode d'observation",
         ["Événement", "État"],
         horizontal=True
     )
-    
-    st.markdown("---")
+    if observation_mode == "Événement":
+        st.caption("Un clic enregistre une action instantanée, par exemple un aboiement.")
+    else:
+        st.caption("Démarrer puis arrêter mesure la durée d'un comportement, par exemple le sommeil.")
     
     # Scan Sampling Module
     st.subheader("⏱️ Scan Sampling (Échantillonnage par Intervalle)")

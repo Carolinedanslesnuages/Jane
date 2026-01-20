@@ -89,19 +89,18 @@ def render(db, individuals_df, selected_individual_id):
     
     
     # Context fields
-    st.subheader("📍 Contexte de l'Observation")
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        location = st.selectbox("Lieu", ["", "Maison", "Jardin", "Parc", "Extérieur", "Autre"], key="location_input")
-    with col2:
-        weather = st.selectbox("Météo", ["", "Ensoleillé", "Nuageux", "Pluie", "Orage", "Neige"], key="weather_input")
-    with col3:
-        stimuli = st.selectbox("Stimuli", ["", "Calme", "Visiteurs", "Bruit", "Autres animaux", "Jouets"], key="stimuli_input")
-    with col4:
-        notes = st.text_input("Notes:", key="notes_input")
-    
-    st.markdown("---")
+    with st.container(border=True):
+        st.markdown("**Contexte**")
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            location = st.selectbox("Lieu", ["", "Maison", "Jardin", "Parc", "Extérieur", "Autre"], key="location_input")
+        with col2:
+            weather = st.selectbox("Météo", ["", "Ensoleillé", "Nuageux", "Pluie", "Orage", "Neige"], key="weather_input")
+        with col3:
+            stimuli = st.selectbox("Stimuli", ["", "Calme", "Visiteurs", "Bruit", "Autres animaux", "Jouets"], key="stimuli_input")
+        with col4:
+            notes = st.text_input("Notes", key="notes_input")
     
     # Ethogram buttons organized by category
     st.subheader("Éthogramme")

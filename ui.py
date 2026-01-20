@@ -19,10 +19,26 @@ h3 { margin-top: 1.25rem; }
 hr { margin: 1.5rem 0; border-color: #D9D0BA; }
 """
 
+_SIDEBAR_CSS = """
+[data-testid="stSidebar"] h1 { font-size: 2rem; margin-bottom: 0; }
+[data-testid="stSidebar"] [role="radiogroup"] { gap: 0.15rem; }
+[data-testid="stSidebar"] [role="radiogroup"] label {
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.5rem;
+    width: 100%;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label:hover { background: #E7DFCB; }
+[data-testid="stSidebar"] [role="radiogroup"] label > div:first-child { display: none; }
+[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {
+    background: #2F5D50;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) p { color: #FBF8F1; }
+"""
+
 
 def inject_style():
     """Inject the application stylesheet once per run."""
-    css = _LAYOUT_CSS + _TYPOGRAPHY_CSS
+    css = _LAYOUT_CSS + _TYPOGRAPHY_CSS + _SIDEBAR_CSS
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 

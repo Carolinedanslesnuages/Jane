@@ -61,29 +61,28 @@ def render(db, individuals_df, selected_individual_id):
     
     if not all_data.empty:
         st.caption(f"{len(all_data)} observations")
-        st.dataframe(observations_for_display(all_data), width="stretch", height=400, hide_index=True)
+        event = st.dataframe(
+            observations_for_display(all_data),
+            width="stretch",
+            height=400,
+            hide_index=True,
+            on_select="rerun",
+            selection_mode="single-row",
+            key="observations_table"
+        )
         
-        # Option to delete observations
-        st.markdown("---")
-        st.markdown("### 🗑️ Supprimer une Observation")
-        
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            obs_id_to_delete = st.number_input(
-                "ID de l'observation à supprimer",
-                min_value=1,
-                step=1,
-                value=1
-            )
-        
-        with col2:
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🗑️ Supprimer", type="secondary", width="stretch"):
-                if db.delete_observation(obs_id_to_delete):
-                    st.success(f"✅ Observation {obs_id_to_delete} supprimée")
-                    st.rerun()
-                else:
-                    st.error("❌ Erreur lors de la suppression")
+        selected_rows = event.selection.rows
+        if selected_rows:
+            chosen = all_data.iloc[selected_rows[0]]
+            with st.popover("Supprimer la ligne sélectionnée"):
+                st.write(f"Supprimer « {chosen['behavior_name']} » du {chosen['timestamp']:%d/%m/%Y %H:%M} ? Cette action est définitive.")
+                if st.button("Confirmer la suppression", type="primary"):
+                    if db.delete_observation(int(chosen['id'])):
+                        st.toast("Observation supprimée.")
+                        st.rerun()
+                    else:
+                        st.error("La suppression a échoué.")
+        else:
+            st.caption("Sélectionnez une ligne du tableau pour la supprimer.")
     else:
         st.info("Aucune donnée disponible.")

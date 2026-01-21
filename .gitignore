@@ -49,3 +49,10 @@ bilan_comportemental_*.pdf
 
 # Tests
 .pytest_cache/
+
+# Node
+node_modules/
+dist/
+.env
+*.tsbuildinfo
+coverage/

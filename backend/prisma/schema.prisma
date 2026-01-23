@@ -14,4 +14,25 @@ model User {
   email           String?
   displayName     String?
   createdAt       DateTime @default(now())
+  dogs            Dog[]
+}
+
+enum DogSex {
+  MALE
+  FEMALE
+}
+
+/// Un chien suivi par un utilisateur.
+model Dog {
+  id        String    @id @default(uuid())
+  ownerId   String
+  name      String
+  breed     String?
+  birthDate DateTime? @db.Date
+  sex       DogSex?
+  neutered  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, name])
 }

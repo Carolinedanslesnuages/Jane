@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
-  await app.listen(config.get<number>('API_PORT') ?? 3000);
+  await app.listen(config.get<number>('API_PORT') ?? 3300);
 }
 
 bootstrap();

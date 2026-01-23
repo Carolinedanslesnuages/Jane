@@ -9,7 +9,7 @@ const valid = {
 describe('validateEnvironment', () => {
   it('applies defaults and trims the Keycloak URL', () => {
     const environment = validateEnvironment(valid);
-    expect(environment.apiPort).toBe(3000);
+    expect(environment.apiPort).toBe(3300);
     expect(environment.keycloakUrl).toBe('http://localhost:8080');
     expect(environment.keycloakApiClientId).toBe('jane-api');
   });

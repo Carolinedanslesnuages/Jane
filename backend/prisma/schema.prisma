@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Utilisateur local, rattaché à un compte Keycloak par son identifiant (claim "sub").
+model User {
+  id              String   @id @default(uuid())
+  keycloakSubject String   @unique
+  email           String?
+  displayName     String?
+  createdAt       DateTime @default(now())
+}

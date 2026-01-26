@@ -34,8 +34,9 @@ model Dog {
   createdAt DateTime  @default(now())
   owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
-  observations Observation[]
-  activeStates ActiveState[]
+  observations   Observation[]
+  activeStates   ActiveState[]
+  cognitiveTests CognitiveTest[]
 
   @@unique([ownerId, name])
 }
@@ -85,4 +86,25 @@ model ActiveState {
   dog       Dog              @relation(fields: [dogId], references: [id], onDelete: Cascade)
 
   @@unique([dogId, behavior])
+}
+
+enum CognitiveTestType {
+  OBJECT_PERMANENCE
+  DETOUR
+  MANIPULATION
+}
+
+/// Résultat d'une épreuve cognitive chronométrée.
+model CognitiveTest {
+  id              String            @id @default(uuid())
+  dogId           String
+  testType        CognitiveTestType
+  recordedAt      DateTime          @default(now())
+  durationSeconds Float
+  /// Note de 0 à 10, facultative.
+  score           Float?
+  notes           String?
+  dog             Dog               @relation(fields: [dogId], references: [id], onDelete: Cascade)
+
+  @@index([dogId, recordedAt])
 }

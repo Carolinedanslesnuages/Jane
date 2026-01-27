@@ -1,4 +1,4 @@
-# Services de développement : base de données PostgreSQL.
+# Services de développement : PostgreSQL et Keycloak.
 services:
   postgres:
     image: postgres:17-alpine
@@ -17,5 +17,21 @@ services:
       timeout: 3s
       retries: 10
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    restart: unless-stopped
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin_dev_password}
+      KC_HTTP_PORT: 8180
+      KC_HOSTNAME_STRICT: "false"
+    ports:
+      - "8180:8180"
+    volumes:
+      - ./keycloak/realm-jane.json:/opt/keycloak/data/import/realm-jane.json:ro
+      - keycloak_data:/opt/keycloak/data
+
 volumes:
   postgres_data:
+  keycloak_data:

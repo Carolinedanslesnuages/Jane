@@ -1,4 +1,4 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { createTestDatabase, resetDatabase } from '../../test/database';
 import { DogsService } from '../dogs/dogs.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -50,6 +50,35 @@ describe('ObservationsService', () => {
 
     it('refuses to record for a dog owned by someone else', async () => {
       await expect(service.recordEvent(strangerId, dogId, { behavior: 'Aboyer' })).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('states', () => {
+    it('measures the duration between start and stop', async () => {
+      await service.startState(ownerId, dogId, 'Dormir');
+      await prisma.activeState.updateMany({ data: { startedAt: new Date(Date.now() - 90_000) } });
+      const observation = await service.stopState(ownerId, dogId, { behavior: 'Dormir', location: 'Maison' });
+      expect(observation).toMatchObject({ type: 'STATE', category: 'REST', location: 'Maison' });
+      expect(observation.durationSeconds).toBeGreaterThanOrEqual(90);
+      expect(observation.startedAt).not.toBeNull();
+      expect(await service.listActiveStates(ownerId, dogId)).toEqual([]);
+    });
+
+    it('refuses to start the same state twice', async () => {
+      await service.startState(ownerId, dogId, 'Dormir');
+      await expect(service.startState(ownerId, dogId, 'Dormir')).rejects.toThrow(ConflictException);
+      await expect(service.startState(ownerId, dogId, 'Courir')).resolves.toBeDefined();
+      expect(await service.listActiveStates(ownerId, dogId)).toHaveLength(2);
+    });
+
+    it('refuses to stop a state that is not running', async () => {
+      await expect(service.stopState(ownerId, dogId, { behavior: 'Dormir' })).rejects.toThrow(NotFoundException);
+    });
+
+    it('allows the same behaviour on two different dogs', async () => {
+      const otherDog = await prisma.dog.create({ data: { ownerId, name: 'Luna' } });
+      await service.startState(ownerId, dogId, 'Dormir');
+      await expect(service.startState(ownerId, otherDog.id, 'Dormir')).resolves.toBeDefined();
     });
   });
 });

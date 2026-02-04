@@ -4,6 +4,7 @@ import { validateEnvironment } from './config/environment';
 import { AuthModule } from './auth/auth.module';
 import { DogsModule } from './dogs/dogs.module';
 import { EthogramController } from './ethogram/ethogram.controller';
+import { ObservationsModule } from './observations/observations.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthController } from './health/health.controller';
 
@@ -20,6 +21,7 @@ import { HealthController } from './health/health.controller';
     PrismaModule,
     AuthModule,
     DogsModule,
+    ObservationsModule,
   ],
   controllers: [HealthController, EthogramController],
 })

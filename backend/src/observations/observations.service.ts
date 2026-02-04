@@ -3,7 +3,7 @@ import { ActiveState, Observation, Prisma } from '@prisma/client';
 import { DogsService } from '../dogs/dogs.service';
 import { findCategory } from '../ethogram/ethogram';
 import { PrismaService } from '../prisma/prisma.service';
-import { RecordEventDto, StopStateDto } from './observation.dto';
+import { ListObservationsQuery, RecordEventDto, StopStateDto } from './observation.dto';
 
 @Injectable()
 export class ObservationsService {
@@ -68,6 +68,45 @@ export class ObservationsService {
   async listActiveStates(ownerId: string, dogId: string): Promise<ActiveState[]> {
     await this.dogsService.findOne(ownerId, dogId);
     return this.prisma.activeState.findMany({ where: { dogId }, orderBy: { startedAt: 'asc' } });
+  }
+
+  /**
+   * Lists the observations of the owner's dogs, newest first.
+   * A state belongs to the period in which it started, an event to the moment it happened.
+   */
+  async list(ownerId: string, query: ListObservationsQuery): Promise<{ total: number; items: Observation[] }> {
+    const range = {
+      ...(query.from ? { gte: new Date(query.from) } : {}),
+      ...(query.to ? { lte: new Date(query.to) } : {}),
+    };
+    const hasRange = Object.keys(range).length > 0;
+    const where: Prisma.ObservationWhereInput = {
+      dog: { ownerId },
+      ...(query.dogId ? { dogId: query.dogId } : {}),
+      ...(hasRange
+        ? { OR: [{ startedAt: range }, { startedAt: null, recordedAt: range }] }
+        : {}),
+    };
+    const [total, items] = await this.prisma.$transaction([
+      this.prisma.observation.count({ where }),
+      this.prisma.observation.findMany({
+        where,
+        orderBy: { recordedAt: 'desc' },
+        take: query.limit ?? 100,
+        skip: query.offset ?? 0,
+      }),
+    ]);
+    return { total, items };
+  }
+
+  async remove(ownerId: string, observationId: string): Promise<void> {
+    const found = await this.prisma.observation.findFirst({
+      where: { id: observationId, dog: { ownerId } },
+    });
+    if (!found) {
+      throw new NotFoundException('Observation introuvable');
+    }
+    await this.prisma.observation.delete({ where: { id: observationId } });
   }
 
   private requireCategory(behavior: string) {

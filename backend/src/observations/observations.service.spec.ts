@@ -81,4 +81,57 @@ describe('ObservationsService', () => {
       await expect(service.startState(ownerId, otherDog.id, 'Dormir')).resolves.toBeDefined();
     });
   });
+
+  describe('list and remove', () => {
+    const at = (iso: string) => new Date(iso);
+
+    beforeEach(async () => {
+      await prisma.observation.createMany({
+        data: [
+          { dogId, behavior: 'Aboyer', category: 'STRESS', type: 'EVENT', recordedAt: at('2026-01-10T10:00:00Z') },
+          { dogId, behavior: 'Courir', category: 'PLAY', type: 'EVENT', recordedAt: at('2026-01-12T10:00:00Z') },
+          {
+            dogId,
+            behavior: 'Dormir',
+            category: 'REST',
+            type: 'STATE',
+            startedAt: at('2026-01-10T23:50:00Z'),
+            recordedAt: at('2026-01-11T00:20:00Z'),
+            durationSeconds: 1800,
+          },
+        ],
+      });
+    });
+
+    it('returns the newest first with the total', async () => {
+      const result = await service.list(ownerId, {});
+      expect(result.total).toBe(3);
+      expect(result.items.map((item) => item.behavior)).toEqual(['Courir', 'Dormir', 'Aboyer']);
+    });
+
+    it('attributes a state to the day it started', async () => {
+      const result = await service.list(ownerId, { from: '2026-01-10T00:00:00Z', to: '2026-01-10T23:59:59Z' });
+      expect(result.items.map((item) => item.behavior).sort()).toEqual(['Aboyer', 'Dormir']);
+    });
+
+    it('filters by dog and paginates', async () => {
+      const otherDog = await prisma.dog.create({ data: { ownerId, name: 'Luna' } });
+      await prisma.observation.create({ data: { dogId: otherDog.id, behavior: 'Sauter', category: 'PLAY', type: 'EVENT' } });
+      expect((await service.list(ownerId, { dogId: otherDog.id })).total).toBe(1);
+      const page = await service.list(ownerId, { limit: 2, offset: 2 });
+      expect(page.items).toHaveLength(2);
+      expect(page.total).toBe(4);
+    });
+
+    it('never shows the observations of another owner', async () => {
+      expect((await service.list(strangerId, {})).total).toBe(0);
+    });
+
+    it('removes an observation only for its owner', async () => {
+      const [first] = (await service.list(ownerId, {})).items;
+      await expect(service.remove(strangerId, first.id)).rejects.toThrow(NotFoundException);
+      await service.remove(ownerId, first.id);
+      expect((await service.list(ownerId, {})).total).toBe(2);
+    });
+  });
 });

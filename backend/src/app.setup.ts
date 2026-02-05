@@ -12,7 +12,7 @@ export function configureApp(app: INestApplication): void {
   );
   const config = app.get(ConfigService);
   app.enableCors({
-    origin: config.get<string>('WEB_ORIGIN') ?? 'http://localhost:5173',
+    origin: config.get<string>('WEB_ORIGIN') ?? 'http://localhost:5273',
     credentials: true,
   });
 }

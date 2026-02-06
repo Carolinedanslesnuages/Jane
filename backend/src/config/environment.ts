@@ -18,7 +18,7 @@ export function validateEnvironment(raw: Record<string, unknown>): Environment {
   return {
     databaseUrl: String(raw.DATABASE_URL),
     apiPort: Number(raw.API_PORT ?? 3300),
-    webOrigin: String(raw.WEB_ORIGIN ?? 'http://localhost:5173'),
+    webOrigin: String(raw.WEB_ORIGIN ?? 'http://localhost:5273'),
     keycloakUrl: String(raw.KEYCLOAK_URL).replace(/\/$/, ''),
     keycloakRealm: String(raw.KEYCLOAK_REALM),
     keycloakApiClientId: String(raw.KEYCLOAK_API_CLIENT_ID ?? 'jane-api'),

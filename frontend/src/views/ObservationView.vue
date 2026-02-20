@@ -22,6 +22,8 @@
         </p>
       </fieldset>
 
+      <ScanSamplingPanel />
+
       <AppCard title="Contexte">
         <div class="context-grid">
           <div>
@@ -70,6 +72,7 @@ import ActiveStates from '../components/ActiveStates.vue';
 import AppCard from '../components/AppCard.vue';
 import CategoryCard from '../components/CategoryCard.vue';
 import PageHeader from '../components/PageHeader.vue';
+import ScanSamplingPanel from '../components/ScanSamplingPanel.vue';
 import { useDogsStore } from '../stores/dogs';
 import { useEthogramStore } from '../stores/ethogram';
 import { useObservationsStore } from '../stores/observations';

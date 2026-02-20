@@ -43,19 +43,62 @@
           </div>
         </form>
       </AppCard>
+
+      <h2>Historique de {{ dogsStore.selectedDog.name }}</h2>
+      <p v-if="cognitiveStore.tests.length === 0" class="muted">Aucun test enregistré pour ce chien.</p>
+      <template v-else>
+        <div class="metrics">
+          <AppCard>
+            <span class="metric-label">Tests réalisés</span>
+            <strong class="metric-value">{{ cognitiveStore.tests.length }}</strong>
+          </AppCard>
+          <AppCard>
+            <span class="metric-label">Durée moyenne</span>
+            <strong class="metric-value">{{ formatDuration(averageDuration) }}</strong>
+          </AppCard>
+          <AppCard>
+            <span class="metric-label">Score moyen</span>
+            <strong class="metric-value">{{ averageScore === null ? 'Non renseigné' : `${averageScore.toFixed(1)} / 10` }}</strong>
+          </AppCard>
+        </div>
+
+        <AppCard v-if="chartData.datasets.length > 0 && cognitiveStore.tests.length > 1">
+          <div class="chart"><Line :data="chartData" :options="chartOptions" /></div>
+        </AppCard>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Épreuve</th><th>Durée</th><th>Score</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="test in cognitiveStore.tests" :key="test.id">
+                <td>{{ formatDateTime(test.recordedAt) }}</td>
+                <td>{{ cognitiveLabel(test.testType) }}</td>
+                <td>{{ formatDuration(test.durationSeconds) }}</td>
+                <td>{{ test.score ?? '–' }}</td>
+                <td>{{ test.notes || '–' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
     </template>
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { Line } from 'vue-chartjs';
 import AppCard from '../components/AppCard.vue';
 import PageHeader from '../components/PageHeader.vue';
 import { useStopwatch } from '../composables/useStopwatch';
 import { useCognitiveStore } from '../stores/cognitive';
 import { useDogsStore } from '../stores/dogs';
 import { useToastsStore } from '../stores/toasts';
-import { COGNITIVE_TESTS } from '../utils/cognitive';
+import { ACCENT_HEX } from '../charts/setup';
+import { cognitiveLabel, COGNITIVE_TESTS } from '../utils/cognitive';
+import { formatDateTime, formatDuration } from '../utils/format';
 import type { CognitiveTestType } from '../api/types';
 
 const dogsStore = useDogsStore();
@@ -111,6 +154,38 @@ function resetStopwatch() {
   measuredSeconds.value = 0;
 }
 
+const averageDuration = computed(
+  () => cognitiveStore.tests.reduce((sum, test) => sum + test.durationSeconds, 0) / Math.max(1, cognitiveStore.tests.length),
+);
+
+const averageScore = computed(() => {
+  const scores = cognitiveStore.tests.map((test) => test.score).filter((value): value is number => value !== null);
+  return scores.length > 0 ? scores.reduce((sum, value) => sum + value, 0) / scores.length : null;
+});
+
+const TEST_COLORS = [ACCENT_HEX, '#d9923b', '#8272a8'];
+
+/** One line per test type: duration over time, oldest first. */
+const chartData = computed(() => {
+  const ordered = [...cognitiveStore.tests].reverse();
+  const labels = ordered.map((test) => formatDateTime(test.recordedAt));
+  return {
+    labels,
+    datasets: COGNITIVE_TESTS.map((test, index) => ({
+      label: test.label,
+      borderColor: TEST_COLORS[index],
+      backgroundColor: TEST_COLORS[index],
+      tension: 0.25,
+      spanGaps: true,
+      data: ordered.map((entry) => (entry.testType === test.type ? entry.durationSeconds : null)),
+    })).filter((dataset) => dataset.data.some((value) => value !== null)),
+  };
+});
+
+const chartOptions = {
+  plugins: { title: { display: true, text: 'Évolution des durées (secondes)' } },
+};
+
 onMounted(() => dogsStore.load());
 
 watch(
@@ -155,6 +230,52 @@ label.inline {
   gap: var(--space-2);
   color: var(--color-ink);
   font-size: 1rem;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-4);
+}
+
+.metric-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.metric-value {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+}
+
+.chart {
+  height: 18rem;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-sand);
+}
+
+th {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  background: var(--color-sand);
 }
 
 .reading {

@@ -33,6 +33,25 @@
         </div>
       </form>
     </AppCard>
+
+    <h2>Chiens suivis</h2>
+    <p v-if="dogsStore.loaded && dogsStore.dogs.length === 0" class="muted">
+      Aucun chien enregistré. Ajoutez le premier ci-dessus.
+    </p>
+    <div class="dog-grid">
+      <AppCard v-for="dog in dogsStore.dogs" :key="dog.id">
+        <article>
+          <h3>{{ dog.name }}</h3>
+          <p class="muted">{{ describe(dog) }}</p>
+          <dl>
+            <dt>Âge</dt>
+            <dd class="age">{{ formatAge(dog.birthDate) }}</dd>
+            <dt>Stérilisé(e)</dt>
+            <dd>{{ dog.neutered ? 'Oui' : 'Non' }}</dd>
+          </dl>
+        </article>
+      </AppCard>
+    </div>
   </section>
 </template>
 
@@ -41,8 +60,10 @@ import { onMounted, reactive, ref } from 'vue';
 import type { DogInput, DogSex } from '../api/types';
 import AppCard from '../components/AppCard.vue';
 import PageHeader from '../components/PageHeader.vue';
+import type { Dog } from '../api/types';
 import { useDogsStore } from '../stores/dogs';
 import { useToastsStore } from '../stores/toasts';
+import { formatAge } from '../utils/format';
 
 const dogsStore = useDogsStore();
 const toasts = useToastsStore();
@@ -50,6 +71,12 @@ const saving = ref(false);
 const form = reactive({ name: '', breed: '', birthDate: '', sex: '' as DogSex | '', neutered: false });
 
 onMounted(() => dogsStore.load());
+
+const SEX_LABELS: Record<DogSex, string> = { MALE: 'Mâle', FEMALE: 'Femelle' };
+
+function describe(dog: Dog): string {
+  return [dog.breed, dog.sex ? SEX_LABELS[dog.sex] : null].filter(Boolean).join(' · ') || 'Informations non renseignées';
+}
 
 async function addDog() {
   saving.value = true;
@@ -96,5 +123,29 @@ async function addDog() {
 .actions {
   display: flex;
   justify-content: flex-end;
+}
+
+.dog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: var(--space-4);
+}
+
+dl {
+  margin: var(--space-3) 0 0;
+}
+
+dt {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+dd {
+  margin: 0 0 var(--space-2);
+}
+
+.age {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
 }
 </style>

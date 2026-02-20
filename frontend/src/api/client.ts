@@ -42,3 +42,19 @@ export const api = {
   patch: <T>(path: string, body: unknown) => apiRequest<T>('PATCH', path, body),
   delete: (path: string) => apiRequest<void>('DELETE', path),
 };
+
+/** Downloads a file served by the API (the access token cannot travel in a plain link). */
+export async function downloadFile(path: string, filename: string): Promise<void> {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}${path}`, {
+    headers: { Authorization: `Bearer ${await getAccessToken()}` },
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, await readErrorMessage(response));
+  }
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}

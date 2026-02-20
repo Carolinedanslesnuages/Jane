@@ -22,11 +22,19 @@ enum DogSex {
   FEMALE
 }
 
+enum Species {
+  DOG
+  CAT
+  HORSE
+  OTHER
+}
+
 /// Un chien suivi par un utilisateur.
 model Dog {
   id        String    @id @default(uuid())
   ownerId   String
   name      String
+  species   Species   @default(DOG)
   breed     String?
   birthDate DateTime? @db.Date
   sex       DogSex?

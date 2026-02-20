@@ -62,6 +62,9 @@
           @choose="choose"
         />
       </div>
+
+      <h2>Dernières observations</h2>
+      <ObservationsTable :observations="observationsStore.recent" />
     </template>
   </section>
 </template>
@@ -71,6 +74,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import ActiveStates from '../components/ActiveStates.vue';
 import AppCard from '../components/AppCard.vue';
 import CategoryCard from '../components/CategoryCard.vue';
+import ObservationsTable from '../components/ObservationsTable.vue';
 import PageHeader from '../components/PageHeader.vue';
 import ScanSamplingPanel from '../components/ScanSamplingPanel.vue';
 import { useDogsStore } from '../stores/dogs';

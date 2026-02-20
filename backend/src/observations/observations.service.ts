@@ -75,18 +75,7 @@ export class ObservationsService {
    * A state belongs to the period in which it started, an event to the moment it happened.
    */
   async list(ownerId: string, query: ListObservationsQuery): Promise<{ total: number; items: Observation[] }> {
-    const range = {
-      ...(query.from ? { gte: new Date(query.from) } : {}),
-      ...(query.to ? { lte: new Date(query.to) } : {}),
-    };
-    const hasRange = Object.keys(range).length > 0;
-    const where: Prisma.ObservationWhereInput = {
-      dog: { ownerId },
-      ...(query.dogId ? { dogId: query.dogId } : {}),
-      ...(hasRange
-        ? { OR: [{ startedAt: range }, { startedAt: null, recordedAt: range }] }
-        : {}),
-    };
+    const where = this.buildWhere(ownerId, query);
     const [total, items] = await this.prisma.$transaction([
       this.prisma.observation.count({ where }),
       this.prisma.observation.findMany({
@@ -97,6 +86,30 @@ export class ObservationsService {
       }),
     ]);
     return { total, items };
+  }
+
+  /** Every observation matching the filters, without pagination (statistics and exports). */
+  listAll(ownerId: string, query: Pick<ListObservationsQuery, 'dogId' | 'from' | 'to'>): Promise<Observation[]> {
+    return this.prisma.observation.findMany({
+      where: this.buildWhere(ownerId, query),
+      orderBy: { recordedAt: 'desc' },
+    });
+  }
+
+  private buildWhere(
+    ownerId: string,
+    query: Pick<ListObservationsQuery, 'dogId' | 'from' | 'to'>,
+  ): Prisma.ObservationWhereInput {
+    const range = {
+      ...(query.from ? { gte: new Date(query.from) } : {}),
+      ...(query.to ? { lte: new Date(query.to) } : {}),
+    };
+    const hasRange = Object.keys(range).length > 0;
+    return {
+      dog: { ownerId },
+      ...(query.dogId ? { dogId: query.dogId } : {}),
+      ...(hasRange ? { OR: [{ startedAt: range }, { startedAt: null, recordedAt: range }] } : {}),
+    };
   }
 
   async remove(ownerId: string, observationId: string): Promise<void> {

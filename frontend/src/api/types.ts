@@ -81,3 +81,18 @@ export interface CognitiveTestInput {
   score?: number;
   notes?: string;
 }
+
+export interface StatsSummary {
+  totals: { observations: number; observedDays: number; measuredSeconds: number; stressCount: number };
+  timeBudget: { category: BehaviorCategory; durationSeconds: number; eventCount: number }[];
+  stress: {
+    total: number;
+    averagePerDay: number;
+    byDay: { date: string; count: number }[];
+    byBehavior: { label: string; count: number }[];
+    byHour: { hour: number; count: number }[];
+    byStimulus: { label: string; count: number }[];
+    byLocation: { label: string; count: number }[];
+  };
+  timeline: { date: string; category: BehaviorCategory; count: number }[];
+}

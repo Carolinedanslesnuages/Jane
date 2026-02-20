@@ -62,3 +62,22 @@ export interface ObservationContext {
   weather?: string;
   stimuli?: string;
 }
+
+export type CognitiveTestType = 'OBJECT_PERMANENCE' | 'DETOUR' | 'MANIPULATION';
+
+export interface CognitiveTest {
+  id: string;
+  dogId: string;
+  testType: CognitiveTestType;
+  recordedAt: string;
+  durationSeconds: number;
+  score: number | null;
+  notes: string | null;
+}
+
+export interface CognitiveTestInput {
+  testType: CognitiveTestType;
+  durationSeconds: number;
+  score?: number;
+  notes?: string;
+}

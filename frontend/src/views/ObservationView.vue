@@ -7,6 +7,8 @@
     </AppCard>
 
     <template v-else-if="dogsStore.selectedDog">
+      <ActiveStates :states="observationsStore.activeStates" />
+
       <fieldset class="mode">
         <legend>Mode d'observation</legend>
         <label class="radio"><input v-model="mode" type="radio" value="EVENT" /> Événement</label>
@@ -64,6 +66,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import ActiveStates from '../components/ActiveStates.vue';
 import AppCard from '../components/AppCard.vue';
 import CategoryCard from '../components/CategoryCard.vue';
 import PageHeader from '../components/PageHeader.vue';

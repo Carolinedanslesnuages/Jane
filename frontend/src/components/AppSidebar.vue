@@ -9,6 +9,18 @@
         {{ route.meta?.label }}
       </RouterLink>
     </nav>
+    <div class="dog-picker">
+      <label for="dog-picker">Chien suivi</label>
+      <select
+        v-if="dogsStore.dogs.length > 0"
+        id="dog-picker"
+        :value="dogsStore.selectedDog?.id"
+        @change="dogsStore.select(($event.target as HTMLSelectElement).value)"
+      >
+        <option v-for="dog in dogsStore.dogs" :key="dog.id" :value="dog.id">{{ dog.name }}</option>
+      </select>
+      <p v-else-if="dogsStore.loaded" class="muted empty">Ajoutez un chien dans Profils.</p>
+    </div>
     <footer class="account">
       <span class="account-name">{{ session.label }}</span>
       <button type="button" @click="session.signOut()">Se déconnecter</button>
@@ -19,10 +31,12 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { routes } from '../router';
+import { useDogsStore } from '../stores/dogs';
 import { useSessionStore } from '../stores/session';
 
 const session = useSessionStore();
-onMounted(() => session.load());
+const dogsStore = useDogsStore();
+onMounted(() => Promise.all([session.load(), dogsStore.load()]));
 
 const navigation = routes.filter((route) => route.meta?.label);
 </script>
@@ -52,6 +66,11 @@ const navigation = routes.filter((route) => route.meta?.label);
   display: block;
   font-size: 0.85rem;
   color: var(--color-muted);
+}
+
+.dog-picker .empty {
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 .account {

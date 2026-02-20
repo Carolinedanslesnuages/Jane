@@ -6,11 +6,13 @@
         <RouterView />
       </div>
     </main>
+    <ToastHost />
   </div>
 </template>
 
 <script setup lang="ts">
 import AppSidebar from './components/AppSidebar.vue';
+import ToastHost from './components/ToastHost.vue';
 </script>
 
 <style scoped>

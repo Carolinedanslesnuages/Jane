@@ -56,3 +56,62 @@ export function computeTimeBudget(observations: StatsObservation[]): TimeBudgetE
     };
   });
 }
+
+export interface CountEntry {
+  label: string;
+  count: number;
+}
+
+export interface StressStats {
+  total: number;
+  averagePerDay: number;
+  byDay: { date: string; count: number }[];
+  byBehavior: CountEntry[];
+  byHour: { hour: number; count: number }[];
+  byStimulus: CountEntry[];
+  byLocation: CountEntry[];
+}
+
+function countBy<T>(items: T[], key: (item: T) => string | null | undefined): CountEntry[] {
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    const label = key(item);
+    if (label) {
+      counts.set(label, (counts.get(label) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
+}
+
+/** Hour of the day (0-23) of an instant in the given time zone. */
+function localHour(instant: Date, timeZone: string): number {
+  const hour = new Intl.DateTimeFormat('en-GB', { timeZone, hour: '2-digit', hourCycle: 'h23' }).format(instant);
+  return Number(hour);
+}
+
+/**
+ * Stress signs over a period: frequency per day, most frequent behaviours and context.
+ * `periodDays` is the number of days of the analysed period, used for the daily average.
+ */
+export function computeStress(observations: StatsObservation[], timeZone: string, periodDays: number): StressStats {
+  const stress = observations.filter((observation) => observation.category === 'STRESS');
+  const byDay = countBy(stress, (observation) => observationDay(observation, timeZone))
+    .map(({ label, count }) => ({ date: label, count }))
+    .sort((left, right) => left.date.localeCompare(right.date));
+  const hours = new Map<number, number>();
+  for (const observation of stress) {
+    const hour = localHour(observation.recordedAt, timeZone);
+    hours.set(hour, (hours.get(hour) ?? 0) + 1);
+  }
+  return {
+    total: stress.length,
+    averagePerDay: stress.length / Math.max(1, periodDays),
+    byDay,
+    byBehavior: countBy(stress, (observation) => observation.behavior),
+    byHour: [...hours.entries()].map(([hour, count]) => ({ hour, count })).sort((left, right) => left.hour - right.hour),
+    byStimulus: countBy(stress, (observation) => observation.stimuli),
+    byLocation: countBy(stress, (observation) => observation.location),
+  };
+}

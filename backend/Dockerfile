@@ -1,15 +1,18 @@
 # Image de production de l'API Jane.
 FROM node:22-alpine AS build
+# Prisma a besoin d'openssl sur Alpine.
+RUN apk add --no-cache openssl
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY prisma ./prisma
 RUN npx prisma generate
-COPY tsconfig.json nest-cli.json ./
+COPY tsconfig.json tsconfig.build.json nest-cli.json ./
 COPY src ./src
 RUN npm run build && npm prune --omit=dev
 
 FROM node:22-alpine
+RUN apk add --no-cache openssl
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/node_modules ./node_modules

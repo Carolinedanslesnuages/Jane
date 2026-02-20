@@ -54,3 +54,52 @@ export function buildTimelineChart(summary: StatsSummary, labelOf: LabelOf) {
     })),
   };
 }
+
+const STRESS_COLOR = CATEGORY_HEX.STRESS;
+
+function stressBars(labels: string[], data: number[], label: string) {
+  return { labels, datasets: [{ label, data, backgroundColor: STRESS_COLOR }] };
+}
+
+/** Frequency of stress signs per day; null when there is none. */
+export function buildStressByDayChart(summary: StatsSummary) {
+  if (summary.stress.byDay.length === 0) {
+    return null;
+  }
+  return {
+    labels: summary.stress.byDay.map((entry) =>
+      new Date(`${entry.date}T12:00:00`).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
+    ),
+    datasets: [
+      {
+        label: 'Signes de stress',
+        data: summary.stress.byDay.map((entry) => entry.count),
+        borderColor: STRESS_COLOR,
+        backgroundColor: STRESS_COLOR,
+        tension: 0.25,
+      },
+    ],
+  };
+}
+
+export function buildStressByBehaviorChart(summary: StatsSummary) {
+  const entries = summary.stress.byBehavior;
+  return entries.length === 0 ? null : stressBars(entries.map((entry) => entry.label), entries.map((entry) => entry.count), 'Occurrences');
+}
+
+export function buildStressByHourChart(summary: StatsSummary) {
+  const entries = summary.stress.byHour;
+  return entries.length === 0
+    ? null
+    : stressBars(entries.map((entry) => `${entry.hour} h`), entries.map((entry) => entry.count), 'Occurrences');
+}
+
+export function buildStressByStimulusChart(summary: StatsSummary) {
+  const entries = summary.stress.byStimulus;
+  return entries.length === 0 ? null : stressBars(entries.map((entry) => entry.label), entries.map((entry) => entry.count), 'Occurrences');
+}
+
+export function buildStressByLocationChart(summary: StatsSummary) {
+  const entries = summary.stress.byLocation;
+  return entries.length === 0 ? null : stressBars(entries.map((entry) => entry.label), entries.map((entry) => entry.count), 'Occurrences');
+}

@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { StatsSummary } from '../api/types';
-import { buildEventsChart, buildTimeBudgetChart, buildTimelineChart } from './builders';
+import {
+  buildEventsChart,
+  buildStressByBehaviorChart,
+  buildStressByDayChart,
+  buildStressByHourChart,
+  buildTimeBudgetChart,
+  buildTimelineChart,
+} from './builders';
 
 const labelOf = (category: string) => `label-${category}`;
 
@@ -43,5 +50,26 @@ describe('chart builders', () => {
     expect(chart.labels).toHaveLength(2);
     const play = chart.datasets.find((dataset) => dataset.label === 'label-PLAY');
     expect(play?.data).toEqual([0, 2]);
+  });
+
+  it('draws the stress charts in the stress colour', () => {
+    const stressful: StatsSummary = {
+      ...summary,
+      stress: {
+        ...summary.stress,
+        byDay: [{ date: '2026-02-19', count: 2 }],
+        byBehavior: [{ label: 'Aboyer', count: 2 }],
+        byHour: [{ hour: 8, count: 2 }],
+      },
+    };
+    expect(buildStressByDayChart(stressful)?.datasets[0].borderColor).toBe('#b8503e');
+    expect(buildStressByBehaviorChart(stressful)?.labels).toEqual(['Aboyer']);
+    expect(buildStressByHourChart(stressful)?.labels).toEqual(['8 h']);
+  });
+
+  it('draws nothing when there is no stress', () => {
+    expect(buildStressByDayChart(summary)).toBeNull();
+    expect(buildStressByBehaviorChart(summary)).toBeNull();
+    expect(buildStressByHourChart(summary)).toBeNull();
   });
 });

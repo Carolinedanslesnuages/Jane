@@ -57,6 +57,42 @@
             </div>
           </AppCard>
         </div>
+
+        <h2>Stress</h2>
+        <p v-if="summary.stress.total === 0" class="muted">Aucun signe de stress enregistré sur cette période.</p>
+        <template v-else>
+          <AppCard>
+            <div class="chart short"><Line v-if="stressByDay" :data="stressByDay" :options="lineOptions" /></div>
+          </AppCard>
+          <div class="chart-pair">
+            <AppCard>
+              <div class="chart short"><Bar v-if="stressByBehavior" :data="stressByBehavior" :options="barOptions('Signes les plus fréquents')" /></div>
+            </AppCard>
+            <AppCard>
+              <p class="stress-figure">
+                <span class="kpi-label">Moyenne par jour</span>
+                <strong class="kpi-value">{{ summary.stress.averagePerDay.toFixed(1) }}</strong>
+              </p>
+              <p v-if="summary.stress.byBehavior[0]" class="stress-figure">
+                <span class="kpi-label">Le plus fréquent</span>
+                <strong>{{ summary.stress.byBehavior[0].label }}</strong>
+              </p>
+            </AppCard>
+          </div>
+          <AppCard title="Contextes du stress">
+            <div class="chart-triple">
+              <div class="chart short"><Bar v-if="stressByHour" :data="stressByHour" :options="barOptions('Par heure')" /></div>
+              <div class="chart short">
+                <Bar v-if="stressByStimulus" :data="stressByStimulus" :options="barOptions('Par stimulus')" />
+                <p v-else class="muted">Aucun stimulus renseigné.</p>
+              </div>
+              <div class="chart short">
+                <Bar v-if="stressByLocation" :data="stressByLocation" :options="barOptions('Par lieu')" />
+                <p v-else class="muted">Aucun lieu renseigné.</p>
+              </div>
+            </div>
+          </AppCard>
+        </template>
       </template>
     </template>
   </section>
@@ -64,10 +100,18 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { Bar, Doughnut } from 'vue-chartjs';
+import { Bar, Doughnut, Line } from 'vue-chartjs';
 import AppCard from '../components/AppCard.vue';
 import PageHeader from '../components/PageHeader.vue';
-import { buildEventsChart, buildTimeBudgetChart } from '../charts/builders';
+import {
+  buildEventsChart,
+  buildStressByBehaviorChart,
+  buildStressByDayChart,
+  buildStressByHourChart,
+  buildStressByLocationChart,
+  buildStressByStimulusChart,
+  buildTimeBudgetChart,
+} from '../charts/builders';
 import { useDogsStore } from '../stores/dogs';
 import { useEthogramStore } from '../stores/ethogram';
 import { useStatsStore } from '../stores/stats';
@@ -86,6 +130,24 @@ const summary = computed(() => statsStore.summary);
 
 const budgetChart = computed(() => (summary.value ? buildTimeBudgetChart(summary.value, ethogramStore.labelOf) : null));
 const eventsChart = computed(() => (summary.value ? buildEventsChart(summary.value, ethogramStore.labelOf) : null));
+
+const stressByDay = computed(() => (summary.value ? buildStressByDayChart(summary.value) : null));
+const stressByBehavior = computed(() => (summary.value ? buildStressByBehaviorChart(summary.value) : null));
+const stressByHour = computed(() => (summary.value ? buildStressByHourChart(summary.value) : null));
+const stressByStimulus = computed(() => (summary.value ? buildStressByStimulusChart(summary.value) : null));
+const stressByLocation = computed(() => (summary.value ? buildStressByLocationChart(summary.value) : null));
+
+const lineOptions = {
+  plugins: { title: { display: true, text: 'Fréquence du stress par jour' }, legend: { display: false } },
+  scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+};
+
+function barOptions(title: string) {
+  return {
+    plugins: { title: { display: true, text: title }, legend: { display: false } },
+    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+  };
+}
 
 const budgetOptions = {
   plugins: { title: { display: true, text: 'Répartition du temps mesuré (minutes)' }, legend: { position: 'bottom' as const } },
@@ -137,6 +199,20 @@ watch([() => dogsStore.selectedDog?.id, fromDate, toDate], reload, { immediate: 
 
 .chart {
   height: 20rem;
+}
+
+.chart.short {
+  height: 15rem;
+}
+
+.chart-triple {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-4);
+}
+
+.stress-figure {
+  margin: 0 0 var(--space-4);
 }
 
 .kpi-label {

@@ -1,0 +1,84 @@
+# Production : PostgreSQL, Keycloak, API, interface web et Caddy (HTTPS).
+# Variables obligatoires : voir .env.production.example
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: jane
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?mot de passe PostgreSQL requis}
+      POSTGRES_DB: jane
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deploy/init-keycloak-database.sql:/docker-entrypoint-initdb.d/init-keycloak-database.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jane -d jane"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    restart: always
+    command: ["start", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?mot de passe administrateur Keycloak requis}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: jane
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_HOSTNAME: https://auth.${JANE_DOMAIN:?domaine requis}
+      KC_HTTP_ENABLED: "true"
+      KC_HTTP_PORT: 8180
+      KC_PROXY_HEADERS: xforwarded
+      JANE_WEB_URL: https://${JANE_DOMAIN}
+    volumes:
+      - ./keycloak/realm-jane.prod.json:/opt/keycloak/data/import/realm-jane.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build: ./backend
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://jane:${POSTGRES_PASSWORD}@postgres:5432/jane?schema=public
+      API_PORT: 3300
+      WEB_ORIGIN: https://${JANE_DOMAIN}
+      KEYCLOAK_URL: https://auth.${JANE_DOMAIN}
+      KEYCLOAK_REALM: jane
+      KEYCLOAK_API_CLIENT_ID: jane-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: https://api.${JANE_DOMAIN}
+        VITE_KEYCLOAK_URL: https://auth.${JANE_DOMAIN}
+        VITE_KEYCLOAK_REALM: jane
+        VITE_KEYCLOAK_CLIENT_ID: jane-web
+    restart: always
+
+  caddy:
+    image: caddy:2-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      JANE_DOMAIN: ${JANE_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      - web
+      - api
+      - keycloak
+
+volumes:
+  postgres_data:
+  caddy_data:

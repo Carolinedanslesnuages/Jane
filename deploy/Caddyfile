@@ -1,0 +1,12 @@
+# Caddy obtient et renouvelle seul les certificats HTTPS.
+{$JANE_DOMAIN} {
+	reverse_proxy web:80
+}
+
+api.{$JANE_DOMAIN} {
+	reverse_proxy api:3300
+}
+
+auth.{$JANE_DOMAIN} {
+	reverse_proxy keycloak:8180
+}

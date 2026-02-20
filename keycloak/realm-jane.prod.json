@@ -1,0 +1,55 @@
+{
+  "realm": "jane",
+  "displayName": "Jane",
+  "enabled": true,
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": true,
+  "loginWithEmailAllowed": true,
+  "resetPasswordAllowed": true,
+  "sslRequired": "external",
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "fr",
+    "en"
+  ],
+  "defaultLocale": "fr",
+  "clients": [
+    {
+      "clientId": "jane-api",
+      "name": "Jane API",
+      "enabled": true,
+      "bearerOnly": true
+    },
+    {
+      "clientId": "jane-web",
+      "name": "Jane (application web)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "rootUrl": "${JANE_WEB_URL}",
+      "redirectUris": [
+        "${JANE_WEB_URL}/*"
+      ],
+      "webOrigins": [
+        "${JANE_WEB_URL}"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${JANE_WEB_URL}/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "jane-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "jane-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ]
+}

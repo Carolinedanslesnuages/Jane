@@ -17,3 +17,10 @@ export interface DogInput {
   sex?: DogSex;
   neutered?: boolean;
 }
+
+export interface Profile {
+  id: string;
+  email: string | null;
+  displayName: string | null;
+  createdAt: string;
+}

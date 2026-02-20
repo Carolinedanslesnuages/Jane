@@ -1,6 +1,6 @@
 <template>
   <section>
-    <h1>Profils</h1>
+    <PageHeader title="Profils" subtitle="Les chiens suivis, avec leurs informations de base." />
 
     <form @submit.prevent="addDog">
       <input v-model="form.name" placeholder="Nom" required />
@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
+import PageHeader from '../components/PageHeader.vue';
 import { useDogsStore } from '../stores/dogs';
 
 const dogsStore = useDogsStore();

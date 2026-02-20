@@ -115,3 +115,24 @@ export function computeStress(observations: StatsObservation[], timeZone: string
     byLocation: countBy(stress, (observation) => observation.location),
   };
 }
+
+export interface TimelineEntry {
+  date: string;
+  category: BehaviorCategory;
+  count: number;
+}
+
+/** Number of observations per day and category (a state counts on the day it started). */
+export function computeTimeline(observations: StatsObservation[], timeZone: string): TimelineEntry[] {
+  const counts = new Map<string, TimelineEntry>();
+  for (const observation of observations) {
+    const date = observationDay(observation, timeZone);
+    const key = `${date}|${observation.category}`;
+    const entry = counts.get(key) ?? { date, category: observation.category, count: 0 };
+    entry.count += 1;
+    counts.set(key, entry);
+  }
+  return [...counts.values()].sort(
+    (left, right) => left.date.localeCompare(right.date) || left.category.localeCompare(right.category),
+  );
+}

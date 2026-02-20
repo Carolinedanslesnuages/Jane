@@ -1,4 +1,4 @@
-import { computeStress, computeTimeBudget, computeTotals, localDay, StatsObservation } from './compute-stats';
+import { computeStress, computeTimeBudget, computeTimeline, computeTotals, localDay, StatsObservation } from './compute-stats';
 
 function observation(overrides: Partial<StatsObservation>): StatsObservation {
   return {
@@ -101,5 +101,20 @@ describe('computeStress', () => {
       { label: 'Jardin', count: 1 },
       { label: 'Maison', count: 1 },
     ]);
+  });
+});
+
+describe('computeTimeline', () => {
+  it('counts per day and category, attributing a state to the day it started', () => {
+    expect(computeTimeline(sample, 'UTC')).toEqual([
+      { date: '2026-01-10', category: 'REST', count: 1 },
+      { date: '2026-01-10', category: 'STRESS', count: 1 },
+      { date: '2026-01-11', category: 'PLAY', count: 1 },
+    ]);
+  });
+
+  it('follows the time zone of the user', () => {
+    const days = computeTimeline(sample, 'Europe/Paris').map((entry) => entry.date);
+    expect(days).toEqual(['2026-01-10', '2026-01-11', '2026-01-11']);
   });
 });

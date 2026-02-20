@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { routes } from './index';
+import { pageTitle, routes } from './index';
 
 describe('routes', () => {
   it('has a unique path and name for every page', () => {
@@ -12,5 +12,15 @@ describe('routes', () => {
   it('labels the six pages of the navigation', () => {
     const labels = routes.flatMap((route) => ('meta' in route && route.meta?.label ? [route.meta.label] : []));
     expect(labels).toEqual(['Profils', 'Observation', 'Tests cognitifs', 'Tableau de bord', 'Données', 'À propos']);
+  });
+
+  it('catches unknown addresses with a dedicated page', () => {
+    expect(routes.at(-1)?.path).toBe('/:pathMatch(.*)*');
+  });
+
+  it('builds the tab title from the page label', () => {
+    expect(pageTitle({ label: 'Profils' })).toBe('Profils · Jane');
+    expect(pageTitle({ title: 'Page introuvable' })).toBe('Page introuvable · Jane');
+    expect(pageTitle({})).toContain('Jane');
   });
 });

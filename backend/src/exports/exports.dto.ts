@@ -17,3 +17,18 @@ export class ExportQuery {
   @IsString()
   timezone?: string;
 }
+
+export class ReportQuery {
+  @IsUUID()
+  dogId: string;
+
+  @IsDateString()
+  from: string;
+
+  @IsDateString()
+  to: string;
+
+  @IsOptional()
+  @IsString()
+  timezone?: string;
+}

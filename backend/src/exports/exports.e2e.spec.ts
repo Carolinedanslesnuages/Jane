@@ -4,12 +4,13 @@ import { createTestApp } from '../../test/test-app';
 
 describe('GET /exports/observations.csv (HTTP)', () => {
   let app: INestApplication;
+  let dogId: string;
   const as = (token: string) => ({ Authorization: `Bearer ${token}` });
 
   beforeAll(async () => {
     ({ app } = await createTestApp());
     const server = app.getHttpServer();
-    const dogId = (await request(server).post('/dogs').set(as('alice')).send({ name: '=Rex' })).body.id;
+    dogId = (await request(server).post('/dogs').set(as('alice')).send({ name: '=Rex' })).body.id;
     await request(server).post(`/dogs/${dogId}/events`).set(as('alice')).send({ behavior: 'Aboyer', notes: 'chez le voisin, tard', stimuli: 'Bruit' });
   });
 
@@ -35,5 +36,27 @@ describe('GET /exports/observations.csv (HTTP)', () => {
 
   it('requires a token', async () => {
     await request(app.getHttpServer()).get('/exports/observations.csv').expect(401);
+  });
+
+  it('generates the PDF report of a dog', async () => {
+    const period = 'from=2020-01-01T00:00:00Z&to=2099-01-01T00:00:00Z';
+    const response = await request(app.getHttpServer())
+      .get(`/exports/report.pdf?dogId=${dogId}&${period}`)
+      .set(as('alice'))
+      .buffer(true)
+      .parse((res, callback) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        res.on('end', () => callback(null, Buffer.concat(chunks)));
+      })
+      .expect(200);
+    expect(response.headers['content-type']).toContain('application/pdf');
+    expect((response.body as Buffer).subarray(0, 5).toString()).toBe('%PDF-');
+  });
+
+  it('refuses the report of a dog that belongs to someone else', async () => {
+    const period = 'from=2020-01-01T00:00:00Z&to=2099-01-01T00:00:00Z';
+    await request(app.getHttpServer()).get(`/exports/report.pdf?dogId=${dogId}&${period}`).set(as('bob')).expect(404);
+    await request(app.getHttpServer()).get('/exports/report.pdf').set(as('alice')).expect(400);
   });
 });

@@ -1,7 +1,7 @@
-import { Controller, Get, Header, Query } from '@nestjs/common';
+import { Controller, Get, Header, Query, StreamableFile } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { ExportQuery } from './exports.dto';
+import { ExportQuery, ReportQuery } from './exports.dto';
 import { ExportsService } from './exports.service';
 
 @Controller('exports')
@@ -13,5 +13,12 @@ export class ExportsController {
   @Header('Content-Disposition', 'attachment; filename="jane-observations.csv"')
   observationsCsv(@CurrentUser() user: User, @Query() query: ExportQuery) {
     return this.exportsService.observationsCsv(user.id, query);
+  }
+
+  @Get('report.pdf')
+  @Header('Content-Type', 'application/pdf')
+  @Header('Content-Disposition', 'attachment; filename="jane-bilan-comportemental.pdf"')
+  async report(@CurrentUser() user: User, @Query() query: ReportQuery) {
+    return new StreamableFile(await this.exportsService.report(user.id, query));
   }
 }

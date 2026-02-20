@@ -93,6 +93,11 @@
             </div>
           </AppCard>
         </template>
+
+        <h2>Activité quotidienne</h2>
+        <AppCard>
+          <div class="chart"><Bar :data="timelineChart" :options="timelineOptions" /></div>
+        </AppCard>
       </template>
     </template>
   </section>
@@ -111,6 +116,7 @@ import {
   buildStressByLocationChart,
   buildStressByStimulusChart,
   buildTimeBudgetChart,
+  buildTimelineChart,
 } from '../charts/builders';
 import { useDogsStore } from '../stores/dogs';
 import { useEthogramStore } from '../stores/ethogram';
@@ -130,6 +136,14 @@ const summary = computed(() => statsStore.summary);
 
 const budgetChart = computed(() => (summary.value ? buildTimeBudgetChart(summary.value, ethogramStore.labelOf) : null));
 const eventsChart = computed(() => (summary.value ? buildEventsChart(summary.value, ethogramStore.labelOf) : null));
+
+const timelineChart = computed(() =>
+  summary.value ? buildTimelineChart(summary.value, ethogramStore.labelOf) : { labels: [], datasets: [] },
+);
+const timelineOptions = {
+  plugins: { title: { display: true, text: 'Observations par jour et par catégorie' }, legend: { position: 'bottom' as const } },
+  scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } },
+};
 
 const stressByDay = computed(() => (summary.value ? buildStressByDayChart(summary.value) : null));
 const stressByBehavior = computed(() => (summary.value ? buildStressByBehaviorChart(summary.value) : null));

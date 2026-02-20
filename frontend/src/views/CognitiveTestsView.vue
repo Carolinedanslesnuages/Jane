@@ -23,6 +23,26 @@
           <button type="button" @click="resetStopwatch">Réinitialiser</button>
         </div>
       </AppCard>
+
+      <AppCard title="Résultat">
+        <form class="result-form" @submit.prevent="saveResult">
+          <div>
+            <label for="result-duration">Durée (secondes)</label>
+            <input id="result-duration" v-model.number="measuredSeconds" type="number" min="0.1" step="0.1" required />
+          </div>
+          <div>
+            <label class="inline"><input v-model="withScore" type="checkbox" /> Renseigner un score</label>
+            <input v-model.number="score" type="number" min="0" max="10" step="0.5" :disabled="!withScore" aria-label="Score sur 10" />
+          </div>
+          <div class="notes">
+            <label for="result-notes">Notes</label>
+            <textarea id="result-notes" v-model="notes" rows="2" maxlength="500"></textarea>
+          </div>
+          <div class="actions">
+            <button type="submit" class="primary" :disabled="saving || !(measuredSeconds > 0)">Enregistrer le test</button>
+          </div>
+        </form>
+      </AppCard>
     </template>
   </section>
 </template>
@@ -34,11 +54,13 @@ import PageHeader from '../components/PageHeader.vue';
 import { useStopwatch } from '../composables/useStopwatch';
 import { useCognitiveStore } from '../stores/cognitive';
 import { useDogsStore } from '../stores/dogs';
+import { useToastsStore } from '../stores/toasts';
 import { COGNITIVE_TESTS } from '../utils/cognitive';
 import type { CognitiveTestType } from '../api/types';
 
 const dogsStore = useDogsStore();
 const cognitiveStore = useCognitiveStore();
+const toasts = useToastsStore();
 const stopwatch = useStopwatch();
 
 const testType = ref<CognitiveTestType>('OBJECT_PERMANENCE');
@@ -46,6 +68,35 @@ const currentTest = computed(() => COGNITIVE_TESTS.find((test) => test.type === 
 
 /** The last measured duration, offered to the result form. */
 const measuredSeconds = ref(0);
+
+const withScore = ref(false);
+const score = ref(5);
+const notes = ref('');
+const saving = ref(false);
+
+async function saveResult() {
+  const dog = dogsStore.selectedDog;
+  if (!dog) {
+    return;
+  }
+  saving.value = true;
+  try {
+    await cognitiveStore.record(dog.id, {
+      testType: testType.value,
+      durationSeconds: measuredSeconds.value,
+      score: withScore.value ? score.value : undefined,
+      notes: notes.value.trim() || undefined,
+    });
+    toasts.info(`${currentTest.value.label} enregistré pour ${dog.name}.`);
+    resetStopwatch();
+    notes.value = '';
+    withScore.value = false;
+  } catch (error) {
+    toasts.error((error as Error).message);
+  } finally {
+    saving.value = false;
+  }
+}
 
 function startStopwatch() {
   stopwatch.start();
@@ -79,6 +130,31 @@ watch(
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
+}
+
+.result-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.notes {
+  grid-column: 1 / -1;
+}
+
+.actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+label.inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-ink);
+  font-size: 1rem;
 }
 
 .reading {

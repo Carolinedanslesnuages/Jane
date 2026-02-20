@@ -4,10 +4,13 @@ import { api } from '../api/client';
 import type { ActiveState, Observation, ObservationContext } from '../api/types';
 
 const RECENT_COUNT = 10;
+const HISTORY_LIMIT = 500;
 
 export const useObservationsStore = defineStore('observations', () => {
   const activeStates = ref<ActiveState[]>([]);
   const recent = ref<Observation[]>([]);
+  const history = ref<Observation[]>([]);
+  const historyTotal = ref(0);
 
   /** Reloads the running states and the latest observations of a dog. */
   async function refresh(dogId: string) {
@@ -38,10 +41,24 @@ export const useObservationsStore = defineStore('observations', () => {
     return activeStates.value.some((state) => state.behavior === behavior);
   }
 
+  /** The full list of a dog's observations (newest first, up to HISTORY_LIMIT). */
+  async function loadHistory(dogId: string) {
+    const page = await api.get<{ total: number; items: Observation[] }>(`/observations?dogId=${dogId}&limit=${HISTORY_LIMIT}`);
+    history.value = page.items;
+    historyTotal.value = page.total;
+  }
+
+  async function removeObservation(dogId: string, observationId: string) {
+    await api.delete(`/observations/${observationId}`);
+    await loadHistory(dogId);
+  }
+
   function reset() {
     activeStates.value = [];
     recent.value = [];
+    history.value = [];
+    historyTotal.value = 0;
   }
 
-  return { activeStates, recent, refresh, recordEvent, startState, stopState, isRunning, reset };
+  return { activeStates, recent, history, historyTotal, loadHistory, removeObservation, refresh, recordEvent, startState, stopState, isRunning, reset };
 });

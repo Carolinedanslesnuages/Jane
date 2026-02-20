@@ -3,8 +3,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const get = vi.fn();
 const post = vi.fn();
+const remove = vi.fn();
 
-vi.mock('../api/client', () => ({ api: { get: (...args: unknown[]) => get(...args), post: (...args: unknown[]) => post(...args) } }));
+vi.mock('../api/client', () => ({
+  api: {
+    get: (...args: unknown[]) => get(...args),
+    post: (...args: unknown[]) => post(...args),
+    delete: (...args: unknown[]) => remove(...args),
+  },
+}));
 
 import { useObservationsStore } from './observations';
 
@@ -12,6 +19,7 @@ describe('observations store', () => {
   beforeEach(() => {
     get.mockReset();
     post.mockReset();
+    remove.mockReset();
     setActivePinia(createPinia());
     get.mockImplementation(async (path: string) =>
       path.includes('active-states')
@@ -43,5 +51,15 @@ describe('observations store', () => {
     await store.stopState('dog-1', 'Dormir', { notes: 'sieste' });
     expect(post).toHaveBeenNthCalledWith(1, '/dogs/dog-1/states/start', { behavior: 'Dormir' });
     expect(post).toHaveBeenNthCalledWith(2, '/dogs/dog-1/states/stop', { behavior: 'Dormir', notes: 'sieste' });
+  });
+
+  it('loads the full history and refreshes it after a deletion', async () => {
+    get.mockImplementation(async () => ({ total: 2, items: [{ id: 'o1' }, { id: 'o2' }] }));
+    const store = useObservationsStore();
+    await store.loadHistory('dog-1');
+    expect(store.historyTotal).toBe(2);
+    await store.removeObservation('dog-1', 'o1');
+    expect(remove).toHaveBeenCalledWith('/observations/o1');
+    expect(get).toHaveBeenCalledTimes(2);
   });
 });

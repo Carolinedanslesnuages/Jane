@@ -49,6 +49,11 @@
             <dt>Stérilisé(e)</dt>
             <dd>{{ dog.neutered ? 'Oui' : 'Non' }}</dd>
           </dl>
+          <ConfirmAction
+            label="Supprimer"
+            :message="`Supprimer ${dog.name} efface aussi ses observations et ses tests. Définitif.`"
+            @confirm="removeDog(dog)"
+          />
         </article>
       </AppCard>
     </div>
@@ -59,6 +64,7 @@
 import { onMounted, reactive, ref } from 'vue';
 import type { DogInput, DogSex } from '../api/types';
 import AppCard from '../components/AppCard.vue';
+import ConfirmAction from '../components/ConfirmAction.vue';
 import PageHeader from '../components/PageHeader.vue';
 import type { Dog } from '../api/types';
 import { useDogsStore } from '../stores/dogs';
@@ -76,6 +82,15 @@ const SEX_LABELS: Record<DogSex, string> = { MALE: 'Mâle', FEMALE: 'Femelle' };
 
 function describe(dog: Dog): string {
   return [dog.breed, dog.sex ? SEX_LABELS[dog.sex] : null].filter(Boolean).join(' · ') || 'Informations non renseignées';
+}
+
+async function removeDog(dog: Dog) {
+  try {
+    await dogsStore.remove(dog.id);
+    toasts.info(`${dog.name} a été supprimé.`);
+  } catch (error) {
+    toasts.error((error as Error).message);
+  }
 }
 
 async function addDog() {

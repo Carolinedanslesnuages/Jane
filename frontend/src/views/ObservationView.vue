@@ -46,17 +46,31 @@
           </div>
         </div>
       </AppCard>
+
+      <div class="category-grid">
+        <CategoryCard
+          v-for="category in ethogramStore.categories"
+          :key="category.category"
+          :category="category"
+          :mode="mode"
+          :running-behaviors="runningBehaviors"
+          :disabled="busy"
+          @choose="choose"
+        />
+      </div>
     </template>
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import AppCard from '../components/AppCard.vue';
+import CategoryCard from '../components/CategoryCard.vue';
 import PageHeader from '../components/PageHeader.vue';
 import { useDogsStore } from '../stores/dogs';
 import { useEthogramStore } from '../stores/ethogram';
 import { useObservationsStore } from '../stores/observations';
+import { useToastsStore } from '../stores/toasts';
 
 const LOCATIONS = ['', 'Maison', 'Jardin', 'Parc', 'Extérieur', 'Autre'];
 const WEATHERS = ['', 'Ensoleillé', 'Nuageux', 'Pluie', 'Orage', 'Neige'];
@@ -65,9 +79,42 @@ const STIMULI = ['', 'Calme', 'Visiteurs', 'Bruit', 'Autres animaux', 'Jouets'];
 const dogsStore = useDogsStore();
 const ethogramStore = useEthogramStore();
 const observationsStore = useObservationsStore();
+const toasts = useToastsStore();
 
 const mode = ref<'EVENT' | 'STATE'>('EVENT');
 const context = reactive({ location: '', weather: '', stimuli: '', notes: '' });
+
+const busy = ref(false);
+const runningBehaviors = computed(() => observationsStore.activeStates.map((state) => state.behavior));
+
+/** The optional fields of the context card, without the empty ones. */
+function currentContext() {
+  return Object.fromEntries(Object.entries(context).filter(([, value]) => value));
+}
+
+async function choose(behavior: string) {
+  const dog = dogsStore.selectedDog;
+  if (!dog || busy.value) {
+    return;
+  }
+  busy.value = true;
+  try {
+    if (mode.value === 'EVENT') {
+      await observationsStore.recordEvent(dog.id, behavior, currentContext());
+      toasts.info(`${behavior} enregistré.`);
+    } else if (observationsStore.isRunning(behavior)) {
+      await observationsStore.stopState(dog.id, behavior, currentContext());
+      toasts.info(`${behavior} terminé et enregistré.`);
+    } else {
+      await observationsStore.startState(dog.id, behavior);
+      toasts.info(`${behavior} démarré.`);
+    }
+  } catch (error) {
+    toasts.error((error as Error).message);
+  } finally {
+    busy.value = false;
+  }
+}
 
 onMounted(async () => {
   await Promise.all([dogsStore.load(), ethogramStore.load()]);
@@ -106,6 +153,13 @@ watch(
 .hint {
   margin: var(--space-1) 0 0;
   font-size: 0.9rem;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
 .context-grid {

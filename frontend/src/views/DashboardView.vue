@@ -40,14 +40,34 @@
           <strong class="kpi-value">{{ summary.totals.stressCount }}</strong>
         </AppCard>
       </div>
+
+      <template v-if="summary && summary.totals.observations > 0">
+        <h2>Budget-temps</h2>
+        <div class="chart-pair">
+          <AppCard>
+            <div class="chart">
+              <Doughnut v-if="budgetChart" :data="budgetChart" :options="budgetOptions" />
+              <p v-else class="muted">Aucun état mesuré : utilisez le mode État pour chronométrer.</p>
+            </div>
+          </AppCard>
+          <AppCard>
+            <div class="chart">
+              <Bar v-if="eventsChart" :data="eventsChart" :options="eventsOptions" />
+              <p v-else class="muted">Aucun événement enregistré.</p>
+            </div>
+          </AppCard>
+        </div>
+      </template>
     </template>
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { Bar, Doughnut } from 'vue-chartjs';
 import AppCard from '../components/AppCard.vue';
 import PageHeader from '../components/PageHeader.vue';
+import { buildEventsChart, buildTimeBudgetChart } from '../charts/builders';
 import { useDogsStore } from '../stores/dogs';
 import { useEthogramStore } from '../stores/ethogram';
 import { useStatsStore } from '../stores/stats';
@@ -63,6 +83,18 @@ const toasts = useToastsStore();
 const fromDate = ref(toInputDate(daysAgo(7)));
 const toDate = ref(toInputDate(new Date()));
 const summary = computed(() => statsStore.summary);
+
+const budgetChart = computed(() => (summary.value ? buildTimeBudgetChart(summary.value, ethogramStore.labelOf) : null));
+const eventsChart = computed(() => (summary.value ? buildEventsChart(summary.value, ethogramStore.labelOf) : null));
+
+const budgetOptions = {
+  plugins: { title: { display: true, text: 'Répartition du temps mesuré (minutes)' }, legend: { position: 'bottom' as const } },
+  cutout: '55%',
+};
+const eventsOptions = {
+  plugins: { title: { display: true, text: 'Événements par catégorie' }, legend: { display: false } },
+  scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+};
 
 async function reload() {
   const dog = dogsStore.selectedDog;
@@ -95,6 +127,16 @@ watch([() => dogsStore.selectedDog?.id, fromDate, toDate], reload, { immediate: 
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   gap: var(--space-4);
+}
+
+.chart-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: var(--space-4);
+}
+
+.chart {
+  height: 20rem;
 }
 
 .kpi-label {

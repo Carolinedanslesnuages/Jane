@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { ActiveState, Observation, Prisma } from '@prisma/client';
+import { ActiveState, Observation, Prisma, Species } from '@prisma/client';
 import { DogsService } from '../dogs/dogs.service';
 import { findCategory } from '../ethogram/ethogram';
 import { PrismaService } from '../prisma/prisma.service';
@@ -14,8 +14,8 @@ export class ObservationsService {
 
   /** Records an instant behaviour (an event). */
   async recordEvent(ownerId: string, dogId: string, input: RecordEventDto): Promise<Observation> {
-    await this.dogsService.findOne(ownerId, dogId);
-    const category = this.requireCategory(input.behavior);
+    const dog = await this.dogsService.findOne(ownerId, dogId);
+    const category = this.requireCategory(dog.species, input.behavior);
     const { behavior, ...context } = input;
     return this.prisma.observation.create({
       data: { dogId, behavior, category, type: 'EVENT', ...context },
@@ -24,8 +24,8 @@ export class ObservationsService {
 
   /** Starts timing a behaviour. A behaviour can only run once at a time for a given dog. */
   async startState(ownerId: string, dogId: string, behavior: string): Promise<ActiveState> {
-    await this.dogsService.findOne(ownerId, dogId);
-    const category = this.requireCategory(behavior);
+    const dog = await this.dogsService.findOne(ownerId, dogId);
+    const category = this.requireCategory(dog.species, behavior);
     try {
       return await this.prisma.activeState.create({ data: { dogId, behavior, category } });
     } catch (error) {
@@ -122,8 +122,8 @@ export class ObservationsService {
     await this.prisma.observation.delete({ where: { id: observationId } });
   }
 
-  private requireCategory(behavior: string) {
-    const category = findCategory(behavior);
+  private requireCategory(species: Species, behavior: string) {
+    const category = findCategory(species, behavior);
     if (!category) {
       throw new BadRequestException(`Comportement inconnu : ${behavior}`);
     }

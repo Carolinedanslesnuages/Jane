@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CognitiveTestType } from '@prisma/client';
 import { CognitiveTestsService } from '../cognitive-tests/cognitive-tests.service';
 import { DogsService } from '../dogs/dogs.service';
-import { ETHOGRAM } from '../ethogram/ethogram';
+import { CATEGORY_LABELS } from '../ethogram/ethogram';
 import { ObservationsService } from '../observations/observations.service';
 import { StatsService } from '../stats/stats.service';
 import { toCsv } from './csv';
@@ -39,12 +39,11 @@ export class ExportsService {
       this.dogsService.list(ownerId),
     ]);
     const dogNames = new Map(dogs.map((dog) => [dog.id, dog.name]));
-    const categoryLabels = new Map(ETHOGRAM.map((entry) => [entry.category, entry.label]));
     const rows = observations.map((observation) => [
       observation.recordedAt,
       dogNames.get(observation.dogId),
       observation.behavior,
-      categoryLabels.get(observation.category),
+      CATEGORY_LABELS[observation.category],
       observation.type === 'EVENT' ? 'evenement' : 'etat',
       observation.startedAt,
       observation.durationSeconds,
@@ -61,7 +60,6 @@ export class ExportsService {
     const dog = await this.dogsService.findOne(ownerId, query.dogId);
     const summary = await this.statsService.summary(ownerId, query);
     const tests = await this.cognitiveTestsService.list(ownerId, { dogId: dog.id });
-    const categoryLabels = new Map(ETHOGRAM.map((entry) => [entry.category, entry.label]));
     const formatDay = (instant: string) => new Date(instant).toLocaleDateString('fr-FR', { timeZone: query.timezone ?? 'UTC' });
 
     const testSummaries = [...new Set(tests.map((test) => test.testType))].map((testType) => {
@@ -81,7 +79,7 @@ export class ExportsService {
       periodLabel: `${formatDay(query.from)} au ${formatDay(query.to)}`,
       totals: summary.totals,
       categories: summary.timeBudget.map((entry) => ({
-        label: categoryLabels.get(entry.category) ?? entry.category,
+        label: CATEGORY_LABELS[entry.category],
         durationSeconds: entry.durationSeconds,
         eventCount: entry.eventCount,
       })),

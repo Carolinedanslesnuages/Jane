@@ -1,12 +1,12 @@
 import { Controller, Get } from '@nestjs/common';
 import { Public } from '../auth/public.decorator';
-import { ETHOGRAM } from './ethogram';
+import { ethogramFor } from './ethogram';
 
 @Controller('ethogram')
 export class EthogramController {
   @Public()
   @Get()
   list() {
-    return ETHOGRAM;
+    return ethogramFor('DOG');
   }
 }

@@ -1,4 +1,4 @@
-import { BehaviorCategory } from '@prisma/client';
+import { BehaviorCategory, Species } from '@prisma/client';
 
 export interface EthogramCategory {
   category: BehaviorCategory;
@@ -6,41 +6,42 @@ export interface EthogramCategory {
   behaviors: string[];
 }
 
-/** The behaviours a user can record, grouped by category. Labels are shown as-is in the interface. */
-export const ETHOGRAM: EthogramCategory[] = [
-  {
-    category: 'EXPLORATION',
-    label: 'Exploration',
-    behaviors: ['Flairer le sol', 'Flairer les objets', "Inspecter l'environnement", 'Chercher'],
-  },
-  {
-    category: 'PLAY',
-    label: 'Jeu',
-    behaviors: ['Jouer avec jouet', 'Jouer avec humain', 'Jouer avec autre chien', 'Courir', 'Sauter'],
-  },
-  {
-    category: 'REST',
-    label: 'Repos',
-    behaviors: ['Dormir', 'Se reposer', 'Somnoler', "S'allonger"],
-  },
-  {
-    category: 'SOCIAL',
-    label: 'Social',
-    behaviors: ['Interaction humain', 'Interaction chien', "Demande d'attention", 'Lécher', 'Contact physique'],
-  },
-  {
-    category: 'STRESS',
-    label: 'Stress',
-    behaviors: ['Aboyer', 'Gémir', 'Haleter excessif', 'Trembler', 'Se lécher les babines', 'Bâiller', 'Queue basse'],
-  },
-  {
-    category: 'ELIMINATION',
-    label: 'Élimination',
-    behaviors: ['Uriner', 'Déféquer', 'Renifler avant élimination'],
-  },
-];
+/** The six categories are shared by every species; only the behaviours inside them differ. */
+export const CATEGORY_LABELS: Record<BehaviorCategory, string> = {
+  EXPLORATION: 'Exploration',
+  PLAY: 'Jeu',
+  REST: 'Repos',
+  SOCIAL: 'Social',
+  STRESS: 'Stress',
+  ELIMINATION: 'Élimination',
+};
 
-/** Returns the category of a behaviour, or undefined when it is not in the ethogram. */
-export function findCategory(behavior: string): BehaviorCategory | undefined {
-  return ETHOGRAM.find((entry) => entry.behaviors.includes(behavior))?.category;
+const CATEGORY_ORDER: BehaviorCategory[] = ['EXPLORATION', 'PLAY', 'REST', 'SOCIAL', 'STRESS', 'ELIMINATION'];
+
+/** Builds an ethogram from the behaviours of each category (labels are shown as-is in the interface). */
+function defineEthogram(behaviors: Record<BehaviorCategory, string[]>): EthogramCategory[] {
+  return CATEGORY_ORDER.map((category) => ({ category, label: CATEGORY_LABELS[category], behaviors: behaviors[category] }));
+}
+
+const DOG_ETHOGRAM = defineEthogram({
+  EXPLORATION: ['Flairer le sol', 'Flairer les objets', "Inspecter l'environnement", 'Chercher'],
+  PLAY: ['Jouer avec jouet', 'Jouer avec humain', 'Jouer avec autre chien', 'Courir', 'Sauter'],
+  REST: ['Dormir', 'Se reposer', 'Somnoler', "S'allonger"],
+  SOCIAL: ['Interaction humain', 'Interaction chien', "Demande d'attention", 'Lécher', 'Contact physique'],
+  STRESS: ['Aboyer', 'Gémir', 'Haleter excessif', 'Trembler', 'Se lécher les babines', 'Bâiller', 'Queue basse'],
+  ELIMINATION: ['Uriner', 'Déféquer', 'Renifler avant élimination'],
+});
+
+/** The ethograms available so far; a species without its own one falls back to the dog's. */
+const ETHOGRAMS: Partial<Record<Species, EthogramCategory[]>> = {
+  DOG: DOG_ETHOGRAM,
+};
+
+export function ethogramFor(species: Species): EthogramCategory[] {
+  return ETHOGRAMS[species] ?? DOG_ETHOGRAM;
+}
+
+/** Returns the category of a behaviour for a species, or undefined when it is not in its ethogram. */
+export function findCategory(species: Species, behavior: string): BehaviorCategory | undefined {
+  return ethogramFor(species).find((entry) => entry.behaviors.includes(behavior))?.category;
 }

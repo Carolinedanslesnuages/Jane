@@ -29,4 +29,21 @@ nav {
   flex-direction: column;
   gap: var(--space-1);
 }
+
+.nav-link {
+  display: block;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  background: var(--color-sand-dark);
+}
+
+.nav-link.router-link-active {
+  background: var(--color-forest);
+  color: var(--color-cream);
+}
 </style>

@@ -27,6 +27,16 @@ import ToastHost from './components/ToastHost.vue';
   padding: var(--space-6) var(--space-5) 4rem;
 }
 
+@media (max-width: 800px) {
+  .shell {
+    flex-direction: column;
+  }
+
+  .content {
+    padding: var(--space-5) var(--space-4) 3rem;
+  }
+}
+
 .content-inner {
   max-width: var(--content-width);
   margin: 0 auto;

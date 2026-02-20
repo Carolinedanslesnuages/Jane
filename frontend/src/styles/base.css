@@ -123,3 +123,16 @@ button.danger {
 .muted {
   color: var(--color-muted);
 }
+
+@media (max-width: 800px) {
+  h1 {
+    font-size: 1.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

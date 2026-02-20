@@ -110,4 +110,33 @@ nav {
   background: var(--color-forest);
   color: var(--color-cream);
 }
+
+/* Narrow screens: the sidebar becomes a header above the content. */
+@media (max-width: 800px) {
+  .sidebar {
+    width: 100%;
+    min-height: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-3);
+  }
+
+  .brand-tagline {
+    display: none;
+  }
+
+  nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .account {
+    margin-top: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--space-3);
+  }
+}
 </style>

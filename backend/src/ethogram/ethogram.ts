@@ -50,15 +50,26 @@ const HORSE_ETHOGRAM = defineEthogram({
   ELIMINATION: ['Uriner', 'Déféquer'],
 });
 
-/** The ethograms available so far; a species without its own one falls back to the dog's. */
-const ETHOGRAMS: Partial<Record<Species, EthogramCategory[]>> = {
+/** A neutral ethogram for any other species (rabbit, bird, rodent, wildlife…). */
+const GENERIC_ETHOGRAM = defineEthogram({
+  EXPLORATION: ['Explorer', 'Flairer', 'Chercher de la nourriture', 'Observer'],
+  PLAY: ['Jouer', 'Courir', 'Sauter', 'Grimper'],
+  REST: ['Dormir', 'Se reposer', 'Somnoler'],
+  SOCIAL: ['Interagir avec un congénère', 'Interagir avec un humain', 'Se toiletter', 'Vocaliser'],
+  STRESS: ['Fuir', 'Se cacher', 'Se figer', 'Vocalisation de détresse', 'Comportement répétitif'],
+  ELIMINATION: ['Uriner', 'Déféquer'],
+});
+
+/** The ethogram of every species. */
+const ETHOGRAMS: Record<Species, EthogramCategory[]> = {
   DOG: DOG_ETHOGRAM,
   CAT: CAT_ETHOGRAM,
   HORSE: HORSE_ETHOGRAM,
+  OTHER: GENERIC_ETHOGRAM,
 };
 
 export function ethogramFor(species: Species): EthogramCategory[] {
-  return ETHOGRAMS[species] ?? DOG_ETHOGRAM;
+  return ETHOGRAMS[species];
 }
 
 /** Returns the category of a behaviour for a species, or undefined when it is not in its ethogram. */

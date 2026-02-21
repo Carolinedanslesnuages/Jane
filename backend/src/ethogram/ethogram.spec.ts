@@ -37,4 +37,9 @@ describe('ethogram', () => {
     expect(findCategory('HORSE', 'Piaffer')).toBe('STRESS');
     expect(findCategory('DOG', 'Piaffer')).toBeUndefined();
   });
+
+  it('offers a neutral ethogram for other species', () => {
+    expect(findCategory('OTHER', 'Fuir')).toBe('STRESS');
+    expect(findCategory('OTHER', 'Aboyer')).toBeUndefined();
+  });
 });

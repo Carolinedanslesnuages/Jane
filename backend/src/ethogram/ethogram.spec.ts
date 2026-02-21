@@ -30,4 +30,11 @@ describe('ethogram', () => {
     expect(findCategory('CAT', 'Aboyer')).toBeUndefined();
     expect(findCategory('DOG', 'Ronronner')).toBeUndefined();
   });
+
+  it('has behaviours that are specific to the horse', () => {
+    expect(findCategory('HORSE', 'Brouter')).toBe('EXPLORATION');
+    expect(findCategory('HORSE', 'Dormir debout')).toBe('REST');
+    expect(findCategory('HORSE', 'Piaffer')).toBe('STRESS');
+    expect(findCategory('DOG', 'Piaffer')).toBeUndefined();
+  });
 });

@@ -41,10 +41,20 @@ const CAT_ETHOGRAM = defineEthogram({
   ELIMINATION: ['Utiliser la litière', 'Uriner hors de la litière', 'Marquer en urinant', 'Gratter la litière'],
 });
 
+const HORSE_ETHOGRAM = defineEthogram({
+  EXPLORATION: ['Flairer', "Inspecter l'environnement", 'Brouter', 'Gratter le sol du sabot'],
+  PLAY: ['Galoper librement', 'Ruer en jeu', 'Jouer avec un congénère', 'Se rouler'],
+  REST: ['Dormir debout', 'Dormir couché', 'Somnoler', 'Se reposer'],
+  SOCIAL: ['Se toiletter mutuellement', "Se tenir près d'un congénère", 'Interaction humain', 'Hennir'],
+  STRESS: ['Piaffer', 'Secouer la tête', 'Fouetter de la queue', 'Oreilles plaquées', 'Montrer le blanc de l\'œil', 'Tic', 'Trembler'],
+  ELIMINATION: ['Uriner', 'Déféquer'],
+});
+
 /** The ethograms available so far; a species without its own one falls back to the dog's. */
 const ETHOGRAMS: Partial<Record<Species, EthogramCategory[]>> = {
   DOG: DOG_ETHOGRAM,
   CAT: CAT_ETHOGRAM,
+  HORSE: HORSE_ETHOGRAM,
 };
 
 export function ethogramFor(species: Species): EthogramCategory[] {

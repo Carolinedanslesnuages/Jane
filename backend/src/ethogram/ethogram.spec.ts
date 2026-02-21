@@ -23,4 +23,11 @@ describe('ethogram', () => {
     expect(findCategory('DOG', 'Dormir')).toBe('REST');
     expect(findCategory('DOG', 'Voler')).toBeUndefined();
   });
+
+  it('has behaviours that are specific to the cat', () => {
+    expect(findCategory('CAT', 'Ronronner')).toBe('SOCIAL');
+    expect(findCategory('CAT', 'Utiliser la litière')).toBe('ELIMINATION');
+    expect(findCategory('CAT', 'Aboyer')).toBeUndefined();
+    expect(findCategory('DOG', 'Ronronner')).toBeUndefined();
+  });
 });

@@ -52,6 +52,16 @@ describe('/dogs (HTTP)', () => {
     await request(server).post('/dogs').set(as('alice')).send({ name: 'Rex', birthDate: 'hier' }).expect(400);
   });
 
+  it('stores the species and refuses an unknown one', async () => {
+    const server = app.getHttpServer();
+    const created = await request(server).post('/dogs').set(as('dave')).send({ name: 'Mistigri', species: 'CAT' }).expect(201);
+    expect(created.body.species).toBe('CAT');
+    const defaulted = await request(server).post('/dogs').set(as('dave')).send({ name: 'Rex' }).expect(201);
+    expect(defaulted.body.species).toBe('DOG');
+    await request(server).post('/dogs').set(as('dave')).send({ name: 'Smaug', species: 'DRAGON' }).expect(400);
+    await request(server).patch(`/dogs/${created.body.id}`).set(as('dave')).send({ species: 'OTHER' }).expect(200);
+  });
+
   it('answers 409 on a duplicate name', async () => {
     const server = app.getHttpServer();
     await request(server).post('/dogs').set(as('carol')).send({ name: 'Luna' }).expect(201);

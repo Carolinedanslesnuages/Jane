@@ -1,4 +1,4 @@
-import { DogSex } from '@prisma/client';
+import { DogSex, Species } from '@prisma/client';
 import { IsBoolean, IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateDogDto {
@@ -6,6 +6,11 @@ export class CreateDogDto {
   @IsNotEmpty()
   @MaxLength(80)
   name: string;
+
+  /** Espèce de l'animal (chien par défaut) : elle détermine l'éthogramme. */
+  @IsOptional()
+  @IsEnum(Species)
+  species?: Species;
 
   @IsOptional()
   @IsString()

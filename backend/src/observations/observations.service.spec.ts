@@ -53,6 +53,21 @@ describe('ObservationsService', () => {
     });
   });
 
+  describe('species', () => {
+    it("checks the behaviour against the ethogram of the animal's species", async () => {
+      const cat = await prisma.dog.create({ data: { ownerId, name: 'Mistigri', species: 'CAT' } });
+      await expect(service.recordEvent(ownerId, cat.id, { behavior: 'Ronronner' })).resolves.toMatchObject({ category: 'SOCIAL' });
+      await expect(service.recordEvent(ownerId, cat.id, { behavior: 'Aboyer' })).rejects.toThrow(BadRequestException);
+      await expect(service.recordEvent(ownerId, dogId, { behavior: 'Ronronner' })).rejects.toThrow(BadRequestException);
+    });
+
+    it('applies the same rule to timed states', async () => {
+      const horse = await prisma.dog.create({ data: { ownerId, name: 'Éclair', species: 'HORSE' } });
+      await expect(service.startState(ownerId, horse.id, 'Dormir debout')).resolves.toMatchObject({ category: 'REST' });
+      await expect(service.startState(ownerId, horse.id, 'Flairer le sol')).rejects.toThrow(BadRequestException);
+    });
+  });
+
   describe('states', () => {
     it('measures the duration between start and stop', async () => {
       await service.startState(ownerId, dogId, 'Dormir');

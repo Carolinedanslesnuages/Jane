@@ -3,6 +3,7 @@ export type DogSex = 'MALE' | 'FEMALE';
 export interface Dog {
   id: string;
   name: string;
+  species: Species;
   breed: string | null;
   birthDate: string | null;
   sex: DogSex | null;
@@ -12,6 +13,7 @@ export interface Dog {
 
 export interface DogInput {
   name: string;
+  species?: Species;
   breed?: string;
   birthDate?: string;
   sex?: DogSex;
@@ -96,3 +98,5 @@ export interface StatsSummary {
   };
   timeline: { date: string; category: BehaviorCategory; count: number }[];
 }
+
+export type Species = 'DOG' | 'CAT' | 'HORSE' | 'OTHER';

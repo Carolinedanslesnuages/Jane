@@ -2,13 +2,13 @@
   <section>
     <PageHeader title="Tests cognitifs" subtitle="Chronométrez et comparez les épreuves de résolution de problème." />
 
-    <AppCard v-if="dogsStore.loaded && !dogsStore.selectedDog">
+    <AppCard v-if="animalsStore.loaded && !animalsStore.selectedAnimal">
       <p>Ajoutez d'abord un chien dans la page <RouterLink to="/profils">Profils</RouterLink> pour enregistrer des tests.</p>
     </AppCard>
 
-    <template v-else-if="dogsStore.selectedDog">
+    <template v-else-if="animalsStore.selectedAnimal">
       <AppCard>
-        <label for="test-type">Épreuve pour {{ dogsStore.selectedDog.name }}</label>
+        <label for="test-type">Épreuve pour {{ animalsStore.selectedAnimal.name }}</label>
         <select id="test-type" v-model="testType">
           <option v-for="test in COGNITIVE_TESTS" :key="test.type" :value="test.type">{{ test.label }}</option>
         </select>
@@ -44,7 +44,7 @@
         </form>
       </AppCard>
 
-      <h2>Historique de {{ dogsStore.selectedDog.name }}</h2>
+      <h2>Historique de {{ animalsStore.selectedAnimal.name }}</h2>
       <p v-if="cognitiveStore.tests.length === 0" class="muted">Aucun test enregistré pour ce chien.</p>
       <template v-else>
         <div class="metrics">
@@ -94,14 +94,14 @@ import AppCard from '../components/AppCard.vue';
 import PageHeader from '../components/PageHeader.vue';
 import { useStopwatch } from '../composables/useStopwatch';
 import { useCognitiveStore } from '../stores/cognitive';
-import { useDogsStore } from '../stores/dogs';
+import { useAnimalsStore } from '../stores/animals';
 import { useToastsStore } from '../stores/toasts';
 import { ACCENT_HEX } from '../charts/setup';
 import { cognitiveLabel, COGNITIVE_TESTS } from '../utils/cognitive';
 import { formatDateTime, formatDuration } from '../utils/format';
 import type { CognitiveTestType } from '../api/types';
 
-const dogsStore = useDogsStore();
+const animalsStore = useAnimalsStore();
 const cognitiveStore = useCognitiveStore();
 const toasts = useToastsStore();
 const stopwatch = useStopwatch();
@@ -118,19 +118,19 @@ const notes = ref('');
 const saving = ref(false);
 
 async function saveResult() {
-  const dog = dogsStore.selectedDog;
-  if (!dog) {
+  const animal = animalsStore.selectedAnimal;
+  if (!animal) {
     return;
   }
   saving.value = true;
   try {
-    await cognitiveStore.record(dog.id, {
+    await cognitiveStore.record(animal.id, {
       testType: testType.value,
       durationSeconds: measuredSeconds.value,
       score: withScore.value ? score.value : undefined,
       notes: notes.value.trim() || undefined,
     });
-    toasts.info(`${currentTest.value.label} enregistré pour ${dog.name}.`);
+    toasts.info(`${currentTest.value.label} enregistré pour ${animal.name}.`);
     resetStopwatch();
     notes.value = '';
     withScore.value = false;
@@ -186,11 +186,11 @@ const chartOptions = {
   plugins: { title: { display: true, text: 'Évolution des durées (secondes)' } },
 };
 
-onMounted(() => dogsStore.load());
+onMounted(() => animalsStore.load());
 
 watch(
-  () => dogsStore.selectedDog?.id,
-  (dogId) => dogId && cognitiveStore.load(dogId),
+  () => animalsStore.selectedAnimal?.id,
+  (animalId) => animalId && cognitiveStore.load(animalId),
   { immediate: true },
 );
 </script>

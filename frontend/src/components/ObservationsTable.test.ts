@@ -7,11 +7,11 @@ import ObservationsTable from './ObservationsTable.vue';
 
 const observations: Observation[] = [
   {
-    id: 'o1', dogId: 'd1', behavior: 'Aboyer', category: 'STRESS', type: 'EVENT', startedAt: null,
+    id: 'o1', animalId: 'd1', behavior: 'Aboyer', category: 'STRESS', type: 'EVENT', startedAt: null,
     recordedAt: '2026-02-20T10:00:00Z', durationSeconds: null, notes: null, location: 'Maison', weather: null, stimuli: null,
   },
   {
-    id: 'o2', dogId: 'd1', behavior: 'Dormir', category: 'REST', type: 'STATE', startedAt: '2026-02-20T08:00:00Z',
+    id: 'o2', animalId: 'd1', behavior: 'Dormir', category: 'REST', type: 'STATE', startedAt: '2026-02-20T08:00:00Z',
     recordedAt: '2026-02-20T09:30:00Z', durationSeconds: 5400, notes: null, location: null, weather: null, stimuli: null,
   },
 ];

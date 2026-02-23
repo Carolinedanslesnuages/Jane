@@ -12,45 +12,45 @@ export const useObservationsStore = defineStore('observations', () => {
   const history = ref<Observation[]>([]);
   const historyTotal = ref(0);
 
-  /** Reloads the running states and the latest observations of a dog. */
-  async function refresh(dogId: string) {
+  /** Reloads the running states and the latest observations of a animal. */
+  async function refresh(animalId: string) {
     const [states, latest] = await Promise.all([
-      api.get<ActiveState[]>(`/dogs/${dogId}/active-states`),
-      api.get<{ items: Observation[] }>(`/observations?dogId=${dogId}&limit=${RECENT_COUNT}`),
+      api.get<ActiveState[]>(`/animals/${animalId}/active-states`),
+      api.get<{ items: Observation[] }>(`/observations?animalId=${animalId}&limit=${RECENT_COUNT}`),
     ]);
     activeStates.value = states;
     recent.value = latest.items;
   }
 
-  async function recordEvent(dogId: string, behavior: string, context: ObservationContext) {
-    await api.post(`/dogs/${dogId}/events`, { behavior, ...context });
-    await refresh(dogId);
+  async function recordEvent(animalId: string, behavior: string, context: ObservationContext) {
+    await api.post(`/animals/${animalId}/events`, { behavior, ...context });
+    await refresh(animalId);
   }
 
-  async function startState(dogId: string, behavior: string) {
-    await api.post(`/dogs/${dogId}/states/start`, { behavior });
-    await refresh(dogId);
+  async function startState(animalId: string, behavior: string) {
+    await api.post(`/animals/${animalId}/states/start`, { behavior });
+    await refresh(animalId);
   }
 
-  async function stopState(dogId: string, behavior: string, context: ObservationContext) {
-    await api.post(`/dogs/${dogId}/states/stop`, { behavior, ...context });
-    await refresh(dogId);
+  async function stopState(animalId: string, behavior: string, context: ObservationContext) {
+    await api.post(`/animals/${animalId}/states/stop`, { behavior, ...context });
+    await refresh(animalId);
   }
 
   function isRunning(behavior: string): boolean {
     return activeStates.value.some((state) => state.behavior === behavior);
   }
 
-  /** The full list of a dog's observations (newest first, up to HISTORY_LIMIT). */
-  async function loadHistory(dogId: string) {
-    const page = await api.get<{ total: number; items: Observation[] }>(`/observations?dogId=${dogId}&limit=${HISTORY_LIMIT}`);
+  /** The full list of a animal's observations (newest first, up to HISTORY_LIMIT). */
+  async function loadHistory(animalId: string) {
+    const page = await api.get<{ total: number; items: Observation[] }>(`/observations?animalId=${animalId}&limit=${HISTORY_LIMIT}`);
     history.value = page.items;
     historyTotal.value = page.total;
   }
 
-  async function removeObservation(dogId: string, observationId: string) {
+  async function removeObservation(animalId: string, observationId: string) {
     await api.delete(`/observations/${observationId}`);
-    await loadHistory(dogId);
+    await loadHistory(animalId);
   }
 
   function reset() {

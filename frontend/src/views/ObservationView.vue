@@ -2,11 +2,11 @@
   <section>
     <PageHeader title="Observation" subtitle="Enregistrez les comportements au fil de l'eau, en événement ou en durée." />
 
-    <AppCard v-if="dogsStore.loaded && !dogsStore.selectedDog">
+    <AppCard v-if="animalsStore.loaded && !animalsStore.selectedAnimal">
       <p>Ajoutez d'abord un chien dans la page <RouterLink to="/profils">Profils</RouterLink> pour commencer à observer.</p>
     </AppCard>
 
-    <template v-else-if="dogsStore.selectedDog">
+    <template v-else-if="animalsStore.selectedAnimal">
       <ActiveStates :states="observationsStore.activeStates" />
 
       <fieldset class="mode">
@@ -77,7 +77,7 @@ import CategoryCard from '../components/CategoryCard.vue';
 import ObservationsTable from '../components/ObservationsTable.vue';
 import PageHeader from '../components/PageHeader.vue';
 import ScanSamplingPanel from '../components/ScanSamplingPanel.vue';
-import { useDogsStore } from '../stores/dogs';
+import { useAnimalsStore } from '../stores/animals';
 import { useEthogramStore } from '../stores/ethogram';
 import { useObservationsStore } from '../stores/observations';
 import { useToastsStore } from '../stores/toasts';
@@ -86,7 +86,7 @@ const LOCATIONS = ['', 'Maison', 'Jardin', 'Parc', 'Extérieur', 'Autre'];
 const WEATHERS = ['', 'Ensoleillé', 'Nuageux', 'Pluie', 'Orage', 'Neige'];
 const STIMULI = ['', 'Calme', 'Visiteurs', 'Bruit', 'Autres animaux', 'Jouets'];
 
-const dogsStore = useDogsStore();
+const animalsStore = useAnimalsStore();
 const ethogramStore = useEthogramStore();
 const observationsStore = useObservationsStore();
 const toasts = useToastsStore();
@@ -103,20 +103,20 @@ function currentContext() {
 }
 
 async function choose(behavior: string) {
-  const dog = dogsStore.selectedDog;
-  if (!dog || busy.value) {
+  const animal = animalsStore.selectedAnimal;
+  if (!animal || busy.value) {
     return;
   }
   busy.value = true;
   try {
     if (mode.value === 'EVENT') {
-      await observationsStore.recordEvent(dog.id, behavior, currentContext());
+      await observationsStore.recordEvent(animal.id, behavior, currentContext());
       toasts.info(`${behavior} enregistré.`);
     } else if (observationsStore.isRunning(behavior)) {
-      await observationsStore.stopState(dog.id, behavior, currentContext());
+      await observationsStore.stopState(animal.id, behavior, currentContext());
       toasts.info(`${behavior} terminé et enregistré.`);
     } else {
-      await observationsStore.startState(dog.id, behavior);
+      await observationsStore.startState(animal.id, behavior);
       toasts.info(`${behavior} démarré.`);
     }
   } catch (error) {
@@ -127,12 +127,12 @@ async function choose(behavior: string) {
 }
 
 onMounted(async () => {
-  await Promise.all([dogsStore.load(), ethogramStore.load()]);
+  await Promise.all([animalsStore.load(), ethogramStore.load()]);
 });
 
 watch(
-  () => dogsStore.selectedDog?.id,
-  (dogId) => (dogId ? observationsStore.refresh(dogId) : observationsStore.reset()),
+  () => animalsStore.selectedAnimal?.id,
+  (animalId) => (animalId ? observationsStore.refresh(animalId) : observationsStore.reset()),
   { immediate: true },
 );
 </script>

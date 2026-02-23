@@ -3,7 +3,7 @@ import { useNow } from './useNow';
 
 /**
  * Interval sampling: a countdown that rings every `intervalMinutes`, to remind the observer
- * to note what the dog is doing at that exact moment.
+ * to note what the animal is doing at that exact moment.
  */
 export function useScanSampling() {
   const now = useNow(1000);

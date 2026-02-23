@@ -9,17 +9,17 @@
         {{ route.meta?.label }}
       </RouterLink>
     </nav>
-    <div class="dog-picker">
-      <label for="dog-picker">Chien suivi</label>
+    <div class="animal-picker">
+      <label for="animal-picker">Chien suivi</label>
       <select
-        v-if="dogsStore.dogs.length > 0"
-        id="dog-picker"
-        :value="dogsStore.selectedDog?.id"
-        @change="dogsStore.select(($event.target as HTMLSelectElement).value)"
+        v-if="animalsStore.animals.length > 0"
+        id="animal-picker"
+        :value="animalsStore.selectedAnimal?.id"
+        @change="animalsStore.select(($event.target as HTMLSelectElement).value)"
       >
-        <option v-for="dog in dogsStore.dogs" :key="dog.id" :value="dog.id">{{ dog.name }}</option>
+        <option v-for="animal in animalsStore.animals" :key="animal.id" :value="animal.id">{{ animal.name }}</option>
       </select>
-      <p v-else-if="dogsStore.loaded" class="muted empty">Ajoutez un chien dans Profils.</p>
+      <p v-else-if="animalsStore.loaded" class="muted empty">Ajoutez un chien dans Profils.</p>
     </div>
     <footer class="account">
       <span class="account-name">{{ session.label }}</span>
@@ -31,12 +31,12 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { routes } from '../router';
-import { useDogsStore } from '../stores/dogs';
+import { useAnimalsStore } from '../stores/animals';
 import { useSessionStore } from '../stores/session';
 
 const session = useSessionStore();
-const dogsStore = useDogsStore();
-onMounted(() => Promise.all([session.load(), dogsStore.load()]));
+const animalsStore = useAnimalsStore();
+onMounted(() => Promise.all([session.load(), animalsStore.load()]));
 
 const navigation = routes.filter((route) => route.meta?.label);
 </script>
@@ -68,7 +68,7 @@ const navigation = routes.filter((route) => route.meta?.label);
   color: var(--color-muted);
 }
 
-.dog-picker .empty {
+.animal-picker .empty {
   font-size: 0.9rem;
   margin: 0;
 }

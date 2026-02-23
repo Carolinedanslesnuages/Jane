@@ -2,11 +2,11 @@
   <section>
     <PageHeader title="Tableau de bord" subtitle="Budget-temps, stress et activité sur la période choisie." />
 
-    <AppCard v-if="dogsStore.loaded && !dogsStore.selectedDog">
+    <AppCard v-if="animalsStore.loaded && !animalsStore.selectedAnimal">
       <p>Ajoutez d'abord un chien dans la page <RouterLink to="/profils">Profils</RouterLink>.</p>
     </AppCard>
 
-    <template v-else-if="dogsStore.selectedDog">
+    <template v-else-if="animalsStore.selectedAnimal">
       <div class="period">
         <div>
           <label for="period-from">Du</label>
@@ -19,7 +19,7 @@
       </div>
 
       <p v-if="summary && summary.totals.observations === 0" class="muted">
-        Aucune donnée sur cette période pour {{ dogsStore.selectedDog.name }}. Élargissez les dates ou enregistrez des observations.
+        Aucune donnée sur cette période pour {{ animalsStore.selectedAnimal.name }}. Élargissez les dates ou enregistrez des observations.
       </p>
 
       <div v-if="summary && summary.totals.observations > 0" class="kpis">
@@ -118,14 +118,14 @@ import {
   buildTimeBudgetChart,
   buildTimelineChart,
 } from '../charts/builders';
-import { useDogsStore } from '../stores/dogs';
+import { useAnimalsStore } from '../stores/animals';
 import { useEthogramStore } from '../stores/ethogram';
 import { useStatsStore } from '../stores/stats';
 import { useToastsStore } from '../stores/toasts';
 import { formatDuration } from '../utils/format';
 import { daysAgo, toInputDate } from '../utils/period';
 
-const dogsStore = useDogsStore();
+const animalsStore = useAnimalsStore();
 const ethogramStore = useEthogramStore();
 const statsStore = useStatsStore();
 const toasts = useToastsStore();
@@ -173,22 +173,22 @@ const eventsOptions = {
 };
 
 async function reload() {
-  const dog = dogsStore.selectedDog;
-  if (!dog || !fromDate.value || !toDate.value) {
+  const animal = animalsStore.selectedAnimal;
+  if (!animal || !fromDate.value || !toDate.value) {
     return;
   }
   try {
-    await statsStore.load(dog.id, fromDate.value, toDate.value);
+    await statsStore.load(animal.id, fromDate.value, toDate.value);
   } catch (error) {
     toasts.error((error as Error).message);
   }
 }
 
 onMounted(async () => {
-  await Promise.all([dogsStore.load(), ethogramStore.load()]);
+  await Promise.all([animalsStore.load(), ethogramStore.load()]);
 });
 
-watch([() => dogsStore.selectedDog?.id, fromDate, toDate], reload, { immediate: true });
+watch([() => animalsStore.selectedAnimal?.id, fromDate, toDate], reload, { immediate: true });
 </script>
 
 <style scoped>

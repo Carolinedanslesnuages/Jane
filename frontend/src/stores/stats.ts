@@ -8,12 +8,12 @@ export const useStatsStore = defineStore('stats', () => {
   const summary = ref<StatsSummary | null>(null);
   const loading = ref(false);
 
-  /** Loads the statistics of a dog between two local dates (AAAA-MM-JJ, both included). */
-  async function load(dogId: string, fromDate: string, toDate: string) {
+  /** Loads the statistics of a animal between two local dates (AAAA-MM-JJ, both included). */
+  async function load(animalId: string, fromDate: string, toDate: string) {
     loading.value = true;
     try {
       const query = new URLSearchParams({
-        dogId,
+        animalId,
         from: startOfLocalDay(fromDate),
         to: endOfLocalDay(toDate),
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,

@@ -1,22 +1,22 @@
-export type DogSex = 'MALE' | 'FEMALE';
+export type Sex = 'MALE' | 'FEMALE';
 
-export interface Dog {
+export interface Animal {
   id: string;
   name: string;
   species: Species;
   breed: string | null;
   birthDate: string | null;
-  sex: DogSex | null;
+  sex: Sex | null;
   neutered: boolean;
   createdAt: string;
 }
 
-export interface DogInput {
+export interface AnimalInput {
   name: string;
   species?: Species;
   breed?: string;
   birthDate?: string;
-  sex?: DogSex;
+  sex?: Sex;
   neutered?: boolean;
 }
 
@@ -37,7 +37,7 @@ export interface EthogramCategory {
 
 export interface Observation {
   id: string;
-  dogId: string;
+  animalId: string;
   behavior: string;
   category: BehaviorCategory;
   type: 'EVENT' | 'STATE';
@@ -52,7 +52,7 @@ export interface Observation {
 
 export interface ActiveState {
   id: string;
-  dogId: string;
+  animalId: string;
   behavior: string;
   category: BehaviorCategory;
   startedAt: string;
@@ -69,7 +69,7 @@ export type CognitiveTestType = 'OBJECT_PERMANENCE' | 'DETOUR' | 'MANIPULATION';
 
 export interface CognitiveTest {
   id: string;
-  dogId: string;
+  animalId: string;
   testType: CognitiveTestType;
   recordedAt: string;
   durationSeconds: number;

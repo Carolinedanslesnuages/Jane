@@ -9,7 +9,7 @@ async function bootstrap() {
   configureApp(app);
   const documentation = new DocumentBuilder()
     .setTitle('API Jane')
-    .setDescription("Carnet d'observation du comportement canin")
+    .setDescription("Carnet d'observation du comportement animal")
     .setVersion('2.0.0')
     .addBearerAuth()
     .build();

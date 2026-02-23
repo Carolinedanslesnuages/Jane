@@ -119,7 +119,7 @@ export function renderReport(data: ReportData, options: { compress?: boolean } =
       );
     }
 
-    document.moveDown(2).fontSize(8).fillColor(MUTED).text("Rapport généré par Jane, carnet d'observation du comportement canin.");
+    document.moveDown(2).fontSize(8).fillColor(MUTED).text("Rapport généré par Jane, carnet d'observation du comportement animal.");
     document.end();
   });
 }

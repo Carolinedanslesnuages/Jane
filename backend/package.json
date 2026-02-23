@@ -1,7 +1,7 @@
 {
   "name": "jane-backend",
   "version": "2.0.0",
-  "description": "API de Jane, carnet d'observation du comportement canin",
+  "description": "API de Jane, carnet d'observation du comportement animal",
   "private": true,
   "scripts": {
     "build": "nest build",

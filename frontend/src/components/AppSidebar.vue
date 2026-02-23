@@ -2,7 +2,7 @@
   <aside class="sidebar">
     <header class="brand">
       <span class="brand-name">Jane</span>
-      <span class="brand-tagline">Carnet d'observation du comportement canin</span>
+      <span class="brand-tagline">Carnet d'observation du comportement animal</span>
     </header>
     <nav aria-label="Navigation principale">
       <RouterLink v-for="route in navigation" :key="route.path" :to="route.path" class="nav-link">
@@ -10,7 +10,7 @@
       </RouterLink>
     </nav>
     <div class="animal-picker">
-      <label for="animal-picker">Chien suivi</label>
+      <label for="animal-picker">Animal suivi</label>
       <select
         v-if="animalsStore.animals.length > 0"
         id="animal-picker"
@@ -19,7 +19,7 @@
       >
         <option v-for="animal in animalsStore.animals" :key="animal.id" :value="animal.id">{{ animal.name }}</option>
       </select>
-      <p v-else-if="animalsStore.loaded" class="muted empty">Ajoutez un chien dans Profils.</p>
+      <p v-else-if="animalsStore.loaded" class="muted empty">Ajoutez un animal dans Profils.</p>
     </div>
     <footer class="account">
       <span class="account-name">{{ session.label }}</span>

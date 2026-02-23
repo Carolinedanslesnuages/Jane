@@ -2,14 +2,20 @@
   <section>
     <PageHeader title="Profils" subtitle="Les chiens suivis, avec leurs informations de base." />
 
-    <AppCard title="Nouveau chien">
+    <AppCard title="Nouvel animal">
       <form class="form-grid" @submit.prevent="addAnimal">
         <div>
           <label for="animal-name">Nom *</label>
           <input id="animal-name" v-model="form.name" required maxlength="80" />
         </div>
         <div>
-          <label for="animal-breed">Race</label>
+          <label for="animal-species">Espèce</label>
+          <select id="animal-species" v-model="form.species">
+            <option v-for="entry in SPECIES" :key="entry.value" :value="entry.value">{{ entry.label }}</option>
+          </select>
+        </div>
+        <div>
+          <label for="animal-breed">Race ou variété</label>
           <input id="animal-breed" v-model="form.breed" maxlength="80" />
         </div>
         <div>
@@ -62,7 +68,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import type { AnimalInput, Sex } from '../api/types';
+import type { AnimalInput, Sex, Species } from '../api/types';
 import AppCard from '../components/AppCard.vue';
 import ConfirmAction from '../components/ConfirmAction.vue';
 import PageHeader from '../components/PageHeader.vue';
@@ -70,11 +76,12 @@ import type { Animal } from '../api/types';
 import { useAnimalsStore } from '../stores/animals';
 import { useToastsStore } from '../stores/toasts';
 import { formatAge } from '../utils/format';
+import { SPECIES } from '../utils/species';
 
 const animalsStore = useAnimalsStore();
 const toasts = useToastsStore();
 const saving = ref(false);
-const form = reactive({ name: '', breed: '', birthDate: '', sex: '' as Sex | '', neutered: false });
+const form = reactive({ name: '', species: 'DOG' as Species, breed: '', birthDate: '', sex: '' as Sex | '', neutered: false });
 
 onMounted(() => animalsStore.load());
 
@@ -98,6 +105,7 @@ async function addAnimal() {
   try {
     const input: AnimalInput = {
       name: form.name.trim(),
+      species: form.species,
       breed: form.breed.trim() || undefined,
       birthDate: form.birthDate || undefined,
       sex: form.sex || undefined,
@@ -105,7 +113,7 @@ async function addAnimal() {
     };
     await animalsStore.create(input);
     toasts.info(`${input.name} a été ajouté.`);
-    Object.assign(form, { name: '', breed: '', birthDate: '', sex: '', neutered: false });
+    Object.assign(form, { name: '', species: form.species, breed: '', birthDate: '', sex: '', neutered: false });
   } catch (error) {
     toasts.error((error as Error).message);
   } finally {

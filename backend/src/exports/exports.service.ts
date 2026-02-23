@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CognitiveTestType } from '@prisma/client';
 import { CognitiveTestsService } from '../cognitive-tests/cognitive-tests.service';
 import { AnimalsService } from '../animals/animals.service';
+import { SPECIES_LABELS } from '../animals/species';
 import { CATEGORY_LABELS } from '../ethogram/ethogram';
 import { ObservationsService } from '../observations/observations.service';
 import { StatsService } from '../stats/stats.service';
@@ -11,7 +12,8 @@ import { renderReport } from './report';
 
 const CSV_HEADER = [
   'date',
-  'chien',
+  'animal',
+  'espece',
   'comportement',
   'categorie',
   'type',
@@ -38,10 +40,11 @@ export class ExportsService {
       this.observationsService.listAll(ownerId, query),
       this.animalsService.list(ownerId),
     ]);
-    const animalNames = new Map(animals.map((animal) => [animal.id, animal.name]));
+    const animalsById = new Map(animals.map((animal) => [animal.id, animal]));
     const rows = observations.map((observation) => [
       observation.recordedAt,
-      animalNames.get(observation.animalId),
+      animalsById.get(observation.animalId)?.name,
+      SPECIES_LABELS[animalsById.get(observation.animalId)?.species ?? 'OTHER'],
       observation.behavior,
       CATEGORY_LABELS[observation.category],
       observation.type === 'EVENT' ? 'evenement' : 'etat',

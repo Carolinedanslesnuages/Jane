@@ -23,9 +23,9 @@ describe('GET /exports/observations.csv (HTTP)', () => {
     expect(response.headers['content-type']).toContain('text/csv');
     expect(response.headers['content-disposition']).toContain('attachment');
     const lines = response.text.replace('﻿', '').trim().split('\r\n');
-    expect(lines[0]).toBe('date,chien,comportement,categorie,type,debut,duree_secondes,lieu,meteo,stimuli,notes');
+    expect(lines[0]).toBe('date,animal,espece,comportement,categorie,type,debut,duree_secondes,lieu,meteo,stimuli,notes');
     expect(lines).toHaveLength(2);
-    expect(lines[1]).toContain("'=Rex,Aboyer,Stress,evenement");
+    expect(lines[1]).toContain("'=Rex,Chien,Aboyer,Stress,evenement");
     expect(lines[1]).toContain('"chez le voisin, tard"');
   });
 

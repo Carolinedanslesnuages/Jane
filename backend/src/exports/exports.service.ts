@@ -78,6 +78,7 @@ export class ExportsService {
 
     return renderReport({
       animalName: animal.name,
+      speciesLabel: SPECIES_LABELS[animal.species],
       generatedAt: new Date(),
       periodLabel: `${formatDay(query.from)} au ${formatDay(query.to)}`,
       totals: summary.totals,

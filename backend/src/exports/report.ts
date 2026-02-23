@@ -2,6 +2,7 @@ import PDFDocument from 'pdfkit';
 
 export interface ReportData {
   animalName: string;
+  speciesLabel: string;
   generatedAt: Date;
   periodLabel: string;
   totals: { observations: number; observedDays: number; measuredSeconds: number; stressCount: number };
@@ -57,7 +58,7 @@ export function renderReport(data: ReportData, options: { compress?: boolean } =
 
     document.font('Times-Bold').fontSize(24).fillColor(FOREST).text('Bilan comportemental', { align: 'left' });
     document.font('Helvetica').fontSize(10.5).fillColor(MUTED);
-    document.text(`Chien : ${data.animalName}`);
+    document.text(`Animal : ${data.animalName} (${data.speciesLabel.toLowerCase()})`);
     document.text(`Période : ${data.periodLabel}`);
     document.text(`Rapport généré le ${data.generatedAt.toLocaleDateString('fr-FR')}`);
     document.fillColor(INK);

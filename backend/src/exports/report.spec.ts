@@ -2,6 +2,7 @@ import { formatReportDuration, renderReport, ReportData } from './report';
 
 const data: ReportData = {
   animalName: 'Rex',
+  speciesLabel: 'Chien',
   generatedAt: new Date('2026-02-20T10:00:00Z'),
   periodLabel: '13/02/2026 au 20/02/2026',
   totals: { observations: 12, observedDays: 4, measuredSeconds: 5400, stressCount: 3 },

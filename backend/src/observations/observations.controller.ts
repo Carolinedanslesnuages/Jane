@@ -8,25 +8,25 @@ import { ObservationsService } from './observations.service';
 export class ObservationsController {
   constructor(private readonly observationsService: ObservationsService) {}
 
-  @Post('dogs/:dogId/events')
-  recordEvent(@CurrentUser() user: User, @Param('dogId', ParseUUIDPipe) dogId: string, @Body() body: RecordEventDto) {
-    return this.observationsService.recordEvent(user.id, dogId, body);
+  @Post('animals/:animalId/events')
+  recordEvent(@CurrentUser() user: User, @Param('animalId', ParseUUIDPipe) animalId: string, @Body() body: RecordEventDto) {
+    return this.observationsService.recordEvent(user.id, animalId, body);
   }
 
-  @Get('dogs/:dogId/active-states')
-  listActiveStates(@CurrentUser() user: User, @Param('dogId', ParseUUIDPipe) dogId: string) {
-    return this.observationsService.listActiveStates(user.id, dogId);
+  @Get('animals/:animalId/active-states')
+  listActiveStates(@CurrentUser() user: User, @Param('animalId', ParseUUIDPipe) animalId: string) {
+    return this.observationsService.listActiveStates(user.id, animalId);
   }
 
-  @Post('dogs/:dogId/states/start')
-  startState(@CurrentUser() user: User, @Param('dogId', ParseUUIDPipe) dogId: string, @Body() body: StartStateDto) {
-    return this.observationsService.startState(user.id, dogId, body.behavior);
+  @Post('animals/:animalId/states/start')
+  startState(@CurrentUser() user: User, @Param('animalId', ParseUUIDPipe) animalId: string, @Body() body: StartStateDto) {
+    return this.observationsService.startState(user.id, animalId, body.behavior);
   }
 
-  @Post('dogs/:dogId/states/stop')
+  @Post('animals/:animalId/states/stop')
   @HttpCode(200)
-  stopState(@CurrentUser() user: User, @Param('dogId', ParseUUIDPipe) dogId: string, @Body() body: StopStateDto) {
-    return this.observationsService.stopState(user.id, dogId, body);
+  stopState(@CurrentUser() user: User, @Param('animalId', ParseUUIDPipe) animalId: string, @Body() body: StopStateDto) {
+    return this.observationsService.stopState(user.id, animalId, body);
   }
 
   @Get('observations')

@@ -28,7 +28,7 @@ export class RecordCognitiveTestDto {
 export class ListCognitiveTestsQuery {
   @IsOptional()
   @IsUUID()
-  dogId?: string;
+  animalId?: string;
 
   @IsOptional()
   @IsEnum(CognitiveTestType)

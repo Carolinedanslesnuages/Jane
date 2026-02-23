@@ -1,7 +1,7 @@
-import { DogSex, Species } from '@prisma/client';
+import { Sex, Species } from '@prisma/client';
 import { IsBoolean, IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
-export class CreateDogDto {
+export class CreateAnimalDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(80)
@@ -23,8 +23,8 @@ export class CreateDogDto {
   birthDate?: string;
 
   @IsOptional()
-  @IsEnum(DogSex)
-  sex?: DogSex;
+  @IsEnum(Sex)
+  sex?: Sex;
 
   @IsOptional()
   @IsBoolean()

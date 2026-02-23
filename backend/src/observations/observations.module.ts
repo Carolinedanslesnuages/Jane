@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { DogsModule } from '../dogs/dogs.module';
+import { AnimalsModule } from '../animals/animals.module';
 import { ObservationsController } from './observations.controller';
 import { ObservationsService } from './observations.service';
 
 @Module({
-  imports: [DogsModule],
+  imports: [AnimalsModule],
   controllers: [ObservationsController],
   providers: [ObservationsService],
   exports: [ObservationsService],

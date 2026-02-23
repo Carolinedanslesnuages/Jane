@@ -4,14 +4,14 @@ import { createTestApp } from '../../test/test-app';
 
 describe('GET /exports/observations.csv (HTTP)', () => {
   let app: INestApplication;
-  let dogId: string;
+  let animalId: string;
   const as = (token: string) => ({ Authorization: `Bearer ${token}` });
 
   beforeAll(async () => {
     ({ app } = await createTestApp());
     const server = app.getHttpServer();
-    dogId = (await request(server).post('/dogs').set(as('alice')).send({ name: '=Rex' })).body.id;
-    await request(server).post(`/dogs/${dogId}/events`).set(as('alice')).send({ behavior: 'Aboyer', notes: 'chez le voisin, tard', stimuli: 'Bruit' });
+    animalId = (await request(server).post('/animals').set(as('alice')).send({ name: '=Rex' })).body.id;
+    await request(server).post(`/animals/${animalId}/events`).set(as('alice')).send({ behavior: 'Aboyer', notes: 'chez le voisin, tard', stimuli: 'Bruit' });
   });
 
   afterAll(async () => {
@@ -38,10 +38,10 @@ describe('GET /exports/observations.csv (HTTP)', () => {
     await request(app.getHttpServer()).get('/exports/observations.csv').expect(401);
   });
 
-  it('generates the PDF report of a dog', async () => {
+  it('generates the PDF report of a animal', async () => {
     const period = 'from=2020-01-01T00:00:00Z&to=2099-01-01T00:00:00Z';
     const response = await request(app.getHttpServer())
-      .get(`/exports/report.pdf?dogId=${dogId}&${period}`)
+      .get(`/exports/report.pdf?animalId=${animalId}&${period}`)
       .set(as('alice'))
       .buffer(true)
       .parse((res, callback) => {
@@ -54,9 +54,9 @@ describe('GET /exports/observations.csv (HTTP)', () => {
     expect((response.body as Buffer).subarray(0, 5).toString()).toBe('%PDF-');
   });
 
-  it('refuses the report of a dog that belongs to someone else', async () => {
+  it('refuses the report of a animal that belongs to someone else', async () => {
     const period = 'from=2020-01-01T00:00:00Z&to=2099-01-01T00:00:00Z';
-    await request(app.getHttpServer()).get(`/exports/report.pdf?dogId=${dogId}&${period}`).set(as('bob')).expect(404);
+    await request(app.getHttpServer()).get(`/exports/report.pdf?animalId=${animalId}&${period}`).set(as('bob')).expect(404);
     await request(app.getHttpServer()).get('/exports/report.pdf').set(as('alice')).expect(400);
   });
 });

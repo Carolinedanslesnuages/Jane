@@ -4,16 +4,16 @@ import { createTestApp } from '../../test/test-app';
 
 describe('GET /stats/summary (HTTP)', () => {
   let app: INestApplication;
-  let dogId: string;
+  let animalId: string;
   const as = (token: string) => ({ Authorization: `Bearer ${token}` });
   const period = 'from=2020-01-01T00:00:00Z&to=2099-01-01T00:00:00Z';
 
   beforeAll(async () => {
     ({ app } = await createTestApp());
     const server = app.getHttpServer();
-    dogId = (await request(server).post('/dogs').set(as('alice')).send({ name: 'Rex' })).body.id;
-    await request(server).post(`/dogs/${dogId}/events`).set(as('alice')).send({ behavior: 'Aboyer', stimuli: 'Bruit' });
-    await request(server).post(`/dogs/${dogId}/events`).set(as('alice')).send({ behavior: 'Courir' });
+    animalId = (await request(server).post('/animals').set(as('alice')).send({ name: 'Rex' })).body.id;
+    await request(server).post(`/animals/${animalId}/events`).set(as('alice')).send({ behavior: 'Aboyer', stimuli: 'Bruit' });
+    await request(server).post(`/animals/${animalId}/events`).set(as('alice')).send({ behavior: 'Courir' });
   });
 
   afterAll(async () => {
@@ -21,7 +21,7 @@ describe('GET /stats/summary (HTTP)', () => {
   });
 
   it('summarises the observations of the period', async () => {
-    const response = await request(app.getHttpServer()).get(`/stats/summary?dogId=${dogId}&${period}`).set(as('alice')).expect(200);
+    const response = await request(app.getHttpServer()).get(`/stats/summary?animalId=${animalId}&${period}`).set(as('alice')).expect(200);
     expect(response.body.totals).toMatchObject({ observations: 2, stressCount: 1, measuredSeconds: 0 });
     expect(response.body.timeBudget).toHaveLength(6);
     expect(response.body.stress.byBehavior).toEqual([{ label: 'Aboyer', count: 1 }]);

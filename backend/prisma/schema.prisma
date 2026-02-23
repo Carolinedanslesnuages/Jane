@@ -14,10 +14,10 @@ model User {
   email           String?
   displayName     String?
   createdAt       DateTime @default(now())
-  dogs            Dog[]
+  animals         Animal[]
 }
 
-enum DogSex {
+enum Sex {
   MALE
   FEMALE
 }
@@ -29,15 +29,15 @@ enum Species {
   OTHER
 }
 
-/// Un chien suivi par un utilisateur.
-model Dog {
+/// Un animal suivi par un utilisateur.
+model Animal {
   id        String    @id @default(uuid())
   ownerId   String
   name      String
   species   Species   @default(DOG)
   breed     String?
   birthDate DateTime? @db.Date
-  sex       DogSex?
+  sex       Sex?
   neutered  Boolean   @default(false)
   createdAt DateTime  @default(now())
   owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -66,7 +66,7 @@ enum ObservationType {
 /// Un comportement observé : instantané (EVENT) ou avec une durée (STATE).
 model Observation {
   id              String           @id @default(uuid())
-  dogId           String
+  animalId        String
   behavior        String
   category        BehaviorCategory
   type            ObservationType
@@ -79,21 +79,21 @@ model Observation {
   location        String?
   weather         String?
   stimuli         String?
-  dog             Dog              @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  animal          Animal           @relation(fields: [animalId], references: [id], onDelete: Cascade)
 
-  @@index([dogId, recordedAt])
+  @@index([animalId, recordedAt])
 }
 
 /// Un état en cours de chronométrage (démarré, pas encore arrêté).
 model ActiveState {
   id        String           @id @default(uuid())
-  dogId     String
+  animalId  String
   behavior  String
   category  BehaviorCategory
   startedAt DateTime         @default(now())
-  dog       Dog              @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  animal    Animal           @relation(fields: [animalId], references: [id], onDelete: Cascade)
 
-  @@unique([dogId, behavior])
+  @@unique([animalId, behavior])
 }
 
 enum CognitiveTestType {
@@ -105,14 +105,14 @@ enum CognitiveTestType {
 /// Résultat d'une épreuve cognitive chronométrée.
 model CognitiveTest {
   id              String            @id @default(uuid())
-  dogId           String
+  animalId        String
   testType        CognitiveTestType
   recordedAt      DateTime          @default(now())
   durationSeconds Float
   /// Note de 0 à 10, facultative.
   score           Float?
   notes           String?
-  dog             Dog               @relation(fields: [dogId], references: [id], onDelete: Cascade)
+  animal          Animal            @relation(fields: [animalId], references: [id], onDelete: Cascade)
 
-  @@index([dogId, recordedAt])
+  @@index([animalId, recordedAt])
 }

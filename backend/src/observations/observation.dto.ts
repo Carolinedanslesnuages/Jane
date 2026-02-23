@@ -45,7 +45,7 @@ export class StopStateDto extends ObservationContextDto {
 export class ListObservationsQuery {
   @IsOptional()
   @IsUUID()
-  dogId?: string;
+  animalId?: string;
 
   @IsOptional()
   @IsDateString()

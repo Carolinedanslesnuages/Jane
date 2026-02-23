@@ -13,7 +13,7 @@ export async function resetDatabase(prisma: PrismaService): Promise<void> {
     prisma.cognitiveTest.deleteMany(),
     prisma.activeState.deleteMany(),
     prisma.observation.deleteMany(),
-    prisma.dog.deleteMany(),
+    prisma.animal.deleteMany(),
     prisma.user.deleteMany(),
   ]);
 }

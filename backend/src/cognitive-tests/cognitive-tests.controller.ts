@@ -8,9 +8,9 @@ import { CognitiveTestsService } from './cognitive-tests.service';
 export class CognitiveTestsController {
   constructor(private readonly cognitiveTestsService: CognitiveTestsService) {}
 
-  @Post('dogs/:dogId/cognitive-tests')
-  record(@CurrentUser() user: User, @Param('dogId', ParseUUIDPipe) dogId: string, @Body() body: RecordCognitiveTestDto) {
-    return this.cognitiveTestsService.record(user.id, dogId, body);
+  @Post('animals/:animalId/cognitive-tests')
+  record(@CurrentUser() user: User, @Param('animalId', ParseUUIDPipe) animalId: string, @Body() body: RecordCognitiveTestDto) {
+    return this.cognitiveTestsService.record(user.id, animalId, body);
   }
 
   @Get('cognitive-tests')

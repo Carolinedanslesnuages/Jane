@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnvironment } from './config/environment';
 import { AuthModule } from './auth/auth.module';
-import { DogsModule } from './dogs/dogs.module';
+import { AnimalsModule } from './animals/animals.module';
 import { EthogramController } from './ethogram/ethogram.controller';
 import { ObservationsModule } from './observations/observations.module';
 import { CognitiveTestsModule } from './cognitive-tests/cognitive-tests.module';
@@ -23,7 +23,7 @@ import { HealthController } from './health/health.controller';
     }),
     PrismaModule,
     AuthModule,
-    DogsModule,
+    AnimalsModule,
     ObservationsModule,
     CognitiveTestsModule,
     StatsModule,

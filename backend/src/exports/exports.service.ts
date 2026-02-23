@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CognitiveTestType } from '@prisma/client';
 import { CognitiveTestsService } from '../cognitive-tests/cognitive-tests.service';
-import { DogsService } from '../dogs/dogs.service';
+import { AnimalsService } from '../animals/animals.service';
 import { CATEGORY_LABELS } from '../ethogram/ethogram';
 import { ObservationsService } from '../observations/observations.service';
 import { StatsService } from '../stats/stats.service';
@@ -27,21 +27,21 @@ const CSV_HEADER = [
 export class ExportsService {
   constructor(
     private readonly observationsService: ObservationsService,
-    private readonly dogsService: DogsService,
+    private readonly animalsService: AnimalsService,
     private readonly statsService: StatsService,
     private readonly cognitiveTestsService: CognitiveTestsService,
   ) {}
 
   /** All the observations matching the filters, as a CSV document. */
   async observationsCsv(ownerId: string, query: ExportQuery): Promise<string> {
-    const [observations, dogs] = await Promise.all([
+    const [observations, animals] = await Promise.all([
       this.observationsService.listAll(ownerId, query),
-      this.dogsService.list(ownerId),
+      this.animalsService.list(ownerId),
     ]);
-    const dogNames = new Map(dogs.map((dog) => [dog.id, dog.name]));
+    const animalNames = new Map(animals.map((animal) => [animal.id, animal.name]));
     const rows = observations.map((observation) => [
       observation.recordedAt,
-      dogNames.get(observation.dogId),
+      animalNames.get(observation.animalId),
       observation.behavior,
       CATEGORY_LABELS[observation.category],
       observation.type === 'EVENT' ? 'evenement' : 'etat',
@@ -55,11 +55,11 @@ export class ExportsService {
     return toCsv(CSV_HEADER, rows);
   }
 
-  /** The behavioural assessment of one dog over a period, as a PDF document. */
+  /** The behavioural assessment of one animal over a period, as a PDF document. */
   async report(ownerId: string, query: ReportQuery): Promise<Buffer> {
-    const dog = await this.dogsService.findOne(ownerId, query.dogId);
+    const animal = await this.animalsService.findOne(ownerId, query.animalId);
     const summary = await this.statsService.summary(ownerId, query);
-    const tests = await this.cognitiveTestsService.list(ownerId, { dogId: dog.id });
+    const tests = await this.cognitiveTestsService.list(ownerId, { animalId: animal.id });
     const formatDay = (instant: string) => new Date(instant).toLocaleDateString('fr-FR', { timeZone: query.timezone ?? 'UTC' });
 
     const testSummaries = [...new Set(tests.map((test) => test.testType))].map((testType) => {
@@ -74,7 +74,7 @@ export class ExportsService {
     });
 
     return renderReport({
-      dogName: dog.name,
+      animalName: animal.name,
       generatedAt: new Date(),
       periodLabel: `${formatDay(query.from)} au ${formatDay(query.to)}`,
       totals: summary.totals,

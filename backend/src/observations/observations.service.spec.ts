@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { createTestDatabase, resetDatabase } from '../../test/database';
-import { DogsService } from '../dogs/dogs.service';
+import { AnimalsService } from '../animals/animals.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ObservationsService } from './observations.service';
 
@@ -8,19 +8,19 @@ describe('ObservationsService', () => {
   let prisma: PrismaService;
   let service: ObservationsService;
   let ownerId: string;
-  let dogId: string;
+  let animalId: string;
   let strangerId: string;
 
   beforeAll(async () => {
     prisma = await createTestDatabase();
-    service = new ObservationsService(prisma, new DogsService(prisma));
+    service = new ObservationsService(prisma, new AnimalsService(prisma));
   });
 
   beforeEach(async () => {
     await resetDatabase(prisma);
     ownerId = (await prisma.user.create({ data: { keycloakSubject: 'owner' } })).id;
     strangerId = (await prisma.user.create({ data: { keycloakSubject: 'stranger' } })).id;
-    dogId = (await prisma.dog.create({ data: { ownerId, name: 'Rex' } })).id;
+    animalId = (await prisma.animal.create({ data: { ownerId, name: 'Rex' } })).id;
   });
 
   afterAll(async () => {
@@ -29,7 +29,7 @@ describe('ObservationsService', () => {
 
   describe('recordEvent', () => {
     it('records an event and derives its category', async () => {
-      const observation = await service.recordEvent(ownerId, dogId, {
+      const observation = await service.recordEvent(ownerId, animalId, {
         behavior: 'Aboyer',
         location: 'Maison',
         stimuli: 'Bruit',
@@ -45,24 +45,24 @@ describe('ObservationsService', () => {
     });
 
     it('rejects a behaviour outside the ethogram', async () => {
-      await expect(service.recordEvent(ownerId, dogId, { behavior: 'Voler' })).rejects.toThrow(BadRequestException);
+      await expect(service.recordEvent(ownerId, animalId, { behavior: 'Voler' })).rejects.toThrow(BadRequestException);
     });
 
-    it('refuses to record for a dog owned by someone else', async () => {
-      await expect(service.recordEvent(strangerId, dogId, { behavior: 'Aboyer' })).rejects.toThrow(NotFoundException);
+    it('refuses to record for a animal owned by someone else', async () => {
+      await expect(service.recordEvent(strangerId, animalId, { behavior: 'Aboyer' })).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('species', () => {
     it("checks the behaviour against the ethogram of the animal's species", async () => {
-      const cat = await prisma.dog.create({ data: { ownerId, name: 'Mistigri', species: 'CAT' } });
+      const cat = await prisma.animal.create({ data: { ownerId, name: 'Mistigri', species: 'CAT' } });
       await expect(service.recordEvent(ownerId, cat.id, { behavior: 'Ronronner' })).resolves.toMatchObject({ category: 'SOCIAL' });
       await expect(service.recordEvent(ownerId, cat.id, { behavior: 'Aboyer' })).rejects.toThrow(BadRequestException);
-      await expect(service.recordEvent(ownerId, dogId, { behavior: 'Ronronner' })).rejects.toThrow(BadRequestException);
+      await expect(service.recordEvent(ownerId, animalId, { behavior: 'Ronronner' })).rejects.toThrow(BadRequestException);
     });
 
     it('applies the same rule to timed states', async () => {
-      const horse = await prisma.dog.create({ data: { ownerId, name: 'Éclair', species: 'HORSE' } });
+      const horse = await prisma.animal.create({ data: { ownerId, name: 'Éclair', species: 'HORSE' } });
       await expect(service.startState(ownerId, horse.id, 'Dormir debout')).resolves.toMatchObject({ category: 'REST' });
       await expect(service.startState(ownerId, horse.id, 'Flairer le sol')).rejects.toThrow(BadRequestException);
     });
@@ -70,30 +70,30 @@ describe('ObservationsService', () => {
 
   describe('states', () => {
     it('measures the duration between start and stop', async () => {
-      await service.startState(ownerId, dogId, 'Dormir');
+      await service.startState(ownerId, animalId, 'Dormir');
       await prisma.activeState.updateMany({ data: { startedAt: new Date(Date.now() - 90_000) } });
-      const observation = await service.stopState(ownerId, dogId, { behavior: 'Dormir', location: 'Maison' });
+      const observation = await service.stopState(ownerId, animalId, { behavior: 'Dormir', location: 'Maison' });
       expect(observation).toMatchObject({ type: 'STATE', category: 'REST', location: 'Maison' });
       expect(observation.durationSeconds).toBeGreaterThanOrEqual(90);
       expect(observation.startedAt).not.toBeNull();
-      expect(await service.listActiveStates(ownerId, dogId)).toEqual([]);
+      expect(await service.listActiveStates(ownerId, animalId)).toEqual([]);
     });
 
     it('refuses to start the same state twice', async () => {
-      await service.startState(ownerId, dogId, 'Dormir');
-      await expect(service.startState(ownerId, dogId, 'Dormir')).rejects.toThrow(ConflictException);
-      await expect(service.startState(ownerId, dogId, 'Courir')).resolves.toBeDefined();
-      expect(await service.listActiveStates(ownerId, dogId)).toHaveLength(2);
+      await service.startState(ownerId, animalId, 'Dormir');
+      await expect(service.startState(ownerId, animalId, 'Dormir')).rejects.toThrow(ConflictException);
+      await expect(service.startState(ownerId, animalId, 'Courir')).resolves.toBeDefined();
+      expect(await service.listActiveStates(ownerId, animalId)).toHaveLength(2);
     });
 
     it('refuses to stop a state that is not running', async () => {
-      await expect(service.stopState(ownerId, dogId, { behavior: 'Dormir' })).rejects.toThrow(NotFoundException);
+      await expect(service.stopState(ownerId, animalId, { behavior: 'Dormir' })).rejects.toThrow(NotFoundException);
     });
 
-    it('allows the same behaviour on two different dogs', async () => {
-      const otherDog = await prisma.dog.create({ data: { ownerId, name: 'Luna' } });
-      await service.startState(ownerId, dogId, 'Dormir');
-      await expect(service.startState(ownerId, otherDog.id, 'Dormir')).resolves.toBeDefined();
+    it('allows the same behaviour on two different animals', async () => {
+      const otherAnimal = await prisma.animal.create({ data: { ownerId, name: 'Luna' } });
+      await service.startState(ownerId, animalId, 'Dormir');
+      await expect(service.startState(ownerId, otherAnimal.id, 'Dormir')).resolves.toBeDefined();
     });
   });
 
@@ -103,10 +103,10 @@ describe('ObservationsService', () => {
     beforeEach(async () => {
       await prisma.observation.createMany({
         data: [
-          { dogId, behavior: 'Aboyer', category: 'STRESS', type: 'EVENT', recordedAt: at('2026-01-10T10:00:00Z') },
-          { dogId, behavior: 'Courir', category: 'PLAY', type: 'EVENT', recordedAt: at('2026-01-12T10:00:00Z') },
+          { animalId, behavior: 'Aboyer', category: 'STRESS', type: 'EVENT', recordedAt: at('2026-01-10T10:00:00Z') },
+          { animalId, behavior: 'Courir', category: 'PLAY', type: 'EVENT', recordedAt: at('2026-01-12T10:00:00Z') },
           {
-            dogId,
+            animalId,
             behavior: 'Dormir',
             category: 'REST',
             type: 'STATE',
@@ -129,10 +129,10 @@ describe('ObservationsService', () => {
       expect(result.items.map((item) => item.behavior).sort()).toEqual(['Aboyer', 'Dormir']);
     });
 
-    it('filters by dog and paginates', async () => {
-      const otherDog = await prisma.dog.create({ data: { ownerId, name: 'Luna' } });
-      await prisma.observation.create({ data: { dogId: otherDog.id, behavior: 'Sauter', category: 'PLAY', type: 'EVENT' } });
-      expect((await service.list(ownerId, { dogId: otherDog.id })).total).toBe(1);
+    it('filters by animal and paginates', async () => {
+      const otherAnimal = await prisma.animal.create({ data: { ownerId, name: 'Luna' } });
+      await prisma.observation.create({ data: { animalId: otherAnimal.id, behavior: 'Sauter', category: 'PLAY', type: 'EVENT' } });
+      expect((await service.list(ownerId, { animalId: otherAnimal.id })).total).toBe(1);
       const page = await service.list(ownerId, { limit: 2, offset: 2 });
       expect(page.items).toHaveLength(2);
       expect(page.total).toBe(4);

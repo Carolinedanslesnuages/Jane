@@ -3,7 +3,7 @@ import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
 export class StatsQuery {
   @IsOptional()
   @IsUUID()
-  dogId?: string;
+  animalId?: string;
 
   @IsDateString()
   from: string;

@@ -3,7 +3,7 @@ import { IsDateString, IsOptional, IsString, IsUUID } from 'class-validator';
 export class ExportQuery {
   @IsOptional()
   @IsUUID()
-  dogId?: string;
+  animalId?: string;
 
   @IsOptional()
   @IsDateString()
@@ -20,7 +20,7 @@ export class ExportQuery {
 
 export class ReportQuery {
   @IsUUID()
-  dogId: string;
+  animalId: string;
 
   @IsDateString()
   from: string;

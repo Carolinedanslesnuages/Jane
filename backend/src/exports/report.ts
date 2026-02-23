@@ -1,7 +1,7 @@
 import PDFDocument from 'pdfkit';
 
 export interface ReportData {
-  dogName: string;
+  animalName: string;
   generatedAt: Date;
   periodLabel: string;
   totals: { observations: number; observedDays: number; measuredSeconds: number; stressCount: number };
@@ -46,7 +46,7 @@ function table(document: PDFKit.PDFDocument, rows: string[][], widths: number[])
   document.fillColor(INK).font('Helvetica');
 }
 
-/** Renders the behavioural assessment of a dog as a PDF document. */
+/** Renders the behavioural assessment of a animal as a PDF document. */
 export function renderReport(data: ReportData, options: { compress?: boolean } = {}): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const document = new PDFDocument({ size: 'A4', margin: 54, compress: options.compress ?? true });
@@ -57,7 +57,7 @@ export function renderReport(data: ReportData, options: { compress?: boolean } =
 
     document.font('Times-Bold').fontSize(24).fillColor(FOREST).text('Bilan comportemental', { align: 'left' });
     document.font('Helvetica').fontSize(10.5).fillColor(MUTED);
-    document.text(`Chien : ${data.dogName}`);
+    document.text(`Chien : ${data.animalName}`);
     document.text(`Période : ${data.periodLabel}`);
     document.text(`Rapport généré le ${data.generatedAt.toLocaleDateString('fr-FR')}`);
     document.fillColor(INK);

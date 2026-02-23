@@ -1,7 +1,7 @@
 import { formatReportDuration, renderReport, ReportData } from './report';
 
 const data: ReportData = {
-  dogName: 'Rex',
+  animalName: 'Rex',
   generatedAt: new Date('2026-02-20T10:00:00Z'),
   periodLabel: '13/02/2026 au 20/02/2026',
   totals: { observations: 12, observedDays: 4, measuredSeconds: 5400, stressCount: 3 },
@@ -38,7 +38,7 @@ describe('renderReport', () => {
     expect(full.length).toBeGreaterThan(quiet.length);
   });
 
-  it('works for a dog without stress signs or tests', async () => {
+  it('works for a animal without stress signs or tests', async () => {
     const quiet = { ...data, totals: { ...data.totals, stressCount: 0 }, cognitiveTests: [] };
     await expect(renderReport(quiet)).resolves.toBeInstanceOf(Buffer);
   });

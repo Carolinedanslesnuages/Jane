@@ -15,7 +15,7 @@ describe('GET /ethogram (HTTP)', () => {
 
   const behaviorsOf = (body: { behaviors: string[] }[]) => body.flatMap((entry) => entry.behaviors);
 
-  it('is public and describes the dog by default', async () => {
+  it('is public and describes the animal by default', async () => {
     const response = await request(app.getHttpServer()).get('/ethogram').expect(200);
     expect(response.body).toHaveLength(6);
     expect(behaviorsOf(response.body)).toContain('Aboyer');

@@ -1,6 +1,6 @@
 <template>
   <section>
-    <PageHeader title="Profils" subtitle="Les chiens suivis, avec leurs informations de base." />
+    <PageHeader title="Profils" subtitle="Les animaux suivis, avec leurs informations de base." />
 
     <AppCard title="Nouvel animal">
       <form class="form-grid" @submit.prevent="addAnimal">
@@ -40,9 +40,9 @@
       </form>
     </AppCard>
 
-    <h2>Chiens suivis</h2>
+    <h2>Animaux suivis</h2>
     <p v-if="animalsStore.loaded && animalsStore.animals.length === 0" class="muted">
-      Aucun chien enregistré. Ajoutez le premier ci-dessus.
+      Aucun animal enregistré. Ajoutez le premier ci-dessus.
     </p>
     <div class="animal-grid">
       <AppCard v-for="animal in animalsStore.animals" :key="animal.id">
@@ -76,7 +76,7 @@ import type { Animal } from '../api/types';
 import { useAnimalsStore } from '../stores/animals';
 import { useToastsStore } from '../stores/toasts';
 import { formatAge } from '../utils/format';
-import { SPECIES } from '../utils/species';
+import { SPECIES, speciesLabel } from '../utils/species';
 
 const animalsStore = useAnimalsStore();
 const toasts = useToastsStore();
@@ -88,7 +88,7 @@ onMounted(() => animalsStore.load());
 const SEX_LABELS: Record<Sex, string> = { MALE: 'Mâle', FEMALE: 'Femelle' };
 
 function describe(animal: Animal): string {
-  return [animal.breed, animal.sex ? SEX_LABELS[animal.sex] : null].filter(Boolean).join(' · ') || 'Informations non renseignées';
+  return [speciesLabel(animal.species), animal.breed, animal.sex ? SEX_LABELS[animal.sex] : null].filter(Boolean).join(' · ') || 'Informations non renseignées';
 }
 
 async function removeAnimal(animal: Animal) {

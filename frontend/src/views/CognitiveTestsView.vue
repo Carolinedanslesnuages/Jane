@@ -3,7 +3,7 @@
     <PageHeader title="Tests cognitifs" subtitle="Chronométrez et comparez les épreuves de résolution de problème." />
 
     <AppCard v-if="animalsStore.loaded && !animalsStore.selectedAnimal">
-      <p>Ajoutez d'abord un chien dans la page <RouterLink to="/profils">Profils</RouterLink> pour enregistrer des tests.</p>
+      <p>Ajoutez d'abord un animal dans la page <RouterLink to="/profils">Profils</RouterLink> pour enregistrer des tests.</p>
     </AppCard>
 
     <template v-else-if="animalsStore.selectedAnimal">
@@ -45,7 +45,7 @@
       </AppCard>
 
       <h2>Historique de {{ animalsStore.selectedAnimal.name }}</h2>
-      <p v-if="cognitiveStore.tests.length === 0" class="muted">Aucun test enregistré pour ce chien.</p>
+      <p v-if="cognitiveStore.tests.length === 0" class="muted">Aucun test enregistré pour cet animal.</p>
       <template v-else>
         <div class="metrics">
           <AppCard>

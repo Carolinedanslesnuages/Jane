@@ -3,7 +3,7 @@
     <PageHeader title="Tableau de bord" subtitle="Budget-temps, stress et activité sur la période choisie." />
 
     <AppCard v-if="animalsStore.loaded && !animalsStore.selectedAnimal">
-      <p>Ajoutez d'abord un chien dans la page <RouterLink to="/profils">Profils</RouterLink>.</p>
+      <p>Ajoutez d'abord un animal dans la page <RouterLink to="/profils">Profils</RouterLink>.</p>
     </AppCard>
 
     <template v-else-if="animalsStore.selectedAnimal">

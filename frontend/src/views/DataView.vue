@@ -3,7 +3,7 @@
     <PageHeader title="Données" subtitle="Exports et liste complète des observations." />
 
     <AppCard v-if="animalsStore.loaded && !animalsStore.selectedAnimal">
-      <p>Ajoutez d'abord un chien dans la page <RouterLink to="/profils">Profils</RouterLink>.</p>
+      <p>Ajoutez d'abord un animal dans la page <RouterLink to="/profils">Profils</RouterLink>.</p>
     </AppCard>
 
     <template v-else-if="animalsStore.selectedAnimal">

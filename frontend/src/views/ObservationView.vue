@@ -3,7 +3,7 @@
     <PageHeader title="Observation" subtitle="Enregistrez les comportements au fil de l'eau, en événement ou en durée." />
 
     <AppCard v-if="animalsStore.loaded && !animalsStore.selectedAnimal">
-      <p>Ajoutez d'abord un chien dans la page <RouterLink to="/profils">Profils</RouterLink> pour commencer à observer.</p>
+      <p>Ajoutez d'abord un animal dans la page <RouterLink to="/profils">Profils</RouterLink> pour commencer à observer.</p>
     </AppCard>
 
     <template v-else-if="animalsStore.selectedAnimal">

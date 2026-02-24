@@ -18,7 +18,7 @@
           <td>{{ observation.behavior }}</td>
           <td>
             <span class="dot" :style="{ background: categoryColor(observation.category) }" aria-hidden="true"></span>
-            {{ ethogramStore.labelOf(observation.category) }}
+            {{ categoryLabel(observation.category) }}
           </td>
           <td>{{ observation.type === 'EVENT' ? 'Événement' : 'État' }}</td>
           <td class="numeric">{{ formatDuration(observation.durationSeconds) || '–' }}</td>
@@ -35,15 +35,13 @@
 
 <script setup lang="ts">
 import type { Observation } from '../api/types';
-import { useEthogramStore } from '../stores/ethogram';
-import { categoryColor } from '../utils/categories';
+import { categoryColor, categoryLabel } from '../utils/categories';
 import { formatDateTime, formatDuration } from '../utils/format';
 import ConfirmAction from './ConfirmAction.vue';
 
 defineProps<{ observations: Observation[]; removable?: boolean }>();
 const emit = defineEmits<{ remove: [observation: Observation] }>();
 
-const ethogramStore = useEthogramStore();
 </script>
 
 <style scoped>

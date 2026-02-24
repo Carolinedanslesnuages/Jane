@@ -1,8 +1,6 @@
 import { mount } from '@vue/test-utils';
-import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { Observation } from '../api/types';
-import { useEthogramStore } from '../stores/ethogram';
 import ObservationsTable from './ObservationsTable.vue';
 
 const observations: Observation[] = [
@@ -17,15 +15,6 @@ const observations: Observation[] = [
 ];
 
 describe('ObservationsTable', () => {
-  beforeEach(() => {
-    const pinia = createPinia();
-    setActivePinia(pinia);
-    useEthogramStore().categories = [
-      { category: 'STRESS', label: 'Stress', behaviors: ['Aboyer'] },
-      { category: 'REST', label: 'Repos', behaviors: ['Dormir'] },
-    ];
-  });
-
   it('shows one row per observation with readable values', () => {
     const wrapper = mount(ObservationsTable, { props: { observations } });
     const rows = wrapper.findAll('tbody tr');

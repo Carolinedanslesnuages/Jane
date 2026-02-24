@@ -38,13 +38,11 @@ import AppCard from '../components/AppCard.vue';
 import ObservationsTable from '../components/ObservationsTable.vue';
 import PageHeader from '../components/PageHeader.vue';
 import { useAnimalsStore } from '../stores/animals';
-import { useEthogramStore } from '../stores/ethogram';
 import { useObservationsStore } from '../stores/observations';
 import { useToastsStore } from '../stores/toasts';
 import { daysAgo, endOfLocalDay, startOfLocalDay, toInputDate } from '../utils/period';
 
 const animalsStore = useAnimalsStore();
-const ethogramStore = useEthogramStore();
 const observationsStore = useObservationsStore();
 const toasts = useToastsStore();
 
@@ -91,7 +89,7 @@ async function removeObservation(observation: Observation) {
   }
 }
 
-onMounted(() => Promise.all([animalsStore.load(), ethogramStore.load()]));
+onMounted(() => animalsStore.load());
 
 watch(
   () => animalsStore.selectedAnimal?.id,

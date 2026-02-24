@@ -119,14 +119,13 @@ import {
   buildTimelineChart,
 } from '../charts/builders';
 import { useAnimalsStore } from '../stores/animals';
-import { useEthogramStore } from '../stores/ethogram';
 import { useStatsStore } from '../stores/stats';
 import { useToastsStore } from '../stores/toasts';
+import { categoryLabel } from '../utils/categories';
 import { formatDuration } from '../utils/format';
 import { daysAgo, toInputDate } from '../utils/period';
 
 const animalsStore = useAnimalsStore();
-const ethogramStore = useEthogramStore();
 const statsStore = useStatsStore();
 const toasts = useToastsStore();
 
@@ -134,11 +133,11 @@ const fromDate = ref(toInputDate(daysAgo(7)));
 const toDate = ref(toInputDate(new Date()));
 const summary = computed(() => statsStore.summary);
 
-const budgetChart = computed(() => (summary.value ? buildTimeBudgetChart(summary.value, ethogramStore.labelOf) : null));
-const eventsChart = computed(() => (summary.value ? buildEventsChart(summary.value, ethogramStore.labelOf) : null));
+const budgetChart = computed(() => (summary.value ? buildTimeBudgetChart(summary.value, categoryLabel) : null));
+const eventsChart = computed(() => (summary.value ? buildEventsChart(summary.value, categoryLabel) : null));
 
 const timelineChart = computed(() =>
-  summary.value ? buildTimelineChart(summary.value, ethogramStore.labelOf) : { labels: [], datasets: [] },
+  summary.value ? buildTimelineChart(summary.value, categoryLabel) : { labels: [], datasets: [] },
 );
 const timelineOptions = {
   plugins: { title: { display: true, text: 'Observations par jour et par catégorie' }, legend: { position: 'bottom' as const } },
@@ -185,7 +184,7 @@ async function reload() {
 }
 
 onMounted(async () => {
-  await Promise.all([animalsStore.load(), ethogramStore.load()]);
+  await animalsStore.load();
 });
 
 watch([() => animalsStore.selectedAnimal?.id, fromDate, toDate], reload, { immediate: true });

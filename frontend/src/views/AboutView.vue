@@ -1,6 +1,6 @@
 <template>
   <section>
-    <PageHeader title="À propos de Jane" subtitle="Un carnet de terrain pour l'observation du comportement canin." />
+    <PageHeader title="À propos de Jane" subtitle="Un carnet de terrain pour l'observation du comportement animal." />
 
     <p class="intro">
       Jane porte le nom de Jane Goodall, qui a montré ce que l'observation patiente du comportement animal peut apprendre.
@@ -9,8 +9,9 @@
     <div class="grid">
       <AppCard title="Observer">
         <p>
-          Un éthogramme en six catégories : exploration, jeu, repos, social, stress et élimination. En mode événement, un
-          clic note une action instantanée. En mode état, démarrer puis arrêter mesure une durée.
+          Un éthogramme en six catégories (exploration, jeu, repos, social, stress, élimination), avec les comportements propres à
+          chaque espèce : chien, chat, cheval, et un modèle générique pour les autres. En mode événement, un clic note une
+          action instantanée ; en mode état, démarrer puis arrêter mesure une durée.
         </p>
       </AppCard>
       <AppCard title="Analyser">
@@ -20,11 +21,11 @@
         </p>
       </AppCard>
       <AppCard title="Exporter">
-        <p>Les observations s'exportent en CSV pour R ou un tableur, et un rapport PDF résume les 30 derniers jours d'un chien.</p>
+        <p>Les observations s'exportent en CSV pour R ou un tableur, et un rapport PDF résume les 30 derniers jours d'un animal.</p>
       </AppCard>
       <AppCard title="Vos données">
         <p>
-          Chaque compte ne voit que ses propres chiens. La connexion passe par Keycloak ; supprimer un chien supprime aussi
+          Chaque compte ne voit que ses propres animaux. La connexion passe par Keycloak ; supprimer un animal supprime aussi
           ses observations et ses tests.
         </p>
       </AppCard>

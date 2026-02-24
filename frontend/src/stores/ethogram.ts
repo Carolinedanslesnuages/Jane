@@ -1,24 +1,21 @@
 import { defineStore } from 'pinia';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { api } from '../api/client';
-import type { BehaviorCategory, EthogramCategory } from '../api/types';
+import type { EthogramCategory, Species } from '../api/types';
 
 export const useEthogramStore = defineStore('ethogram', () => {
-  const categories = ref<EthogramCategory[]>([]);
+  const bySpecies = ref<Partial<Record<Species, EthogramCategory[]>>>({});
 
-  const labelsByCategory = computed(
-    () => Object.fromEntries(categories.value.map((entry) => [entry.category, entry.label])) as Record<BehaviorCategory, string>,
-  );
-
-  async function load() {
-    if (categories.value.length === 0) {
-      categories.value = await api.get<EthogramCategory[]>('/ethogram');
+  /** Loads the ethogram of a species once; later calls reuse it. */
+  async function load(species: Species) {
+    if (!bySpecies.value[species]) {
+      bySpecies.value[species] = await api.get<EthogramCategory[]>(`/ethogram?species=${species}`);
     }
   }
 
-  function labelOf(category: BehaviorCategory): string {
-    return labelsByCategory.value[category] ?? category;
+  function categoriesFor(species: Species): EthogramCategory[] {
+    return bySpecies.value[species] ?? [];
   }
 
-  return { categories, load, labelOf };
+  return { bySpecies, load, categoriesFor };
 });

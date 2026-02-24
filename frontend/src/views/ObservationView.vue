@@ -53,7 +53,7 @@
 
       <div class="category-grid">
         <CategoryCard
-          v-for="category in ethogramStore.categories"
+          v-for="category in categories"
           :key="category.category"
           :category="category"
           :mode="mode"
@@ -95,6 +95,11 @@ const mode = ref<'EVENT' | 'STATE'>('EVENT');
 const context = reactive({ location: '', weather: '', stimuli: '', notes: '' });
 
 const busy = ref(false);
+/** The behaviours of the species of the followed animal. */
+const categories = computed(() => {
+  const animal = animalsStore.selectedAnimal;
+  return animal ? ethogramStore.categoriesFor(animal.species) : [];
+});
 const runningBehaviors = computed(() => observationsStore.activeStates.map((state) => state.behavior));
 
 /** The optional fields of the context card, without the empty ones. */
@@ -126,9 +131,13 @@ async function choose(behavior: string) {
   }
 }
 
-onMounted(async () => {
-  await Promise.all([animalsStore.load(), ethogramStore.load()]);
-});
+onMounted(() => animalsStore.load());
+
+watch(
+  () => animalsStore.selectedAnimal?.species,
+  (species) => species && ethogramStore.load(species),
+  { immediate: true },
+);
 
 watch(
   () => animalsStore.selectedAnimal?.id,

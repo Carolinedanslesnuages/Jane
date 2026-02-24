@@ -17,7 +17,9 @@
         :value="animalsStore.selectedAnimal?.id"
         @change="animalsStore.select(($event.target as HTMLSelectElement).value)"
       >
-        <option v-for="animal in animalsStore.animals" :key="animal.id" :value="animal.id">{{ animal.name }}</option>
+        <option v-for="animal in animalsStore.animals" :key="animal.id" :value="animal.id">
+          {{ animal.name }} · {{ speciesLabel(animal.species) }}
+        </option>
       </select>
       <p v-else-if="animalsStore.loaded" class="muted empty">Ajoutez un animal dans Profils.</p>
     </div>
@@ -33,6 +35,7 @@ import { onMounted } from 'vue';
 import { routes } from '../router';
 import { useAnimalsStore } from '../stores/animals';
 import { useSessionStore } from '../stores/session';
+import { speciesLabel } from '../utils/species';
 
 const session = useSessionStore();
 const animalsStore = useAnimalsStore();

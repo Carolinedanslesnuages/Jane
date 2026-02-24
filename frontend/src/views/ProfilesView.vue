@@ -40,12 +40,21 @@
       </form>
     </AppCard>
 
-    <h2>Animaux suivis</h2>
+    <div class="list-heading">
+      <h2>Animaux suivis</h2>
+      <div v-if="animalsStore.animals.length > 1" class="species-filter">
+        <label for="species-filter">Espèce</label>
+        <select id="species-filter" v-model="speciesFilter">
+          <option value="ALL">Toutes</option>
+          <option v-for="entry in SPECIES" :key="entry.value" :value="entry.value">{{ entry.label }}</option>
+        </select>
+      </div>
+    </div>
     <p v-if="animalsStore.loaded && animalsStore.animals.length === 0" class="muted">
       Aucun animal enregistré. Ajoutez le premier ci-dessus.
     </p>
     <div class="animal-grid">
-      <AppCard v-for="animal in animalsStore.animals" :key="animal.id">
+      <AppCard v-for="animal in visibleAnimals" :key="animal.id">
         <article>
           <h3>{{ animal.name }}</h3>
           <p class="muted">{{ describe(animal) }}</p>
@@ -67,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import type { AnimalInput, Sex, Species } from '../api/types';
 import AppCard from '../components/AppCard.vue';
 import ConfirmAction from '../components/ConfirmAction.vue';
@@ -76,11 +85,13 @@ import type { Animal } from '../api/types';
 import { useAnimalsStore } from '../stores/animals';
 import { useToastsStore } from '../stores/toasts';
 import { formatAge } from '../utils/format';
-import { SPECIES, speciesLabel } from '../utils/species';
+import { filterBySpecies, SPECIES, speciesLabel } from '../utils/species';
 
 const animalsStore = useAnimalsStore();
 const toasts = useToastsStore();
 const saving = ref(false);
+const speciesFilter = ref<Species | 'ALL'>('ALL');
+const visibleAnimals = computed(() => filterBySpecies(animalsStore.animals, speciesFilter.value));
 const form = reactive({ name: '', species: 'DOG' as Species, breed: '', birthDate: '', sex: '' as Sex | '', neutered: false });
 
 onMounted(() => animalsStore.load());
@@ -146,6 +157,18 @@ async function addAnimal() {
 .actions {
   display: flex;
   justify-content: flex-end;
+}
+
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.species-filter {
+  min-width: 12rem;
 }
 
 .animal-grid {

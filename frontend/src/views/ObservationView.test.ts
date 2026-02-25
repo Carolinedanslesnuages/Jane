@@ -1,0 +1,74 @@
+import { flushPromises, mount } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Animal } from '../api/types';
+
+vi.mock('../api/client', () => ({
+  api: {
+    get: vi.fn(async (path: string) => {
+      if (path.includes('active-states')) return [];
+      if (path.startsWith('/observations')) return { total: 0, items: [] };
+      return [];
+    }),
+    post: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
+
+import { useAnimalsStore } from '../stores/animals';
+import { useEthogramStore } from '../stores/ethogram';
+import ObservationView from './ObservationView.vue';
+
+function animal(overrides: Partial<Animal>): Animal {
+  return {
+    id: 'a1', name: 'Rex', species: 'DOG', breed: null, birthDate: null, sex: null, neutered: false,
+    createdAt: '2026-02-20T10:00:00Z', ...overrides,
+  };
+}
+
+const ethograms = {
+  DOG: [{ category: 'STRESS' as const, label: 'Stress', behaviors: ['Aboyer'] }],
+  CAT: [{ category: 'SOCIAL' as const, label: 'Social', behaviors: ['Ronronner'] }],
+};
+
+function mountView(selected: Animal) {
+  const animalsStore = useAnimalsStore();
+  animalsStore.animals = [selected];
+  animalsStore.loaded = true;
+  animalsStore.load = vi.fn(async () => undefined);
+  const ethogramStore = useEthogramStore();
+  ethogramStore.bySpecies = ethograms;
+  return mount(ObservationView, { global: { stubs: { RouterLink: true } } });
+}
+
+describe('ObservationView', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+
+  it("offers the dog's behaviours for a dog", async () => {
+    const wrapper = mountView(animal({ species: 'DOG' }));
+    await flushPromises();
+    const buttons = wrapper.findAll('button').map((button) => button.text());
+    expect(buttons).toContain('Aboyer');
+    expect(buttons).not.toContain('Ronronner');
+  });
+
+  it("offers the cat's behaviours for a cat", async () => {
+    const wrapper = mountView(animal({ id: 'a2', name: 'Mistigri', species: 'CAT' }));
+    await flushPromises();
+    const buttons = wrapper.findAll('button').map((button) => button.text());
+    expect(buttons).toContain('Ronronner');
+    expect(buttons).not.toContain('Aboyer');
+  });
+
+  it('asks to add an animal first when there is none', async () => {
+    setActivePinia(createPinia());
+    const animalsStore = useAnimalsStore();
+    animalsStore.loaded = true;
+    animalsStore.load = vi.fn(async () => undefined);
+    const wrapper = mount(ObservationView, { global: { stubs: { RouterLink: true } } });
+    await flushPromises();
+    expect(wrapper.text()).toContain("Ajoutez d'abord un animal");
+  });
+});

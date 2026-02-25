@@ -1,5 +1,7 @@
 # Jane 🐕
 
+> **Ancienne version.** Cette première version de Jane, en Streamlit, ne suit que des chiens et n'est plus développée. La version web (tous animaux) est à la racine du dépôt.
+
 Application web locale pour l'observation et l'analyse du comportement canin dans un contexte d'étude éthologique.
 
 > Jane est nommée en hommage à Jane Goodall, pionnière de l'observation patiente du comportement animal.

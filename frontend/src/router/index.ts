@@ -14,7 +14,7 @@ export const routes = [
 /** The browser tab title of a page. */
 export function pageTitle(meta: Record<string, unknown>): string {
   const name = String(meta.label ?? meta.title ?? '');
-  return name ? `${name} · Jane` : 'Jane · carnet d\'observation canine';
+  return name ? `${name} · Jane` : 'Jane · carnet d\'observation animale';
 }
 
 export const router = createRouter({

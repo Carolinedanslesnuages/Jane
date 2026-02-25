@@ -1,12 +1,19 @@
 # Jane 🐕
 
-Carnet d'observation du comportement canin, en application web.
+Carnet d'observation du comportement animal, en application web.
 
 > Jane est nommée en hommage à Jane Goodall, pionnière de l'observation patiente du comportement animal.
 
-Jane permet d'enregistrer des comportements au fil de l'eau (événements instantanés ou états chronométrés), de suivre le
+Jane suit des chiens, des chats, des chevaux et d'autres espèces, chacune avec son éthogramme.
+Elle permet d'enregistrer des comportements au fil de l'eau (événements instantanés ou états chronométrés), de suivre le
 stress, de passer des tests cognitifs, d'analyser le tout dans un tableau de bord et d'exporter les données (CSV, rapport PDF).
-Chaque compte ne voit que ses propres chiens.
+Chaque compte ne voit que ses propres animaux.
+
+## Espèces
+
+Les six catégories de comportements (exploration, jeu, repos, social, stress, élimination) sont communes ; les comportements
+qu'elles contiennent dépendent de l'espèce : chien, chat, cheval, et un modèle générique pour les autres. Pour en ajouter une,
+voir [docs/ajouter-une-espece.md](docs/ajouter-une-espece.md).
 
 ## Architecture
 

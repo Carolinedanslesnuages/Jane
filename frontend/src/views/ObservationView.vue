@@ -7,6 +7,7 @@
     </AppCard>
 
     <template v-else-if="animalsStore.selectedAnimal">
+      <AnimalBanner :animal="animalsStore.selectedAnimal" />
       <ActiveStates :states="observationsStore.activeStates" />
 
       <fieldset class="mode">
@@ -72,6 +73,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import ActiveStates from '../components/ActiveStates.vue';
+import AnimalBanner from '../components/AnimalBanner.vue';
 import AppCard from '../components/AppCard.vue';
 import CategoryCard from '../components/CategoryCard.vue';
 import ObservationsTable from '../components/ObservationsTable.vue';

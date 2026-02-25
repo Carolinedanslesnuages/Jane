@@ -7,6 +7,7 @@
     </AppCard>
 
     <template v-else-if="animalsStore.selectedAnimal">
+      <AnimalBanner :animal="animalsStore.selectedAnimal" />
       <AppCard>
         <label for="test-type">Épreuve pour {{ animalsStore.selectedAnimal.name }}</label>
         <select id="test-type" v-model="testType">
@@ -90,6 +91,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { Line } from 'vue-chartjs';
+import AnimalBanner from '../components/AnimalBanner.vue';
 import AppCard from '../components/AppCard.vue';
 import PageHeader from '../components/PageHeader.vue';
 import { useStopwatch } from '../composables/useStopwatch';

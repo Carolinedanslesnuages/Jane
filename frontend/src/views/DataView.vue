@@ -7,6 +7,7 @@
     </AppCard>
 
     <template v-else-if="animalsStore.selectedAnimal">
+      <AnimalBanner :animal="animalsStore.selectedAnimal" />
       <AppCard title="Exports">
         <p class="muted">
           Le CSV se lit avec R, Excel ou tout autre outil d'analyse. Le rapport PDF résume les 30 derniers jours de
@@ -34,6 +35,7 @@
 import { onMounted, ref, watch } from 'vue';
 import { downloadFile } from '../api/client';
 import type { Observation } from '../api/types';
+import AnimalBanner from '../components/AnimalBanner.vue';
 import AppCard from '../components/AppCard.vue';
 import ObservationsTable from '../components/ObservationsTable.vue';
 import PageHeader from '../components/PageHeader.vue';

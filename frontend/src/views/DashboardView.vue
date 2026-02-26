@@ -7,6 +7,7 @@
     </AppCard>
 
     <template v-else-if="animalsStore.selectedAnimal">
+      <AnimalBanner :animal="animalsStore.selectedAnimal" />
       <div class="period">
         <div>
           <label for="period-from">Du</label>
@@ -106,6 +107,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { Bar, Doughnut, Line } from 'vue-chartjs';
+import AnimalBanner from '../components/AnimalBanner.vue';
 import AppCard from '../components/AppCard.vue';
 import PageHeader from '../components/PageHeader.vue';
 import {

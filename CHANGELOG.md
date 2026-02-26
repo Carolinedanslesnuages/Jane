@@ -1,5 +1,23 @@
 # Journal des modifications
 
+## 2.1.0 — 26 février 2026
+
+Jane suit désormais tous les animaux, pas seulement les chiens.
+
+### Ajouté
+- Une espèce par animal (chien, chat, cheval, autre) et un éthogramme par espèce : les six catégories sont communes, les
+  comportements propres à chaque espèce (« Ronronner » pour le chat, « Piaffer » pour le cheval…).
+- Le comportement enregistré est vérifié selon l'espèce de l'animal.
+- `GET /ethogram?species=` et `GET /animals?species=`.
+- Filtre par espèce sur la page Profils, rappel de l'animal suivi en haut des pages, espèce dans l'export CSV et le rapport PDF.
+- Guide pour ajouter une espèce (`docs/ajouter-une-espece.md`).
+- Contrôle en intégration continue : le schéma Prisma doit avoir sa migration.
+
+### Modifié
+- « Chien » devient « animal » partout : modèle, routes (`/animals`), pages et textes. La migration conserve les données ;
+  les animaux existants restent des chiens.
+- Le dossier de la migration initiale suit l'ordre chronologique des suivantes.
+
 ## 2.0.0 — 20 février 2026
 
 Jane devient une application web.

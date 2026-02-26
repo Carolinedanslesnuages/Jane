@@ -62,6 +62,18 @@ describe('/animals (HTTP)', () => {
     await request(server).patch(`/animals/${created.body.id}`).set(as('dave')).send({ species: 'OTHER' }).expect(200);
   });
 
+  it('lists the animals of one species', async () => {
+    const server = app.getHttpServer();
+    await request(server).post('/animals').set(as('frank')).send({ name: 'Rex' }).expect(201);
+    await request(server).post('/animals').set(as('frank')).send({ name: 'Mistigri', species: 'CAT' }).expect(201);
+    await request(server).post('/animals').set(as('frank')).send({ name: 'Felix', species: 'CAT' }).expect(201);
+    const cats = await request(server).get('/animals?species=CAT').set(as('frank')).expect(200);
+    expect(cats.body.map((animal: { name: string }) => animal.name)).toEqual(['Felix', 'Mistigri']);
+    const all = await request(server).get('/animals').set(as('frank')).expect(200);
+    expect(all.body).toHaveLength(3);
+    await request(server).get('/animals?species=DRAGON').set(as('frank')).expect(400);
+  });
+
   it('answers 409 on a duplicate name', async () => {
     const server = app.getHttpServer();
     await request(server).post('/animals').set(as('carol')).send({ name: 'Luna' }).expect(201);

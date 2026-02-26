@@ -1,15 +1,18 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Animal, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateAnimalDto } from './animal.dto';
+import { CreateAnimalDto, ListAnimalsQuery } from './animal.dto';
 import { UpdateAnimalDto } from './update-animal.dto';
 
 @Injectable()
 export class AnimalsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  list(ownerId: string): Promise<Animal[]> {
-    return this.prisma.animal.findMany({ where: { ownerId }, orderBy: { name: 'asc' } });
+  list(ownerId: string, query: ListAnimalsQuery = {}): Promise<Animal[]> {
+    return this.prisma.animal.findMany({
+      where: { ownerId, ...(query.species ? { species: query.species } : {}) },
+      orderBy: { name: 'asc' },
+    });
   }
 
   async create(ownerId: string, input: CreateAnimalDto): Promise<Animal> {

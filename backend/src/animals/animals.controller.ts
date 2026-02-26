@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { CreateAnimalDto } from './animal.dto';
+import { CreateAnimalDto, ListAnimalsQuery } from './animal.dto';
 import { AnimalsService } from './animals.service';
 import { UpdateAnimalDto } from './update-animal.dto';
 
@@ -10,8 +10,8 @@ export class AnimalsController {
   constructor(private readonly animalsService: AnimalsService) {}
 
   @Get()
-  list(@CurrentUser() user: User) {
-    return this.animalsService.list(user.id);
+  list(@CurrentUser() user: User, @Query() query: ListAnimalsQuery) {
+    return this.animalsService.list(user.id, query);
   }
 
   @Post()

@@ -30,3 +30,10 @@ export class CreateAnimalDto {
   @IsBoolean()
   neutered?: boolean;
 }
+
+export class ListAnimalsQuery {
+  /** Ne garde que les animaux de cette espèce. */
+  @IsOptional()
+  @IsEnum(Species)
+  species?: Species;
+}

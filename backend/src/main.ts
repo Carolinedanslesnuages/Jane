@@ -10,7 +10,7 @@ async function bootstrap() {
   const documentation = new DocumentBuilder()
     .setTitle('API Jane')
     .setDescription("Carnet d'observation du comportement animal")
-    .setVersion('2.0.0')
+    .setVersion('2.1.0')
     .addBearerAuth()
     .build();
   SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, documentation));

@@ -53,10 +53,15 @@ export const useAnimalsStore = defineStore('animals', () => {
     }
   }
 
+  async function update(animalId: string, input: Partial<AnimalInput>) {
+    await api.patch<Animal>(`/animals/${animalId}`, input);
+    await load();
+  }
+
   async function remove(animalId: string) {
     await api.delete(`/animals/${animalId}`);
     await load();
   }
 
-  return { animals, loaded, selectedAnimalId, selectedAnimal, select, load, create, remove };
+  return { animals, loaded, selectedAnimalId, selectedAnimal, select, load, create, update, remove };
 });

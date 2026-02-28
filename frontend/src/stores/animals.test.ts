@@ -10,10 +10,12 @@ vi.mock('../api/client', () => ({
   api: {
     get: vi.fn(async () => animalsOnServer),
     post: vi.fn(async () => ({ id: 'animal-3' })),
+    patch: vi.fn(async () => ({ id: 'animal-1' })),
     delete: vi.fn(async () => undefined),
   },
 }));
 
+import { api } from '../api/client';
 import { useAnimalsStore } from './animals';
 
 describe('animals store', () => {
@@ -45,5 +47,12 @@ describe('animals store', () => {
     const store = useAnimalsStore();
     await store.load();
     expect(store.selectedAnimal?.name).toBe('Luna');
+  });
+
+  it('updates an animal then reloads the list', async () => {
+    const store = useAnimalsStore();
+    await store.update('animal-1', { name: 'Luna II' });
+    expect(api.patch).toHaveBeenCalledWith('/animals/animal-1', { name: 'Luna II' });
+    expect(api.get).toHaveBeenCalled();
   });
 });

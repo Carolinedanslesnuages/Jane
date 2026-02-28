@@ -56,3 +56,7 @@ dist/
 .env
 *.tsbuildinfo
 coverage/
+
+# Tests de bout en bout
+e2e/test-results/
+e2e/playwright-report/

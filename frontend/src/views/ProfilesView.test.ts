@@ -4,11 +4,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const get = vi.fn();
 const post = vi.fn();
+const patch = vi.fn();
 
 vi.mock('../api/client', () => ({
   api: {
     get: (...args: unknown[]) => get(...args),
     post: (...args: unknown[]) => post(...args),
+    patch: (...args: unknown[]) => patch(...args),
     delete: vi.fn(),
   },
 }));
@@ -22,6 +24,8 @@ describe('ProfilesView', () => {
   beforeEach(() => {
     get.mockReset();
     post.mockReset();
+    patch.mockReset();
+    patch.mockResolvedValue({});
     get.mockResolvedValue([rex, mistigri]);
     post.mockResolvedValue({ id: 'a3' });
     setActivePinia(createPinia());
@@ -53,5 +57,29 @@ describe('ProfilesView', () => {
     const cards = wrapper.findAll('article');
     expect(cards).toHaveLength(1);
     expect(cards[0].text()).toContain('Mistigri');
+  });
+
+  it('edits an animal in place', async () => {
+    const wrapper = mount(ProfilesView);
+    await flushPromises();
+    await wrapper.findAll('article')[0].findAll('button').find((button) => button.text() === 'Modifier')!.trigger('click');
+    const nameInput = wrapper.get('#edit-name');
+    expect((nameInput.element as HTMLInputElement).value).toBe('Rex');
+    await nameInput.setValue('Rexou');
+    await wrapper.get('#edit-species').setValue('OTHER');
+    expect(wrapper.text()).toContain("Changer l'espèce ne modifie pas");
+    await wrapper.findAll('form')[1].trigger('submit');
+    await flushPromises();
+    expect(patch).toHaveBeenCalledWith('/animals/a1', expect.objectContaining({ name: 'Rexou', species: 'OTHER' }));
+    expect(wrapper.find('#edit-name').exists()).toBe(false);
+  });
+
+  it('cancels an edit without saving', async () => {
+    const wrapper = mount(ProfilesView);
+    await flushPromises();
+    await wrapper.findAll('article')[0].findAll('button').find((button) => button.text() === 'Modifier')!.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text() === 'Annuler')!.trigger('click');
+    expect(patch).not.toHaveBeenCalled();
+    expect(wrapper.find('#edit-name').exists()).toBe(false);
   });
 });

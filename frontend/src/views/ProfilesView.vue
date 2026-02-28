@@ -21,7 +21,15 @@
     </p>
     <div class="animal-grid">
       <AppCard v-for="animal in visibleAnimals" :key="animal.id">
-        <article>
+        <AnimalForm
+          v-if="editingId === animal.id"
+          :animal="animal"
+          submit-label="Enregistrer"
+          :save="(input) => updateAnimal(animal, input)"
+          id-prefix="edit"
+          @cancel="editingId = null"
+        />
+        <article v-else>
           <h3>{{ animal.name }}</h3>
           <p class="muted">{{ describe(animal) }}</p>
           <dl>
@@ -30,11 +38,14 @@
             <dt>Stérilisé(e)</dt>
             <dd>{{ animal.neutered ? 'Oui' : 'Non' }}</dd>
           </dl>
-          <ConfirmAction
-            label="Supprimer"
-            :message="`Supprimer ${animal.name} efface aussi ses observations et ses tests. Définitif.`"
-            @confirm="removeAnimal(animal)"
-          />
+          <div class="card-actions">
+            <button type="button" @click="editingId = animal.id">Modifier</button>
+            <ConfirmAction
+              label="Supprimer"
+              :message="`Supprimer ${animal.name} efface aussi ses observations et ses tests. Définitif.`"
+              @confirm="removeAnimal(animal)"
+            />
+          </div>
         </article>
       </AppCard>
     </div>
@@ -56,6 +67,7 @@ import { filterBySpecies, SPECIES, speciesLabel } from '../utils/species';
 const animalsStore = useAnimalsStore();
 const toasts = useToastsStore();
 const speciesFilter = ref<Species | 'ALL'>('ALL');
+const editingId = ref<string | null>(null);
 const visibleAnimals = computed(() => filterBySpecies(animalsStore.animals, speciesFilter.value));
 
 onMounted(() => animalsStore.load());
@@ -72,6 +84,17 @@ async function removeAnimal(animal: Animal) {
     toasts.info(`${animal.name} a été supprimé.`);
   } catch (error) {
     toasts.error((error as Error).message);
+  }
+}
+
+async function updateAnimal(animal: Animal, input: AnimalInput) {
+  try {
+    await animalsStore.update(animal.id, input);
+    toasts.info(`${input.name} a été modifié.`);
+    editingId.value = null;
+  } catch (error) {
+    toasts.error((error as Error).message);
+    throw error;
   }
 }
 
@@ -116,6 +139,13 @@ dt {
 
 dd {
   margin: 0 0 var(--space-2);
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
 }
 
 .age {

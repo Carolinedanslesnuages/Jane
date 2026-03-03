@@ -21,6 +21,8 @@ h2,
 h3,
 h4 {
   font-family: var(--font-heading);
+  /* Georgia draws "0" like an "o" with its default old-style figures. */
+  font-variant-numeric: lining-nums;
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.2;
@@ -135,4 +137,10 @@ button.danger {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Big figures (ages, indicators, stopwatch) are set in the heading font with lining figures. */
+.figure {
+  font-family: var(--font-heading);
+  font-variant-numeric: lining-nums tabular-nums;
 }

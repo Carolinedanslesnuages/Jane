@@ -34,7 +34,7 @@
           <p class="muted">{{ describe(animal) }}</p>
           <dl>
             <dt>Âge</dt>
-            <dd class="age">{{ formatAge(animal.birthDate) }}</dd>
+            <dd class="age figure">{{ formatAge(animal.birthDate) }}</dd>
             <dt>Stérilisé(e)</dt>
             <dd>{{ animal.neutered ? 'Oui' : 'Non' }}</dd>
           </dl>

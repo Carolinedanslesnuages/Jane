@@ -26,19 +26,19 @@
       <div v-if="summary && summary.totals.observations > 0" class="kpis">
         <AppCard>
           <span class="kpi-label">Observations</span>
-          <strong class="kpi-value">{{ summary.totals.observations }}</strong>
+          <strong class="kpi-value figure">{{ summary.totals.observations }}</strong>
         </AppCard>
         <AppCard>
           <span class="kpi-label">Jours observés</span>
-          <strong class="kpi-value">{{ summary.totals.observedDays }}</strong>
+          <strong class="kpi-value figure">{{ summary.totals.observedDays }}</strong>
         </AppCard>
         <AppCard>
           <span class="kpi-label">Temps mesuré</span>
-          <strong class="kpi-value">{{ formatDuration(summary.totals.measuredSeconds) || '0 s' }}</strong>
+          <strong class="kpi-value figure">{{ formatDuration(summary.totals.measuredSeconds) || '0 s' }}</strong>
         </AppCard>
         <AppCard>
           <span class="kpi-label">Signes de stress</span>
-          <strong class="kpi-value">{{ summary.totals.stressCount }}</strong>
+          <strong class="kpi-value figure">{{ summary.totals.stressCount }}</strong>
         </AppCard>
       </div>
 
@@ -72,7 +72,7 @@
             <AppCard>
               <p class="stress-figure">
                 <span class="kpi-label">Moyenne par jour</span>
-                <strong class="kpi-value">{{ summary.stress.averagePerDay.toFixed(1) }}</strong>
+                <strong class="kpi-value figure">{{ summary.stress.averagePerDay.toFixed(1) }}</strong>
               </p>
               <p v-if="summary.stress.byBehavior[0]" class="stress-figure">
                 <span class="kpi-label">Le plus fréquent</span>

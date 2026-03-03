@@ -18,7 +18,7 @@
 
       <AppCard title="Chronomètre">
         <div class="stopwatch">
-          <output class="reading" aria-live="off">{{ stopwatch.elapsedSeconds.value.toFixed(1) }} s</output>
+          <output class="reading figure" aria-live="off">{{ stopwatch.elapsedSeconds.value.toFixed(1) }} s</output>
           <button v-if="!stopwatch.running.value" type="button" class="primary" @click="startStopwatch">Démarrer</button>
           <button v-else type="button" class="primary" @click="stopStopwatch">Arrêter</button>
           <button type="button" @click="resetStopwatch">Réinitialiser</button>
@@ -51,15 +51,15 @@
         <div class="metrics">
           <AppCard>
             <span class="metric-label">Tests réalisés</span>
-            <strong class="metric-value">{{ cognitiveStore.tests.length }}</strong>
+            <strong class="metric-value figure">{{ cognitiveStore.tests.length }}</strong>
           </AppCard>
           <AppCard>
             <span class="metric-label">Durée moyenne</span>
-            <strong class="metric-value">{{ formatDuration(averageDuration) }}</strong>
+            <strong class="metric-value figure">{{ formatDuration(averageDuration) }}</strong>
           </AppCard>
           <AppCard>
             <span class="metric-label">Score moyen</span>
-            <strong class="metric-value">{{ averageScore === null ? 'Non renseigné' : `${averageScore.toFixed(1)} / 10` }}</strong>
+            <strong class="metric-value figure">{{ averageScore === null ? 'Non renseigné' : `${averageScore.toFixed(1)} / 10` }}</strong>
           </AppCard>
         </div>
 

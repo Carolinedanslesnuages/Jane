@@ -60,3 +60,6 @@ coverage/
 # Tests de bout en bout
 e2e/test-results/
 e2e/playwright-report/
+
+# Captures d'écran
+e2e/captures/

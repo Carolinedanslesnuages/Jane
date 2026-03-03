@@ -46,16 +46,12 @@
         <h2>Budget-temps</h2>
         <div class="chart-pair">
           <AppCard>
-            <div class="chart">
-              <Doughnut v-if="budgetChart" :data="budgetChart" :options="budgetOptions" />
-              <p v-else class="muted">Aucun état mesuré : utilisez le mode État pour chronométrer.</p>
-            </div>
+            <div v-if="budgetChart" class="chart"><Doughnut :data="budgetChart" :options="budgetOptions" /></div>
+            <p v-else class="muted">Aucun état mesuré : utilisez le mode État pour chronométrer.</p>
           </AppCard>
           <AppCard>
-            <div class="chart">
-              <Bar v-if="eventsChart" :data="eventsChart" :options="eventsOptions" />
-              <p v-else class="muted">Aucun événement enregistré.</p>
-            </div>
+            <div v-if="eventsChart" class="chart"><Bar :data="eventsChart" :options="eventsOptions" /></div>
+            <p v-else class="muted">Aucun événement enregistré.</p>
           </AppCard>
         </div>
 

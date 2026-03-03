@@ -72,4 +72,9 @@ describe('chart builders', () => {
     expect(buildStressByBehaviorChart(summary)).toBeNull();
     expect(buildStressByHourChart(summary)).toBeNull();
   });
+
+  it('limits the width of the bars', () => {
+    expect(buildEventsChart(summary, labelOf)?.datasets[0].maxBarThickness).toBe(72);
+    expect(buildTimelineChart(summary, labelOf).datasets[0].maxBarThickness).toBe(72);
+  });
 });

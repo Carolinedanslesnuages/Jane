@@ -3,6 +3,9 @@ import { CATEGORY_HEX } from './setup';
 
 type LabelOf = (category: BehaviorCategory) => string;
 
+/** A single bar must not stretch across the whole card. */
+const BAR_MAX_THICKNESS = 72;
+
 /** Doughnut of the measured time per category; null when no state has been measured. */
 export function buildTimeBudgetChart(summary: StatsSummary, labelOf: LabelOf) {
   const entries = summary.timeBudget.filter((entry) => entry.durationSeconds > 0);
@@ -32,6 +35,7 @@ export function buildEventsChart(summary: StatsSummary, labelOf: LabelOf) {
     datasets: [
       {
         label: 'Événements',
+        maxBarThickness: BAR_MAX_THICKNESS,
         data: entries.map((entry) => entry.eventCount),
         backgroundColor: entries.map((entry) => CATEGORY_HEX[entry.category]),
       },
@@ -47,6 +51,7 @@ export function buildTimelineChart(summary: StatsSummary, labelOf: LabelOf) {
     labels: days.map((day) => new Date(`${day}T12:00:00`).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })),
     datasets: categories.map((category) => ({
       label: labelOf(category),
+      maxBarThickness: BAR_MAX_THICKNESS,
       backgroundColor: CATEGORY_HEX[category],
       data: days.map(
         (day) => summary.timeline.find((entry) => entry.date === day && entry.category === category)?.count ?? 0,
@@ -58,7 +63,7 @@ export function buildTimelineChart(summary: StatsSummary, labelOf: LabelOf) {
 const STRESS_COLOR = CATEGORY_HEX.STRESS;
 
 function stressBars(labels: string[], data: number[], label: string) {
-  return { labels, datasets: [{ label, data, backgroundColor: STRESS_COLOR }] };
+  return { labels, datasets: [{ label, data, backgroundColor: STRESS_COLOR, maxBarThickness: BAR_MAX_THICKNESS }] };
 }
 
 /** Frequency of stress signs per day; null when there is none. */

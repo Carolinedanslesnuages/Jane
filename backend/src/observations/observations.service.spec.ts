@@ -53,6 +53,24 @@ describe('ObservationsService', () => {
     });
   });
 
+  describe('recording after the fact', () => {
+    it('records an event at the given moment', async () => {
+      const observation = await service.recordEvent(ownerId, animalId, {
+        behavior: 'Aboyer',
+        occurredAt: '2026-02-10T08:30:00Z',
+      });
+      expect(observation.recordedAt.toISOString()).toBe('2026-02-10T08:30:00.000Z');
+      expect(observation.startedAt).toBeNull();
+    });
+
+    it('refuses an event in the future', async () => {
+      const tomorrow = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+      await expect(service.recordEvent(ownerId, animalId, { behavior: 'Aboyer', occurredAt: tomorrow })).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+  });
+
   describe('species', () => {
     it("checks the behaviour against the ethogram of the animal's species", async () => {
       const cat = await prisma.animal.create({ data: { ownerId, name: 'Mistigri', species: 'CAT' } });

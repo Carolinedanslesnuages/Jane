@@ -5,6 +5,9 @@ import { findCategory } from '../ethogram/ethogram';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListObservationsQuery, RecordEventDto, StopStateDto } from './observation.dto';
 
+/** Clock differences between the browser and the server must not reject "now". */
+const FUTURE_TOLERANCE_MS = 60_000;
+
 @Injectable()
 export class ObservationsService {
   constructor(
@@ -16,9 +19,10 @@ export class ObservationsService {
   async recordEvent(ownerId: string, animalId: string, input: RecordEventDto): Promise<Observation> {
     const animal = await this.animalsService.findOne(ownerId, animalId);
     const category = this.requireCategory(animal.species, input.behavior);
-    const { behavior, ...context } = input;
+    const { behavior, occurredAt, ...context } = input;
+    const recordedAt = occurredAt ? this.requireNotFuture(new Date(occurredAt), "L'événement") : new Date();
     return this.prisma.observation.create({
-      data: { animalId, behavior, category, type: 'EVENT', ...context },
+      data: { animalId, behavior, category, type: 'EVENT', recordedAt, ...context },
     });
   }
 
@@ -120,6 +124,13 @@ export class ObservationsService {
       throw new NotFoundException('Observation introuvable');
     }
     await this.prisma.observation.delete({ where: { id: observationId } });
+  }
+
+  private requireNotFuture(instant: Date, subject: string): Date {
+    if (instant.getTime() > Date.now() + FUTURE_TOLERANCE_MS) {
+      throw new BadRequestException(`${subject} ne peut pas être dans le futur`);
+    }
+    return instant;
   }
 
   private requireCategory(species: Species, behavior: string) {

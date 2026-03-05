@@ -28,6 +28,25 @@ export class RecordEventDto extends ObservationContextDto {
   @IsString()
   @IsNotEmpty()
   behavior: string;
+
+  /** Moment où l'événement a eu lieu, pour une saisie après coup (maintenant par défaut, jamais dans le futur). */
+  @IsOptional()
+  @IsDateString()
+  occurredAt?: string;
+}
+
+export class LogStateDto extends ObservationContextDto {
+  @IsString()
+  @IsNotEmpty()
+  behavior: string;
+
+  /** Début de l'état, déjà terminé. */
+  @IsDateString()
+  startedAt: string;
+
+  /** Fin de l'état : après le début, jamais dans le futur. */
+  @IsDateString()
+  endedAt: string;
 }
 
 export class StartStateDto {

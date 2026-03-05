@@ -38,7 +38,7 @@ describe('GET /exports/observations.csv (HTTP)', () => {
     await request(app.getHttpServer()).get('/exports/observations.csv').expect(401);
   });
 
-  it('generates the PDF report of a animal', async () => {
+  it('generates the PDF report of an animal', async () => {
     const period = 'from=2020-01-01T00:00:00Z&to=2099-01-01T00:00:00Z';
     const response = await request(app.getHttpServer())
       .get(`/exports/report.pdf?animalId=${animalId}&${period}`)
@@ -54,7 +54,7 @@ describe('GET /exports/observations.csv (HTTP)', () => {
     expect((response.body as Buffer).subarray(0, 5).toString()).toBe('%PDF-');
   });
 
-  it('refuses the report of a animal that belongs to someone else', async () => {
+  it('refuses the report of an animal that belongs to someone else', async () => {
     const period = 'from=2020-01-01T00:00:00Z&to=2099-01-01T00:00:00Z';
     await request(app.getHttpServer()).get(`/exports/report.pdf?animalId=${animalId}&${period}`).set(as('bob')).expect(404);
     await request(app.getHttpServer()).get('/exports/report.pdf').set(as('alice')).expect(400);

@@ -24,7 +24,7 @@ describe('/animals (HTTP)', () => {
     await request(app.getHttpServer()).get('/health').expect(200);
   });
 
-  it('creates, reads, updates and deletes a animal', async () => {
+  it('creates, reads, updates and deletes an animal', async () => {
     const server = app.getHttpServer();
     const created = await request(server)
       .post('/animals')

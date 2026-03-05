@@ -39,7 +39,7 @@ describe('renderReport', () => {
     expect(full.length).toBeGreaterThan(quiet.length);
   });
 
-  it('works for a animal without stress signs or tests', async () => {
+  it('works for an animal without stress signs or tests', async () => {
     const quiet = { ...data, totals: { ...data.totals, stressCount: 0 }, cognitiveTests: [] };
     await expect(renderReport(quiet)).resolves.toBeInstanceOf(Buffer);
   });

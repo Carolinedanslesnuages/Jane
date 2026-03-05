@@ -8,7 +8,7 @@ export const useStatsStore = defineStore('stats', () => {
   const summary = ref<StatsSummary | null>(null);
   const loading = ref(false);
 
-  /** Loads the statistics of a animal between two local dates (AAAA-MM-JJ, both included). */
+  /** Loads the statistics of an animal between two local dates (AAAA-MM-JJ, both included). */
   async function load(animalId: string, fromDate: string, toDate: string) {
     loading.value = true;
     try {

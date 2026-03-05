@@ -12,7 +12,7 @@ export const useObservationsStore = defineStore('observations', () => {
   const history = ref<Observation[]>([]);
   const historyTotal = ref(0);
 
-  /** Reloads the running states and the latest observations of a animal. */
+  /** Reloads the running states and the latest observations of an animal. */
   async function refresh(animalId: string) {
     const [states, latest] = await Promise.all([
       api.get<ActiveState[]>(`/animals/${animalId}/active-states`),
@@ -41,7 +41,7 @@ export const useObservationsStore = defineStore('observations', () => {
     return activeStates.value.some((state) => state.behavior === behavior);
   }
 
-  /** The full list of a animal's observations (newest first, up to HISTORY_LIMIT). */
+  /** The full list of an animal's observations (newest first, up to HISTORY_LIMIT). */
   async function loadHistory(animalId: string) {
     const page = await api.get<{ total: number; items: Observation[] }>(`/observations?animalId=${animalId}&limit=${HISTORY_LIMIT}`);
     history.value = page.items;

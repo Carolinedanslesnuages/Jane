@@ -24,7 +24,7 @@ describe('AnimalsService', () => {
     await prisma.$disconnect();
   });
 
-  it('creates a animal and lists it alphabetically', async () => {
+  it('creates an animal and lists it alphabetically', async () => {
     await service.create(ownerId, { name: 'Rex', breed: 'Border Collie', birthDate: '2023-05-10', sex: 'MALE', neutered: true });
     await service.create(ownerId, { name: 'Luna' });
     const animals = await service.list(ownerId);

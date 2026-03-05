@@ -29,7 +29,7 @@ describe('observations store', () => {
     post.mockResolvedValue({});
   });
 
-  it('loads the running states and the latest observations of a animal', async () => {
+  it('loads the running states and the latest observations of an animal', async () => {
     const store = useObservationsStore();
     await store.refresh('animal-1');
     expect(store.isRunning('Dormir')).toBe(true);

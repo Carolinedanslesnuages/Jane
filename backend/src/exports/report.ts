@@ -47,7 +47,7 @@ function table(document: PDFKit.PDFDocument, rows: string[][], widths: number[])
   document.fillColor(INK).font('Helvetica');
 }
 
-/** Renders the behavioural assessment of a animal as a PDF document. */
+/** Renders the behavioural assessment of an animal as a PDF document. */
 export function renderReport(data: ReportData, options: { compress?: boolean } = {}): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const document = new PDFDocument({ size: 'A4', margin: 54, compress: options.compress ?? true });

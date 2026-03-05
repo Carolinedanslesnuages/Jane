@@ -36,6 +36,31 @@ describe('observations (HTTP)', () => {
     await request(server).post(`/animals/${animalId}/states/stop`).set(as('alice')).send({ behavior: 'Dormir' }).expect(404);
   });
 
+  it('records events and elapsed states after the fact', async () => {
+    const server = app.getHttpServer();
+    await request(server)
+      .post(`/animals/${animalId}/events`)
+      .set(as('alice'))
+      .send({ behavior: 'Courir', occurredAt: '2026-01-15T10:00:00Z' })
+      .expect(201);
+    const logged = await request(server)
+      .post(`/animals/${animalId}/states/log`)
+      .set(as('alice'))
+      .send({ behavior: 'Dormir', startedAt: '2026-01-15T12:00:00Z', endedAt: '2026-01-15T13:00:00Z' })
+      .expect(201);
+    expect(logged.body).toMatchObject({ type: 'STATE', durationSeconds: 3600 });
+    const listed = await request(server)
+      .get(`/observations?animalId=${animalId}&from=2026-01-15T00:00:00Z&to=2026-01-15T23:59:59Z`)
+      .set(as('alice'))
+      .expect(200);
+    expect(listed.body.total).toBe(2);
+    await request(server)
+      .post(`/animals/${animalId}/states/log`)
+      .set(as('alice'))
+      .send({ behavior: 'Dormir', startedAt: '2026-01-15T13:00:00Z', endedAt: '2026-01-15T12:00:00Z' })
+      .expect(400);
+  });
+
   it('rejects unknown behaviours and bad queries', async () => {
     const server = app.getHttpServer();
     await request(server).post(`/animals/${animalId}/events`).set(as('alice')).send({ behavior: 'Voler' }).expect(400);

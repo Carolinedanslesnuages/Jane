@@ -3,10 +3,11 @@ import { ActiveState, Observation, Prisma, Species } from '@prisma/client';
 import { AnimalsService } from '../animals/animals.service';
 import { findCategory } from '../ethogram/ethogram';
 import { PrismaService } from '../prisma/prisma.service';
-import { ListObservationsQuery, RecordEventDto, StopStateDto } from './observation.dto';
+import { ListObservationsQuery, LogStateDto, RecordEventDto, StopStateDto } from './observation.dto';
 
 /** Clock differences between the browser and the server must not reject "now". */
 const FUTURE_TOLERANCE_MS = 60_000;
+const MAX_LOGGED_STATE_MS = 48 * 3600 * 1000;
 
 @Injectable()
 export class ObservationsService {
@@ -68,7 +69,34 @@ export class ObservationsService {
     });
   }
 
-  /** The states currently running for a animal, oldest first. */
+  /** Records a state that is already over (noted after the fact), with its start and end. */
+  async logState(ownerId: string, animalId: string, input: LogStateDto): Promise<Observation> {
+    const animal = await this.animalsService.findOne(ownerId, animalId);
+    const category = this.requireCategory(animal.species, input.behavior);
+    const { behavior, startedAt, endedAt, ...context } = input;
+    const start = new Date(startedAt);
+    const end = this.requireNotFuture(new Date(endedAt), "La fin de l'état");
+    if (end.getTime() <= start.getTime()) {
+      throw new BadRequestException("La fin de l'état doit être après son début");
+    }
+    if (end.getTime() - start.getTime() > MAX_LOGGED_STATE_MS) {
+      throw new BadRequestException('Un état ne peut pas durer plus de 48 heures');
+    }
+    return this.prisma.observation.create({
+      data: {
+        animalId,
+        behavior,
+        category,
+        type: 'STATE',
+        startedAt: start,
+        recordedAt: end,
+        durationSeconds: (end.getTime() - start.getTime()) / 1000,
+        ...context,
+      },
+    });
+  }
+
+  /** The states currently running for an animal, oldest first. */
   async listActiveStates(ownerId: string, animalId: string): Promise<ActiveState[]> {
     await this.animalsService.findOne(ownerId, animalId);
     return this.prisma.activeState.findMany({ where: { animalId }, orderBy: { startedAt: 'asc' } });

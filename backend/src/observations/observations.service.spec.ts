@@ -48,7 +48,7 @@ describe('ObservationsService', () => {
       await expect(service.recordEvent(ownerId, animalId, { behavior: 'Voler' })).rejects.toThrow(BadRequestException);
     });
 
-    it('refuses to record for a animal owned by someone else', async () => {
+    it('refuses to record for an animal owned by someone else', async () => {
       await expect(service.recordEvent(strangerId, animalId, { behavior: 'Aboyer' })).rejects.toThrow(NotFoundException);
     });
   });
@@ -68,6 +68,35 @@ describe('ObservationsService', () => {
       await expect(service.recordEvent(ownerId, animalId, { behavior: 'Aboyer', occurredAt: tomorrow })).rejects.toThrow(
         BadRequestException,
       );
+    });
+  });
+
+  describe('logState', () => {
+    it('stores an elapsed state with its duration', async () => {
+      const observation = await service.logState(ownerId, animalId, {
+        behavior: 'Dormir',
+        startedAt: '2026-02-10T13:00:00Z',
+        endedAt: '2026-02-10T14:30:00Z',
+        location: 'Maison',
+      });
+      expect(observation).toMatchObject({ type: 'STATE', category: 'REST', durationSeconds: 5400, location: 'Maison' });
+      expect(observation.startedAt?.toISOString()).toBe('2026-02-10T13:00:00.000Z');
+      expect(observation.recordedAt.toISOString()).toBe('2026-02-10T14:30:00.000Z');
+    });
+
+    it('refuses an end before the start, a future end, and an absurd duration', async () => {
+      const log = (startedAt: string, endedAt: string) => service.logState(ownerId, animalId, { behavior: 'Dormir', startedAt, endedAt });
+      await expect(log('2026-02-10T14:00:00Z', '2026-02-10T13:00:00Z')).rejects.toThrow(BadRequestException);
+      await expect(log('2026-02-10T14:00:00Z', '2026-02-10T14:00:00Z')).rejects.toThrow(BadRequestException);
+      await expect(log('2026-02-01T00:00:00Z', '2026-02-10T00:00:00Z')).rejects.toThrow(BadRequestException);
+      const tomorrow = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+      await expect(log(new Date().toISOString(), tomorrow)).rejects.toThrow(BadRequestException);
+    });
+
+    it('checks the behaviour against the ethogram and the owner', async () => {
+      const input = { behavior: 'Voler', startedAt: '2026-02-10T13:00:00Z', endedAt: '2026-02-10T14:00:00Z' };
+      await expect(service.logState(ownerId, animalId, input)).rejects.toThrow(BadRequestException);
+      await expect(service.logState(strangerId, animalId, { ...input, behavior: 'Dormir' })).rejects.toThrow(NotFoundException);
     });
   });
 

@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { ListObservationsQuery, RecordEventDto, StartStateDto, StopStateDto } from './observation.dto';
+import { ListObservationsQuery, LogStateDto, RecordEventDto, StartStateDto, StopStateDto } from './observation.dto';
 import { ObservationsService } from './observations.service';
 
 @Controller()
@@ -27,6 +27,11 @@ export class ObservationsController {
   @HttpCode(200)
   stopState(@CurrentUser() user: User, @Param('animalId', ParseUUIDPipe) animalId: string, @Body() body: StopStateDto) {
     return this.observationsService.stopState(user.id, animalId, body);
+  }
+
+  @Post('animals/:animalId/states/log')
+  logState(@CurrentUser() user: User, @Param('animalId', ParseUUIDPipe) animalId: string, @Body() body: LogStateDto) {
+    return this.observationsService.logState(user.id, animalId, body);
   }
 
   @Get('observations')

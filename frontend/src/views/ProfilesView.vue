@@ -34,7 +34,8 @@
           <p class="muted">{{ describe(animal) }}</p>
           <dl>
             <dt>Âge</dt>
-            <dd class="age figure">{{ formatAge(animal.birthDate) }}</dd>
+            <dd v-if="animal.birthDate" class="age figure">{{ formatAge(animal.birthDate) }}</dd>
+            <dd v-else class="muted">Non renseigné</dd>
             <dt>Stérilisé(e)</dt>
             <dd>{{ animal.neutered ? 'Oui' : 'Non' }}</dd>
           </dl>
@@ -111,6 +112,7 @@ async function addAnimal(input: AnimalInput) {
 
 <style scoped>
 .list-heading {
+  margin-bottom: var(--space-3);
   display: flex;
   flex-wrap: wrap;
   align-items: end;

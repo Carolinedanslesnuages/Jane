@@ -1,5 +1,5 @@
 import { CognitiveTestType } from '@prisma/client';
-import { Type } from 'class-transformer';
+import { PartialType } from '@nestjs/mapped-types';
 import { IsEnum, IsNumber, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator';
 
 export class RecordCognitiveTestDto {
@@ -34,3 +34,6 @@ export class ListCognitiveTestsQuery {
   @IsEnum(CognitiveTestType)
   testType?: CognitiveTestType;
 }
+
+/** Correction d'un résultat : seuls les champs fournis changent ; `score: null` efface la note. */
+export class UpdateCognitiveTestDto extends PartialType(RecordCognitiveTestDto) {}

@@ -47,4 +47,26 @@ describe('CognitiveTestsService', () => {
     await expect(service.record(strangerId, animalId, { testType: 'DETOUR', durationSeconds: 5 })).rejects.toThrow(NotFoundException);
     expect(await service.list(strangerId, {})).toEqual([]);
   });
+
+  it('corrects only the given fields, and can clear the score', async () => {
+    const test = await service.record(ownerId, animalId, { testType: 'DETOUR', durationSeconds: 12.5, score: 7, notes: 'ok' });
+    const corrected = await service.update(ownerId, test.id, { durationSeconds: 11 });
+    expect(corrected).toMatchObject({ durationSeconds: 11, score: 7, notes: 'ok' });
+    const cleared = await service.update(ownerId, test.id, { score: null as unknown as undefined });
+    expect(cleared.score).toBeNull();
+  });
+
+  it('deletes a result', async () => {
+    const test = await service.record(ownerId, animalId, { testType: 'DETOUR', durationSeconds: 12.5 });
+    await service.remove(ownerId, test.id);
+    expect(await service.list(ownerId, {})).toEqual([]);
+  });
+
+  it("does not let someone else correct or delete a result", async () => {
+    const test = await service.record(ownerId, animalId, { testType: 'DETOUR', durationSeconds: 12.5 });
+    const strangerId = (await prisma.user.create({ data: { keycloakSubject: 'stranger-2' } })).id;
+    await expect(service.update(strangerId, test.id, { durationSeconds: 1 })).rejects.toThrow(NotFoundException);
+    await expect(service.remove(strangerId, test.id)).rejects.toThrow(NotFoundException);
+    expect(await service.list(ownerId, {})).toHaveLength(1);
+  });
 });

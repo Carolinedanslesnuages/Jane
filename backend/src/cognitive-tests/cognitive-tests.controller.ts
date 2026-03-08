@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { ListCognitiveTestsQuery, RecordCognitiveTestDto } from './cognitive-test.dto';
+import { ListCognitiveTestsQuery, RecordCognitiveTestDto, UpdateCognitiveTestDto } from './cognitive-test.dto';
 import { CognitiveTestsService } from './cognitive-tests.service';
 
 @Controller()
@@ -16,5 +16,16 @@ export class CognitiveTestsController {
   @Get('cognitive-tests')
   list(@CurrentUser() user: User, @Query() query: ListCognitiveTestsQuery) {
     return this.cognitiveTestsService.list(user.id, query);
+  }
+
+  @Patch('cognitive-tests/:testId')
+  update(@CurrentUser() user: User, @Param('testId', ParseUUIDPipe) testId: string, @Body() body: UpdateCognitiveTestDto) {
+    return this.cognitiveTestsService.update(user.id, testId, body);
+  }
+
+  @Delete('cognitive-tests/:testId')
+  @HttpCode(204)
+  async remove(@CurrentUser() user: User, @Param('testId', ParseUUIDPipe) testId: string) {
+    await this.cognitiveTestsService.remove(user.id, testId);
   }
 }

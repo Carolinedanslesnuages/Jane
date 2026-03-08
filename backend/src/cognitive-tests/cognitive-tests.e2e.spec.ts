@@ -41,4 +41,23 @@ describe('cognitive tests (HTTP)', () => {
     await request(server).post(`/animals/${animalId}/cognitive-tests`).set(as('bob')).send({ testType: 'DETOUR', durationSeconds: 5 }).expect(404);
     expect((await request(server).get('/cognitive-tests').set(as('bob')).expect(200)).body).toEqual([]);
   });
+
+  it('corrects then deletes a result', async () => {
+    const server = app.getHttpServer();
+    const created = await request(server)
+      .post(`/animals/${animalId}/cognitive-tests`)
+      .set(as('alice'))
+      .send({ testType: 'MANIPULATION', durationSeconds: 40, score: 5 })
+      .expect(201);
+    const testId = created.body.id;
+
+    const corrected = await request(server).patch(`/cognitive-tests/${testId}`).set(as('alice')).send({ durationSeconds: 35, score: null }).expect(200);
+    expect(corrected.body).toMatchObject({ durationSeconds: 35, score: null });
+    await request(server).patch(`/cognitive-tests/${testId}`).set(as('alice')).send({ durationSeconds: 0 }).expect(400);
+    await request(server).patch(`/cognitive-tests/${testId}`).set(as('bob')).send({ durationSeconds: 1 }).expect(404);
+
+    await request(server).delete(`/cognitive-tests/${testId}`).set(as('bob')).expect(404);
+    await request(server).delete(`/cognitive-tests/${testId}`).set(as('alice')).expect(204);
+    await request(server).delete(`/cognitive-tests/${testId}`).set(as('alice')).expect(404);
+  });
 });

@@ -25,6 +25,27 @@
 
       <ScanSamplingPanel />
 
+      <AppCard title="Moment">
+        <label class="inline"><input v-model="retroactive" type="checkbox" /> Noter après coup</label>
+        <div v-if="retroactive" class="moment-grid">
+          <div v-if="mode === 'EVENT'">
+            <label for="moment-when">Quand ?</label>
+            <input id="moment-when" v-model="when" type="datetime-local" :max="nowInput" />
+          </div>
+          <template v-else>
+            <div>
+              <label for="moment-from">Début</label>
+              <input id="moment-from" v-model="from" type="datetime-local" :max="nowInput" />
+            </div>
+            <div>
+              <label for="moment-to">Fin</label>
+              <input id="moment-to" v-model="to" type="datetime-local" :max="nowInput" />
+            </div>
+          </template>
+        </div>
+        <p v-else class="muted hint">Les comportements sont enregistrés à l'instant où vous les touchez.</p>
+      </AppCard>
+
       <AppCard title="Contexte">
         <div class="context-grid">
           <div>
@@ -57,8 +78,8 @@
           v-for="category in categories"
           :key="category.category"
           :category="category"
-          :mode="mode"
-          :running-behaviors="runningBehaviors"
+          :mode="retroactive ? 'EVENT' : mode"
+          :running-behaviors="retroactive ? [] : runningBehaviors"
           :disabled="busy"
           @choose="choose"
         />
@@ -83,6 +104,8 @@ import { useAnimalsStore } from '../stores/animals';
 import { useEthogramStore } from '../stores/ethogram';
 import { useObservationsStore } from '../stores/observations';
 import { useToastsStore } from '../stores/toasts';
+import { formatDateTime } from '../utils/format';
+import { fromDateTimeInput, toDateTimeInput } from '../utils/period';
 
 const LOCATIONS = ['', 'Maison', 'Jardin', 'Parc', 'Extérieur', 'Autre'];
 const WEATHERS = ['', 'Ensoleillé', 'Nuageux', 'Pluie', 'Orage', 'Neige'];
@@ -96,6 +119,12 @@ const toasts = useToastsStore();
 const mode = ref<'EVENT' | 'STATE'>('EVENT');
 const context = reactive({ location: '', weather: '', stimuli: '', notes: '' });
 
+const retroactive = ref(false);
+const when = ref(toDateTimeInput(new Date()));
+const from = ref(toDateTimeInput(new Date(Date.now() - 30 * 60_000)));
+const to = ref(toDateTimeInput(new Date()));
+/** The latest moment that can be entered: now, to the minute. */
+const nowInput = computed(() => toDateTimeInput(new Date()));
 const busy = ref(false);
 /** The behaviours of the species of the followed animal. */
 const categories = computed(() => {
@@ -116,7 +145,9 @@ async function choose(behavior: string) {
   }
   busy.value = true;
   try {
-    if (mode.value === 'EVENT') {
+    if (retroactive.value) {
+      await chooseAfterTheFact(animal.id, behavior);
+    } else if (mode.value === 'EVENT') {
       await observationsStore.recordEvent(animal.id, behavior, currentContext());
       toasts.info(`${behavior} enregistré.`);
     } else if (observationsStore.isRunning(behavior)) {
@@ -131,6 +162,22 @@ async function choose(behavior: string) {
   } finally {
     busy.value = false;
   }
+}
+
+/** Records a behaviour at a past moment (event) or between two past moments (state). */
+async function chooseAfterTheFact(animalId: string, behavior: string) {
+  if (mode.value === 'EVENT') {
+    await observationsStore.recordEvent(animalId, behavior, { ...currentContext(), occurredAt: fromDateTimeInput(when.value) });
+    toasts.info(`${behavior} enregistré à ${formatDateTime(fromDateTimeInput(when.value))}.`);
+    return;
+  }
+  const start = fromDateTimeInput(from.value);
+  const end = fromDateTimeInput(to.value);
+  if (new Date(end) <= new Date(start)) {
+    throw new Error("La fin doit être après le début.");
+  }
+  await observationsStore.logState(animalId, behavior, start, end, currentContext());
+  toasts.info(`${behavior} enregistré.`);
 }
 
 onMounted(() => animalsStore.load());
@@ -181,6 +228,21 @@ watch(
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
   gap: var(--space-4);
   margin-bottom: var(--space-5);
+}
+
+.moment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 18rem));
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+}
+
+label.inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-ink);
+  font-size: 1rem;
 }
 
 .context-grid {

@@ -27,6 +27,12 @@ export const useObservationsStore = defineStore('observations', () => {
     await refresh(animalId);
   }
 
+  /** Records a state that is already over, with its start and end (ISO instants). */
+  async function logState(animalId: string, behavior: string, startedAt: string, endedAt: string, context: ObservationContext) {
+    await api.post(`/animals/${animalId}/states/log`, { behavior, startedAt, endedAt, ...context });
+    await refresh(animalId);
+  }
+
   async function startState(animalId: string, behavior: string) {
     await api.post(`/animals/${animalId}/states/start`, { behavior });
     await refresh(animalId);
@@ -60,5 +66,5 @@ export const useObservationsStore = defineStore('observations', () => {
     historyTotal.value = 0;
   }
 
-  return { activeStates, recent, history, historyTotal, loadHistory, removeObservation, refresh, recordEvent, startState, stopState, isRunning, reset };
+  return { activeStates, recent, history, historyTotal, loadHistory, removeObservation, refresh, logState, recordEvent, startState, stopState, isRunning, reset };
 });

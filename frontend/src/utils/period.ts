@@ -22,3 +22,14 @@ export function daysAgo(count: number, from: Date = new Date()): Date {
   date.setDate(date.getDate() - count);
   return date;
 }
+
+/** The value of a datetime-local input (local time, to the minute) for an instant. */
+export function toDateTimeInput(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${toInputDate(date)}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+/** The ISO instant of a datetime-local input value. */
+export function fromDateTimeInput(value: string): string {
+  return new Date(value).toISOString();
+}

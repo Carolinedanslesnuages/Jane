@@ -59,6 +59,8 @@ export interface ActiveState {
 }
 
 export interface ObservationContext {
+  /** For an event noted after the fact: when it happened (ISO). */
+  occurredAt?: string;
   notes?: string;
   location?: string;
   weather?: string;

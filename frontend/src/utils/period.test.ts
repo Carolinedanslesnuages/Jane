@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { daysAgo, endOfLocalDay, startOfLocalDay, toInputDate } from './period';
+import { daysAgo, endOfLocalDay, fromDateTimeInput, startOfLocalDay, toDateTimeInput, toInputDate } from './period';
 
 describe('period helpers', () => {
   it('formats a local date for a date input', () => {
@@ -16,5 +16,11 @@ describe('period helpers', () => {
 
   it('goes back in time', () => {
     expect(toInputDate(daysAgo(7, new Date(2026, 1, 20)))).toBe('2026-02-13');
+  });
+
+  it('round-trips a datetime-local value', () => {
+    const date = new Date(2026, 2, 5, 8, 7);
+    expect(toDateTimeInput(date)).toBe('2026-03-05T08:07');
+    expect(new Date(fromDateTimeInput('2026-03-05T08:07')).getTime()).toBe(date.getTime());
   });
 });

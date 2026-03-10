@@ -70,15 +70,30 @@
         <div class="table-wrapper">
           <table>
             <thead>
-              <tr><th>Date</th><th>Épreuve</th><th>Durée</th><th>Score</th><th>Notes</th></tr>
+              <tr><th>Date</th><th>Épreuve</th><th>Durée</th><th>Score</th><th>Notes</th><th><span class="visually-hidden">Actions</span></th></tr>
             </thead>
             <tbody>
               <tr v-for="test in cognitiveStore.tests" :key="test.id">
                 <td>{{ formatDateTime(test.recordedAt) }}</td>
                 <td>{{ cognitiveLabel(test.testType) }}</td>
-                <td>{{ formatDuration(test.durationSeconds) }}</td>
-                <td>{{ test.score ?? '–' }}</td>
-                <td>{{ test.notes || '–' }}</td>
+                <template v-if="editingTestId === test.id">
+                  <td><input v-model.number="edit.durationSeconds" type="number" min="0.1" step="0.1" aria-label="Durée en secondes" /></td>
+                  <td><input v-model="edit.score" type="number" min="0" max="10" step="0.5" aria-label="Score sur 10 (vide pour effacer)" /></td>
+                  <td><input v-model="edit.notes" maxlength="500" aria-label="Notes" /></td>
+                  <td class="row-actions">
+                    <button type="button" class="primary" @click="saveEdit(test.id)">Enregistrer</button>
+                    <button type="button" @click="editingTestId = null">Annuler</button>
+                  </td>
+                </template>
+                <template v-else>
+                  <td>{{ formatDuration(test.durationSeconds) }}</td>
+                  <td>{{ test.score ?? '–' }}</td>
+                  <td>{{ test.notes || '–' }}</td>
+                  <td class="row-actions">
+                    <button type="button" @click="startEdit(test)">Modifier</button>
+                    <ConfirmAction label="Supprimer" message="Supprimer ce résultat ?" @confirm="removeTest(test.id)" />
+                  </td>
+                </template>
               </tr>
             </tbody>
           </table>
@@ -89,10 +104,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { Line } from 'vue-chartjs';
 import AnimalBanner from '../components/AnimalBanner.vue';
 import AppCard from '../components/AppCard.vue';
+import ConfirmAction from '../components/ConfirmAction.vue';
 import PageHeader from '../components/PageHeader.vue';
 import { useStopwatch } from '../composables/useStopwatch';
 import { useCognitiveStore } from '../stores/cognitive';
@@ -101,7 +117,7 @@ import { useToastsStore } from '../stores/toasts';
 import { ACCENT_HEX } from '../charts/setup';
 import { cognitiveLabel, COGNITIVE_TESTS } from '../utils/cognitive';
 import { formatDateTime, formatDuration } from '../utils/format';
-import type { CognitiveTestType } from '../api/types';
+import type { CognitiveTest, CognitiveTestType } from '../api/types';
 
 const animalsStore = useAnimalsStore();
 const cognitiveStore = useCognitiveStore();
@@ -187,6 +203,45 @@ const chartData = computed(() => {
 const chartOptions = {
   plugins: { title: { display: true, text: 'Évolution des durées (secondes)' } },
 };
+
+const editingTestId = ref<string | null>(null);
+const edit = reactive({ durationSeconds: 0, score: '' as number | string, notes: '' });
+
+function startEdit(test: CognitiveTest) {
+  editingTestId.value = test.id;
+  Object.assign(edit, { durationSeconds: test.durationSeconds, score: test.score ?? '', notes: test.notes ?? '' });
+}
+
+async function saveEdit(testId: string) {
+  const animal = animalsStore.selectedAnimal;
+  if (!animal) {
+    return;
+  }
+  try {
+    await cognitiveStore.update(animal.id, testId, {
+      durationSeconds: edit.durationSeconds,
+      score: edit.score === '' ? null : Number(edit.score),
+      notes: edit.notes.trim(),
+    });
+    editingTestId.value = null;
+    toasts.info('Résultat corrigé.');
+  } catch (error) {
+    toasts.error((error as Error).message);
+  }
+}
+
+async function removeTest(testId: string) {
+  const animal = animalsStore.selectedAnimal;
+  if (!animal) {
+    return;
+  }
+  try {
+    await cognitiveStore.remove(animal.id, testId);
+    toasts.info('Résultat supprimé.');
+  } catch (error) {
+    toasts.error((error as Error).message);
+  }
+}
 
 onMounted(() => animalsStore.load());
 
@@ -278,6 +333,24 @@ th {
   font-size: 0.8rem;
   color: var(--color-muted);
   background: var(--color-sand);
+}
+
+.row-actions {
+  display: flex;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+td input {
+  min-width: 5rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
 }
 
 .reading {

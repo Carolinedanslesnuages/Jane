@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeAge, formatAge, formatDuration } from './format';
+import { computeAge, formatAge, formatDuration, formatPreciseDuration } from './format';
 
 describe('formatDuration', () => {
   it('formats seconds, minutes and hours', () => {
@@ -11,6 +11,19 @@ describe('formatDuration', () => {
   it('is empty when there is no duration (events)', () => {
     expect(formatDuration(null)).toBe('');
     expect(formatDuration(undefined)).toBe('');
+  });
+});
+
+describe('formatPreciseDuration', () => {
+  it('keeps the tenth of a second under a minute, with a French decimal comma', () => {
+    expect(formatPreciseDuration(12.5)).toBe('12,5 s');
+    expect(formatPreciseDuration(0)).toBe('0,0 s');
+    expect(formatPreciseDuration(59.94)).toBe('59,9 s');
+  });
+
+  it('falls back to the usual form beyond a minute and when empty', () => {
+    expect(formatPreciseDuration(125)).toBe('2 min 05 s');
+    expect(formatPreciseDuration(null)).toBe('');
   });
 });
 

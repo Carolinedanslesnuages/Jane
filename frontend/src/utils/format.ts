@@ -15,6 +15,17 @@ export function formatDuration(seconds: number | null | undefined): string {
   return `${total} s`;
 }
 
+/**
+ * A duration measured to a tenth of a second (cognitive tests): "12,5 s" under a minute,
+ * the usual rounded form beyond.
+ */
+export function formatPreciseDuration(seconds: number | null | undefined): string {
+  if (seconds === null || seconds === undefined || Number.isNaN(seconds)) {
+    return '';
+  }
+  return seconds < 60 ? `${seconds.toFixed(1).replace('.', ',')} s` : formatDuration(seconds);
+}
+
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
 }

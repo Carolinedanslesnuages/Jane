@@ -18,7 +18,7 @@
 
       <AppCard title="Chronomètre">
         <div class="stopwatch">
-          <output class="reading figure" aria-live="off">{{ stopwatch.elapsedSeconds.value.toFixed(1) }} s</output>
+          <output class="reading figure" aria-live="off">{{ stopwatch.elapsedSeconds.value.toFixed(1).replace('.', ',') }} s</output>
           <button v-if="!stopwatch.running.value" type="button" class="primary" @click="startStopwatch">Démarrer</button>
           <button v-else type="button" class="primary" @click="stopStopwatch">Arrêter</button>
           <button type="button" @click="resetStopwatch">Réinitialiser</button>
@@ -55,7 +55,7 @@
           </AppCard>
           <AppCard>
             <span class="metric-label">Durée moyenne</span>
-            <strong class="metric-value figure">{{ formatDuration(averageDuration) }}</strong>
+            <strong class="metric-value figure">{{ formatPreciseDuration(averageDuration) }}</strong>
           </AppCard>
           <AppCard>
             <span class="metric-label">Score moyen</span>
@@ -86,7 +86,7 @@
                   </td>
                 </template>
                 <template v-else>
-                  <td>{{ formatDuration(test.durationSeconds) }}</td>
+                  <td>{{ formatPreciseDuration(test.durationSeconds) }}</td>
                   <td>{{ test.score ?? '–' }}</td>
                   <td>{{ test.notes || '–' }}</td>
                   <td class="row-actions">
@@ -116,7 +116,7 @@ import { useAnimalsStore } from '../stores/animals';
 import { useToastsStore } from '../stores/toasts';
 import { ACCENT_HEX } from '../charts/setup';
 import { cognitiveLabel, COGNITIVE_TESTS } from '../utils/cognitive';
-import { formatDateTime, formatDuration } from '../utils/format';
+import { formatDateTime, formatPreciseDuration } from '../utils/format';
 import type { CognitiveTest, CognitiveTestType } from '../api/types';
 
 const animalsStore = useAnimalsStore();

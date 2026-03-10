@@ -15,5 +15,16 @@ export const useCognitiveStore = defineStore('cognitive', () => {
     await load(animalId);
   }
 
-  return { tests, load, record };
+  /** Corrects a result; `score: null` clears the score. */
+  async function update(animalId: string, testId: string, input: Partial<Omit<CognitiveTestInput, 'score'>> & { score?: number | null }) {
+    await api.patch(`/cognitive-tests/${testId}`, input);
+    await load(animalId);
+  }
+
+  async function remove(animalId: string, testId: string) {
+    await api.delete(`/cognitive-tests/${testId}`);
+    await load(animalId);
+  }
+
+  return { tests, load, record, update, remove };
 });

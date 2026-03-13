@@ -33,6 +33,7 @@ services:
       KC_HTTP_PORT: 8180
       KC_PROXY_HEADERS: xforwarded
       JANE_WEB_URL: https://${JANE_DOMAIN}
+      JANE_ADMIN_CLIENT_SECRET: ${JANE_ADMIN_CLIENT_SECRET:?secret du compte de service requis}
     volumes:
       - ./keycloak/realm-jane.prod.json:/opt/keycloak/data/import/realm-jane.json:ro
     depends_on:
@@ -49,6 +50,8 @@ services:
       KEYCLOAK_URL: https://auth.${JANE_DOMAIN}
       KEYCLOAK_REALM: jane
       KEYCLOAK_API_CLIENT_ID: jane-api
+      KEYCLOAK_ADMIN_CLIENT_ID: jane-admin
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${JANE_ADMIN_CLIENT_SECRET}
     depends_on:
       postgres:
         condition: service_healthy

@@ -53,4 +53,26 @@ describe('DELETE /me (HTTP)', () => {
   it('requires a token', async () => {
     await request(app.getHttpServer()).delete('/me').expect(401);
   });
+
+  it('also deletes the sign-in account when Keycloak administration is configured', async () => {
+    const deleted: string[] = [];
+    const { app: configuredApp } = await createTestApp({
+      keycloakAdmin: { isConfigured: true, deleteUser: async (subject) => void deleted.push(subject) },
+    });
+    const response = await request(configuredApp.getHttpServer()).delete('/me').set({ Authorization: 'Bearer carol' }).expect(200);
+    expect(response.body).toEqual({ identityDeleted: true });
+    expect(deleted).toEqual(['carol']);
+    await configuredApp.close();
+  });
+
+  it('answers 500 and keeps the account when Keycloak refuses', async () => {
+    const { app: failingApp, prisma } = await createTestApp({
+      keycloakAdmin: { isConfigured: true, deleteUser: async () => { throw new Error('refusé'); } },
+    });
+    const server = failingApp.getHttpServer();
+    await request(server).post('/animals').set({ Authorization: 'Bearer dave' }).send({ name: 'Rex' }).expect(201);
+    await request(server).delete('/me').set({ Authorization: 'Bearer dave' }).expect(500);
+    expect(await prisma.animal.count()).toBe(1);
+    await failingApp.close();
+  });
 });

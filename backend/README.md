@@ -24,6 +24,8 @@ Lues depuis `.env` (à la racine du dépôt) ou l'environnement.
 | `KEYCLOAK_URL` | adresse publique de Keycloak | obligatoire |
 | `KEYCLOAK_REALM` | realm Keycloak | obligatoire |
 | `KEYCLOAK_API_CLIENT_ID` | audience attendue dans les jetons | `jane-api` |
+| `KEYCLOAK_ADMIN_CLIENT_ID` | compte de service qui supprime les comptes de connexion | `jane-admin` |
+| `KEYCLOAK_ADMIN_CLIENT_SECRET` | son secret ; absent, `DELETE /me` ne supprime que les données de Jane | facultatif |
 | `API_PORT` | port d'écoute | `3300` |
 | `WEB_ORIGIN` | origine autorisée par CORS (l'interface) | `http://localhost:5273` |
 

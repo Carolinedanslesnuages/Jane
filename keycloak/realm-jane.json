@@ -8,7 +8,10 @@
   "resetPasswordAllowed": true,
   "sslRequired": "external",
   "internationalizationEnabled": true,
-  "supportedLocales": ["fr", "en"],
+  "supportedLocales": [
+    "fr",
+    "en"
+  ],
   "defaultLocale": "fr",
   "clients": [
     {
@@ -25,8 +28,12 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "rootUrl": "http://localhost:5273",
-      "redirectUris": ["http://localhost:5273/*"],
-      "webOrigins": ["http://localhost:5273"],
+      "redirectUris": [
+        "http://localhost:5273/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5273"
+      ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
         "post.logout.redirect.uris": "http://localhost:5273/*"
@@ -43,6 +50,17 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "jane-admin",
+      "name": "Jane (compte de service)",
+      "enabled": true,
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "jane-admin-dev-secret"
     }
   ],
   "users": [
@@ -53,7 +71,23 @@
       "lastName": "Jane",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "demo-jane", "temporary": false }]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo-jane",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "service-account-jane-admin",
+      "enabled": true,
+      "serviceAccountClientId": "jane-admin",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users"
+        ]
+      }
     }
   ]
 }

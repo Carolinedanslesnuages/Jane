@@ -50,6 +50,29 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "jane-admin",
+      "name": "Jane (compte de service)",
+      "enabled": true,
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${JANE_ADMIN_CLIENT_SECRET}"
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-jane-admin",
+      "enabled": true,
+      "serviceAccountClientId": "jane-admin",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users"
+        ]
+      }
     }
   ]
 }

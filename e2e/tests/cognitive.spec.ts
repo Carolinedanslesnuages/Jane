@@ -20,15 +20,15 @@ test('enregistre, corrige puis supprime un test cognitif', async ({ page }) => {
   await page.getByLabel('Score sur 10').fill('7');
   await page.getByRole('button', { name: 'Enregistrer le test' }).click();
   const row = page.locator('tbody tr', { hasText: 'Permanence' });
-  await expect(row).toContainText('12 s');
+  await expect(row).toContainText('12,5 s');
   await expect(row).toContainText('7');
 
   // Correction : durée et effacement du score
   await row.getByRole('button', { name: 'Modifier' }).click();
   await page.getByLabel('Durée en secondes').fill('30');
-  await page.getByLabel(/Score sur 10/).fill('');
+  await page.getByLabel('Score sur 10 (vide pour effacer)').fill('');
   await page.getByRole('button', { name: 'Enregistrer', exact: true }).click();
-  await expect(page.locator('tbody tr', { hasText: 'Permanence' })).toContainText('30 s');
+  await expect(page.locator('tbody tr', { hasText: 'Permanence' })).toContainText('30,0 s');
   await expect(page.locator('tbody tr', { hasText: 'Permanence' })).toContainText('–');
 
   // Suppression

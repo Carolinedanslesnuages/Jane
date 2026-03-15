@@ -7,6 +7,7 @@ export const routes = [
   { path: '/tests', name: 'cognitive-tests', component: () => import('../views/CognitiveTestsView.vue'), meta: { label: 'Tests cognitifs' } },
   { path: '/tableau-de-bord', name: 'dashboard', component: () => import('../views/DashboardView.vue'), meta: { label: 'Tableau de bord' } },
   { path: '/donnees', name: 'data', component: () => import('../views/DataView.vue'), meta: { label: 'Données' } },
+  { path: '/compte', name: 'account', component: () => import('../views/AccountView.vue'), meta: { label: 'Mon compte' } },
   { path: '/a-propos', name: 'about', component: () => import('../views/AboutView.vue'), meta: { label: 'À propos' } },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('../views/NotFoundView.vue'), meta: { title: 'Page introuvable' } },
 ];

@@ -9,9 +9,9 @@ describe('routes', () => {
     expect(new Set(names).size).toBe(names.length);
   });
 
-  it('labels the six pages of the navigation', () => {
+  it('labels the pages of the navigation', () => {
     const labels = routes.flatMap((route) => ('meta' in route && route.meta?.label ? [route.meta.label] : []));
-    expect(labels).toEqual(['Profils', 'Observation', 'Tests cognitifs', 'Tableau de bord', 'Données', 'À propos']);
+    expect(labels).toEqual(['Profils', 'Observation', 'Tests cognitifs', 'Tableau de bord', 'Données', 'Mon compte', 'À propos']);
   });
 
   it('catches unknown addresses with a dedicated page', () => {

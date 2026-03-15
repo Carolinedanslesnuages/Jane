@@ -14,5 +14,11 @@ export const useSessionStore = defineStore('session', () => {
     profile.value = await api.get<Profile>('/me');
   }
 
-  return { profile, label, load, signOut };
+  /** Deletes the account and all its data, then ends the session. Irreversible. */
+  async function deleteAccount() {
+    await api.delete<{ identityDeleted: boolean }>('/me');
+    await signOut();
+  }
+
+  return { profile, label, load, signOut, deleteAccount };
 });

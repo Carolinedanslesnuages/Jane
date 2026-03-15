@@ -40,7 +40,7 @@ export const api = {
   get: <T>(path: string) => apiRequest<T>('GET', path),
   post: <T>(path: string, body?: unknown) => apiRequest<T>('POST', path, body ?? {}),
   patch: <T>(path: string, body: unknown) => apiRequest<T>('PATCH', path, body),
-  delete: (path: string) => apiRequest<void>('DELETE', path),
+  delete: <T = void>(path: string) => apiRequest<T>('DELETE', path),
 };
 
 /** Downloads a file served by the API (the access token cannot travel in a plain link). */

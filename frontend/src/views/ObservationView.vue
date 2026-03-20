@@ -94,6 +94,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import ActiveStates from '../components/ActiveStates.vue';
+import type { Animal } from '../api/types';
 import AnimalBanner from '../components/AnimalBanner.vue';
 import AppCard from '../components/AppCard.vue';
 import CategoryCard from '../components/CategoryCard.vue';
@@ -146,10 +147,10 @@ async function choose(behavior: string) {
   busy.value = true;
   try {
     if (retroactive.value) {
-      await chooseAfterTheFact(animal.id, behavior);
+      await chooseAfterTheFact(animal, behavior);
     } else if (mode.value === 'EVENT') {
-      await observationsStore.recordEvent(animal.id, behavior, currentContext());
-      toasts.info(`${behavior} enregistré.`);
+      const outcome = await observationsStore.recordEvent(animal.id, behavior, currentContext(), `${behavior} (${animal.name})`);
+      toasts.info(savedMessage(behavior, outcome));
     } else if (observationsStore.isRunning(behavior)) {
       await observationsStore.stopState(animal.id, behavior, currentContext());
       toasts.info(`${behavior} terminé et enregistré.`);
@@ -164,11 +165,25 @@ async function choose(behavior: string) {
   }
 }
 
+/** What to tell the observer: saved, or kept on the device until the network is back. */
+function savedMessage(behavior: string, outcome: 'sent' | 'queued', when = ''): string {
+  if (outcome === 'queued') {
+    return `${behavior} conservé sur cet appareil, il partira au retour du réseau.`;
+  }
+  return `${behavior} enregistré${when ? ` ${when}` : ''}.`;
+}
+
 /** Records a behaviour at a past moment (event) or between two past moments (state). */
-async function chooseAfterTheFact(animalId: string, behavior: string) {
+async function chooseAfterTheFact(animal: Animal, behavior: string) {
+  const label = `${behavior} (${animal.name})`;
   if (mode.value === 'EVENT') {
-    await observationsStore.recordEvent(animalId, behavior, { ...currentContext(), occurredAt: fromDateTimeInput(when.value) });
-    toasts.info(`${behavior} enregistré à ${formatDateTime(fromDateTimeInput(when.value))}.`);
+    const outcome = await observationsStore.recordEvent(
+      animal.id,
+      behavior,
+      { ...currentContext(), occurredAt: fromDateTimeInput(when.value) },
+      label,
+    );
+    toasts.info(savedMessage(behavior, outcome, `à ${formatDateTime(fromDateTimeInput(when.value))}`));
     return;
   }
   const start = fromDateTimeInput(from.value);
@@ -176,8 +191,8 @@ async function chooseAfterTheFact(animalId: string, behavior: string) {
   if (new Date(end) <= new Date(start)) {
     throw new Error("La fin doit être après le début.");
   }
-  await observationsStore.logState(animalId, behavior, start, end, currentContext());
-  toasts.info(`${behavior} enregistré.`);
+  const outcome = await observationsStore.logState(animal.id, behavior, start, end, currentContext(), label);
+  toasts.info(savedMessage(behavior, outcome));
 }
 
 onMounted(() => animalsStore.load());

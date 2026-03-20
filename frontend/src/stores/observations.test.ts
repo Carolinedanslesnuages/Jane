@@ -3,9 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const get = vi.fn();
 const post = vi.fn();
+const apiSend = vi.fn();
 const remove = vi.fn();
 
+vi.mock('../auth/keycloak', () => ({ currentSubject: () => 'u1', signOut: vi.fn() }));
+
 vi.mock('../api/client', () => ({
+  apiSend: (...args: unknown[]) => apiSend(...args),
   api: {
     get: (...args: unknown[]) => get(...args),
     post: (...args: unknown[]) => post(...args),
@@ -13,12 +17,18 @@ vi.mock('../api/client', () => ({
   },
 }));
 
+import { NetworkError } from '../offline/outbox';
+import { useConnectivityStore } from './connectivity';
 import { useObservationsStore } from './observations';
+import { useOutboxStore } from './outbox';
 
 describe('observations store', () => {
   beforeEach(() => {
     get.mockReset();
     post.mockReset();
+    apiSend.mockReset();
+    apiSend.mockResolvedValue(undefined);
+    localStorage.clear();
     remove.mockReset();
     setActivePinia(createPinia());
     get.mockImplementation(async (path: string) =>
@@ -40,8 +50,9 @@ describe('observations store', () => {
 
   it('sends the context with an event, then refreshes', async () => {
     const store = useObservationsStore();
-    await store.recordEvent('animal-1', 'Aboyer', { location: 'Maison', stimuli: 'Bruit' });
-    expect(post).toHaveBeenCalledWith('/animals/animal-1/events', { behavior: 'Aboyer', location: 'Maison', stimuli: 'Bruit' });
+    const outcome = await store.recordEvent('animal-1', 'Aboyer', { location: 'Maison', stimuli: 'Bruit' });
+    expect(outcome).toBe('sent');
+    expect(apiSend).toHaveBeenCalledWith('/animals/animal-1/events', { behavior: 'Aboyer', location: 'Maison', stimuli: 'Bruit' });
     expect(get).toHaveBeenCalledTimes(2);
   });
 
@@ -66,7 +77,7 @@ describe('observations store', () => {
   it('logs an elapsed state with its start and end', async () => {
     const store = useObservationsStore();
     await store.logState('animal-1', 'Dormir', '2026-03-05T13:00:00.000Z', '2026-03-05T14:00:00.000Z', { location: 'Maison' });
-    expect(post).toHaveBeenCalledWith('/animals/animal-1/states/log', {
+    expect(apiSend).toHaveBeenCalledWith('/animals/animal-1/states/log', {
       behavior: 'Dormir',
       startedAt: '2026-03-05T13:00:00.000Z',
       endedAt: '2026-03-05T14:00:00.000Z',
@@ -77,6 +88,39 @@ describe('observations store', () => {
   it('sends the moment of an event noted after the fact', async () => {
     const store = useObservationsStore();
     await store.recordEvent('animal-1', 'Aboyer', { occurredAt: '2026-03-05T08:00:00.000Z' });
-    expect(post).toHaveBeenCalledWith('/animals/animal-1/events', { behavior: 'Aboyer', occurredAt: '2026-03-05T08:00:00.000Z' });
+    expect(apiSend).toHaveBeenCalledWith('/animals/animal-1/events', { behavior: 'Aboyer', occurredAt: '2026-03-05T08:00:00.000Z' });
+  });
+
+  describe('without network', () => {
+    it('keeps an event in the outbox with the moment it was noted, and does not reload', async () => {
+      const store = useObservationsStore();
+      useConnectivityStore().setOnline(false);
+      const before = Date.now();
+      const outcome = await store.recordEvent('animal-1', 'Aboyer', { location: 'Jardin' }, 'Aboyer (Rex)');
+      expect(outcome).toBe('queued');
+      expect(apiSend).not.toHaveBeenCalled();
+      expect(get).not.toHaveBeenCalled();
+      const [entry] = useOutboxStore().entries();
+      expect(entry).toMatchObject({ label: 'Aboyer (Rex)', path: '/animals/animal-1/events' });
+      expect(entry.body).toMatchObject({ behavior: 'Aboyer', location: 'Jardin' });
+      expect(new Date((entry.body as { occurredAt: string }).occurredAt).getTime()).toBeGreaterThanOrEqual(before);
+    });
+
+    it('keeps an elapsed state in the outbox', async () => {
+      const store = useObservationsStore();
+      useConnectivityStore().setOnline(false);
+      const outcome = await store.logState('animal-1', 'Dormir', '2026-03-05T13:00:00.000Z', '2026-03-05T14:00:00.000Z', {});
+      expect(outcome).toBe('queued');
+      expect(useOutboxStore().pending).toBe(1);
+    });
+
+    it('keeps what is displayed when a reload cannot reach the server', async () => {
+      const store = useObservationsStore();
+      await store.refresh('animal-1');
+      get.mockRejectedValue(new NetworkError('hors ligne'));
+      await store.refresh('animal-1');
+      expect(store.recent).toHaveLength(1);
+      expect(useConnectivityStore().online).toBe(false);
+    });
   });
 });

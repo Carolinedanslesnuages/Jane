@@ -12,14 +12,20 @@ export class ApiError extends Error {
 
 /** Calls the Jane API with the current access token and returns the parsed JSON body. */
 export async function apiRequest<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}${path}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${await getAccessToken()}`,
-      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-    },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  const token = await getAccessToken();
+  let response: Response;
+  try {
+    response = await fetch(`${import.meta.env.VITE_API_URL}${path}`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  } catch (error) {
+    throw new NetworkError((error as Error).message);
+  }
 
   if (!response.ok) {
     throw new ApiError(response.status, await readErrorMessage(response));
@@ -46,9 +52,13 @@ export const api = {
 
 /** Downloads a file served by the API (the access token cannot travel in a plain link). */
 export async function downloadFile(path: string, filename: string): Promise<void> {
-  const response = await fetch(`${import.meta.env.VITE_API_URL}${path}`, {
-    headers: { Authorization: `Bearer ${await getAccessToken()}` },
-  });
+  const token = await getAccessToken();
+  let response: Response;
+  try {
+    response = await fetch(`${import.meta.env.VITE_API_URL}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+  } catch (error) {
+    throw new NetworkError((error as Error).message);
+  }
   if (!response.ok) {
     throw new ApiError(response.status, await readErrorMessage(response));
   }
@@ -68,11 +78,12 @@ const RETRYABLE_STATUSES = new Set([401, 408, 425, 429]);
  * error, expired session) throws a NetworkError: it will be retried. A refusal (invalid entry) throws a RejectedError.
  */
 export async function apiSend(path: string, body: unknown): Promise<void> {
+  const token = await getAccessToken();
   let response: Response;
   try {
     response = await fetch(`${import.meta.env.VITE_API_URL}${path}`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${await getAccessToken()}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
   } catch (error) {

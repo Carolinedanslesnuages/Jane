@@ -2,26 +2,9 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { apiSend } from '../api/client';
 import { NetworkError, Outbox, RejectedError, type FlushResult, type OutboxEntry } from '../offline/outbox';
+import { recallUser, rememberUser } from '../offline/user';
 import { useConnectivityStore } from './connectivity';
 import { useSessionStore } from './session';
-
-const LAST_USER_KEY = 'jane.lastUserId';
-
-function rememberUser(userId: string): void {
-  try {
-    localStorage.setItem(LAST_USER_KEY, userId);
-  } catch {
-    // Without storage the outbox simply cannot survive a reload.
-  }
-}
-
-function recallUser(): string | null {
-  try {
-    return localStorage.getItem(LAST_USER_KEY);
-  } catch {
-    return null;
-  }
-}
 
 export const useOutboxStore = defineStore('outbox', () => {
   const outbox = new Outbox(localStorage);

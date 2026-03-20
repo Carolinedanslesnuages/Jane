@@ -1,4 +1,5 @@
 import { getAccessToken } from '../auth/keycloak';
+import { NetworkError, RejectedError } from '../offline/outbox';
 
 export class ApiError extends Error {
   constructor(
@@ -57,4 +58,31 @@ export async function downloadFile(path: string, filename: string): Promise<void
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+/** HTTP statuses that mean "try again later" rather than "this entry is wrong". */
+const RETRYABLE_STATUSES = new Set([401, 408, 425, 429]);
+
+/**
+ * Sends a POST that may have to wait in the outbox. A request that cannot reach the server (network down, server
+ * error, expired session) throws a NetworkError: it will be retried. A refusal (invalid entry) throws a RejectedError.
+ */
+export async function apiSend(path: string, body: unknown): Promise<void> {
+  let response: Response;
+  try {
+    response = await fetch(`${import.meta.env.VITE_API_URL}${path}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${await getAccessToken()}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch (error) {
+    throw new NetworkError((error as Error).message);
+  }
+  if (response.ok) {
+    return;
+  }
+  if (response.status >= 500 || RETRYABLE_STATUSES.has(response.status)) {
+    throw new NetworkError(`Le serveur n'a pas pu traiter la demande (${response.status})`);
+  }
+  throw new RejectedError(await readErrorMessage(response));
 }

@@ -29,4 +29,14 @@ describe('ethogram store', () => {
     expect(store.categoriesFor('HORSE')[0].behaviors).toEqual(['/ethogram?species=HORSE']);
     expect(store.categoriesFor('DOG')).toEqual([]);
   });
+
+  it('falls back to the offline copy of the ethogram when the network is down', async () => {
+    const { NetworkError } = await import('../offline/outbox');
+    await useEthogramStore().load('CAT');
+    setActivePinia(createPinia());
+    get.mockRejectedValueOnce(new NetworkError('hors ligne'));
+    const store = useEthogramStore();
+    await store.load('CAT');
+    expect(store.categoriesFor('CAT')).toHaveLength(1);
+  });
 });

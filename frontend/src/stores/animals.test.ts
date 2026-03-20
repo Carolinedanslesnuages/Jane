@@ -6,6 +6,8 @@ const animalsOnServer = [
   { id: 'animal-2', name: 'Rex' },
 ];
 
+vi.mock('../auth/keycloak', () => ({ currentSubject: () => 'u1' }));
+
 vi.mock('../api/client', () => ({
   api: {
     get: vi.fn(async () => animalsOnServer),
@@ -54,5 +56,16 @@ describe('animals store', () => {
     await store.update('animal-1', { name: 'Luna II' });
     expect(api.patch).toHaveBeenCalledWith('/animals/animal-1', { name: 'Luna II' });
     expect(api.get).toHaveBeenCalled();
+  });
+
+  it('falls back to the offline copy when the network is down', async () => {
+    const { NetworkError } = await import('../offline/outbox');
+    const store = useAnimalsStore();
+    await store.load();
+    (api.get as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new NetworkError('hors ligne'));
+    store.animals = [];
+    await store.load();
+    expect(store.animals.map((animal) => animal.name)).toEqual(['Luna', 'Rex']);
+    expect(store.loaded).toBe(true);
   });
 });

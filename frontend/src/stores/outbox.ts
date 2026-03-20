@@ -1,28 +1,20 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { apiSend } from '../api/client';
+import { currentSubject } from '../auth/keycloak';
 import { NetworkError, Outbox, RejectedError, type FlushResult, type OutboxEntry } from '../offline/outbox';
-import { recallUser, rememberUser } from '../offline/user';
 import { useConnectivityStore } from './connectivity';
-import { useSessionStore } from './session';
 
 export const useOutboxStore = defineStore('outbox', () => {
   const outbox = new Outbox(localStorage);
   const connectivity = useConnectivityStore();
-  const session = useSessionStore();
 
   const pending = ref(0);
   const rejected = ref<FlushResult['rejected']>([]);
   const flushing = ref(false);
 
   /** The account whose entries are handled: the signed-in one, or the last one seen when offline at startup. */
-  function currentUserId(): string | null {
-    if (session.profile) {
-      rememberUser(session.profile.id);
-      return session.profile.id;
-    }
-    return recallUser();
-  }
+  const currentUserId = currentSubject;
 
   function refreshCount() {
     const userId = currentUserId();

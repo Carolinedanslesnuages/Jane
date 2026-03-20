@@ -4,16 +4,13 @@ import { NetworkError, RejectedError } from '../offline/outbox';
 
 const apiSend = vi.fn();
 vi.mock('../api/client', () => ({ apiSend: (...args: unknown[]) => apiSend(...args), api: {} }));
-vi.mock('../auth/keycloak', () => ({ signOut: vi.fn() }));
+vi.mock('../auth/keycloak', () => ({ signOut: vi.fn(), currentSubject: () => 'u1' }));
 
 import { useConnectivityStore } from './connectivity';
 import { useOutboxStore } from './outbox';
-import { useSessionStore } from './session';
 
 function setup(online = true) {
   setActivePinia(createPinia());
-  const session = useSessionStore();
-  session.profile = { id: 'u1', email: 'demo@jane.test', displayName: null, createdAt: '2026-01-01' };
   const connectivity = useConnectivityStore();
   connectivity.setOnline(online);
   return { outbox: useOutboxStore(), connectivity };

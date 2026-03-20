@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { api } from '../api/client';
+import { loadWithCache } from '../offline/cache';
 import type { EthogramCategory, Species } from '../api/types';
 
 export const useEthogramStore = defineStore('ethogram', () => {
@@ -9,7 +10,8 @@ export const useEthogramStore = defineStore('ethogram', () => {
   /** Loads the ethogram of a species once; later calls reuse it. */
   async function load(species: Species) {
     if (!bySpecies.value[species]) {
-      bySpecies.value[species] = await api.get<EthogramCategory[]>(`/ethogram?species=${species}`);
+      const { value } = await loadWithCache(`ethogram:${species}`, () => api.get<EthogramCategory[]>(`/ethogram?species=${species}`));
+      bySpecies.value[species] = value;
     }
   }
 

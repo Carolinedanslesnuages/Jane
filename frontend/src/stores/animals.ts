@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { api } from '../api/client';
+import { currentSubject } from '../auth/keycloak';
+import { loadWithCache } from '../offline/cache';
 import type { Animal, AnimalInput } from '../api/types';
 
 const STORAGE_KEY = 'jane.selectedAnimalId';
@@ -41,7 +43,8 @@ export const useAnimalsStore = defineStore('animals', () => {
   }
 
   async function load() {
-    animals.value = await api.get<Animal[]>('/animals');
+    const { value } = await loadWithCache(`animals:${currentSubject() ?? 'anonymous'}`, () => api.get<Animal[]>('/animals'));
+    animals.value = value;
     loaded.value = true;
   }
 

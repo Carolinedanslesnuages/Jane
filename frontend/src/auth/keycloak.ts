@@ -1,5 +1,6 @@
 import Keycloak from 'keycloak-js';
 import { NetworkError } from '../offline/outbox';
+import { recallUser, rememberUser } from '../offline/user';
 
 export const keycloak = new Keycloak({
   url: import.meta.env.VITE_KEYCLOAK_URL,
@@ -9,11 +10,23 @@ export const keycloak = new Keycloak({
 
 /** Signs the visitor in (authorization code flow with PKCE); redirects to Keycloak when needed. */
 export async function initializeAuthentication(): Promise<boolean> {
-  return keycloak.init({
+  const authenticated = await keycloak.init({
     onLoad: 'login-required',
     pkceMethod: 'S256',
     checkLoginIframe: false,
   });
+  if (authenticated && keycloak.subject) {
+    rememberUser(keycloak.subject);
+  }
+  return authenticated;
+}
+
+/**
+ * The sign-in identity (Keycloak "sub") whose data this device holds: the signed-in one, or the last one seen
+ * when the application starts without network. Offline copies and the outbox are filed under it.
+ */
+export function currentSubject(): string | null {
+  return keycloak.subject ?? recallUser();
 }
 
 /**

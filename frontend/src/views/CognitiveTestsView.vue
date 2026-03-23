@@ -142,13 +142,17 @@ async function saveResult() {
   }
   saving.value = true;
   try {
-    await cognitiveStore.record(animal.id, {
+    const outcome = await cognitiveStore.record(animal.id, {
       testType: testType.value,
       durationSeconds: measuredSeconds.value,
       score: withScore.value ? score.value : undefined,
       notes: notes.value.trim() || undefined,
-    });
-    toasts.info(`${currentTest.value.label} enregistré pour ${animal.name}.`);
+    }, `${currentTest.value.label} (${animal.name})`);
+    toasts.info(
+      outcome === 'queued'
+        ? `${currentTest.value.label} conservé sur cet appareil, il partira au retour du réseau.`
+        : `${currentTest.value.label} enregistré pour ${animal.name}.`,
+    );
     resetStopwatch();
     notes.value = '';
     withScore.value = false;

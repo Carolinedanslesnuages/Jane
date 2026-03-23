@@ -53,12 +53,22 @@ export class StartStateDto {
   @IsString()
   @IsNotEmpty()
   behavior: string;
+
+  /** Moment réel du démarrage, pour un état lancé sans réseau (maintenant par défaut, jamais dans le futur). */
+  @IsOptional()
+  @IsDateString()
+  startedAt?: string;
 }
 
 export class StopStateDto extends ObservationContextDto {
   @IsString()
   @IsNotEmpty()
   behavior: string;
+
+  /** Moment réel de l'arrêt, pour un état arrêté sans réseau (maintenant par défaut, après le début, jamais dans le futur). */
+  @IsOptional()
+  @IsDateString()
+  endedAt?: string;
 }
 
 export class ListObservationsQuery {

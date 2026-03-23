@@ -71,6 +71,28 @@ describe('ObservationsService', () => {
     });
   });
 
+  describe('states started and stopped without network', () => {
+    it('keeps the real start and end', async () => {
+      await service.startState(ownerId, animalId, 'Dormir', '2026-03-23T13:00:00Z');
+      const observation = await service.stopState(ownerId, animalId, { behavior: 'Dormir', endedAt: '2026-03-23T14:15:00Z' });
+      expect(observation.startedAt?.toISOString()).toBe('2026-03-23T13:00:00.000Z');
+      expect(observation.recordedAt.toISOString()).toBe('2026-03-23T14:15:00.000Z');
+      expect(observation.durationSeconds).toBe(4500);
+    });
+
+    it('refuses a start or an end in the future, and an end before the start', async () => {
+      const tomorrow = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+      await expect(service.startState(ownerId, animalId, 'Dormir', tomorrow)).rejects.toThrow(BadRequestException);
+      await service.startState(ownerId, animalId, 'Dormir', '2026-03-23T13:00:00Z');
+      await expect(service.stopState(ownerId, animalId, { behavior: 'Dormir', endedAt: tomorrow })).rejects.toThrow(BadRequestException);
+      await expect(service.stopState(ownerId, animalId, { behavior: 'Dormir', endedAt: '2026-03-23T12:00:00Z' })).rejects.toThrow(
+        BadRequestException,
+      );
+      // The refused stop did not close the state.
+      expect(await service.listActiveStates(ownerId, animalId)).toHaveLength(1);
+    });
+  });
+
   describe('logState', () => {
     it('stores an elapsed state with its duration', async () => {
       const observation = await service.logState(ownerId, animalId, {

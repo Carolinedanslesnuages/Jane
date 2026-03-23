@@ -20,7 +20,7 @@ export class ObservationsController {
 
   @Post('animals/:animalId/states/start')
   startState(@CurrentUser() user: User, @Param('animalId', ParseUUIDPipe) animalId: string, @Body() body: StartStateDto) {
-    return this.observationsService.startState(user.id, animalId, body.behavior);
+    return this.observationsService.startState(user.id, animalId, body.behavior, body.startedAt);
   }
 
   @Post('animals/:animalId/states/stop')

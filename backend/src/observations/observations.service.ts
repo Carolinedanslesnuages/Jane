@@ -28,11 +28,12 @@ export class ObservationsService {
   }
 
   /** Starts timing a behaviour. A behaviour can only run once at a time for a given animal. */
-  async startState(ownerId: string, animalId: string, behavior: string): Promise<ActiveState> {
+  async startState(ownerId: string, animalId: string, behavior: string, startedAt?: string): Promise<ActiveState> {
     const animal = await this.animalsService.findOne(ownerId, animalId);
     const category = this.requireCategory(animal.species, behavior);
     try {
-      return await this.prisma.activeState.create({ data: { animalId, behavior, category } });
+      const start = startedAt ? this.requireNotFuture(new Date(startedAt), "Le début de l'état") : new Date();
+      return await this.prisma.activeState.create({ data: { animalId, behavior, category, startedAt: start } });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new ConflictException(`${behavior} est déjà en cours`);
@@ -44,7 +45,7 @@ export class ObservationsService {
   /** Stops a running behaviour and stores it as an observation with its duration. */
   async stopState(ownerId: string, animalId: string, input: StopStateDto): Promise<Observation> {
     await this.animalsService.findOne(ownerId, animalId);
-    const { behavior, ...context } = input;
+    const { behavior, endedAt, ...context } = input;
     return this.prisma.$transaction(async (transaction) => {
       const running = await transaction.activeState.findUnique({
         where: { animalId_behavior: { animalId, behavior } },
@@ -52,7 +53,10 @@ export class ObservationsService {
       if (!running) {
         throw new NotFoundException(`${behavior} n'est pas en cours`);
       }
-      const stoppedAt = new Date();
+      const stoppedAt = endedAt ? this.requireNotFuture(new Date(endedAt), "La fin de l'état") : new Date();
+      if (stoppedAt.getTime() <= running.startedAt.getTime()) {
+        throw new BadRequestException("La fin de l'état doit être après son début");
+      }
       await transaction.activeState.delete({ where: { id: running.id } });
       return transaction.observation.create({
         data: {

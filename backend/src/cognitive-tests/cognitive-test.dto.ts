@@ -1,6 +1,6 @@
 import { CognitiveTestType } from '@prisma/client';
 import { PartialType } from '@nestjs/mapped-types';
-import { IsEnum, IsNumber, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator';
+import { IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator';
 
 export class RecordCognitiveTestDto {
   @IsEnum(CognitiveTestType)
@@ -23,6 +23,11 @@ export class RecordCognitiveTestDto {
   @IsString()
   @MaxLength(500)
   notes?: string;
+
+  /** Moment de la passation, pour un résultat saisi sans réseau (maintenant par défaut, jamais dans le futur). */
+  @IsOptional()
+  @IsDateString()
+  recordedAt?: string;
 }
 
 export class ListCognitiveTestsQuery {

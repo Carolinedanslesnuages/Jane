@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CognitiveTest } from '@prisma/client';
 import { AnimalsService } from '../animals/animals.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -13,7 +13,10 @@ export class CognitiveTestsService {
 
   async record(ownerId: string, animalId: string, input: RecordCognitiveTestDto): Promise<CognitiveTest> {
     await this.animalsService.findOne(ownerId, animalId);
-    return this.prisma.cognitiveTest.create({ data: { animalId, ...input } });
+    const { recordedAt, ...result } = input;
+    return this.prisma.cognitiveTest.create({
+      data: { animalId, ...result, ...(recordedAt ? { recordedAt: this.requireNotFuture(new Date(recordedAt)) } : {}) },
+    });
   }
 
   list(ownerId: string, query: ListCognitiveTestsQuery): Promise<CognitiveTest[]> {
@@ -25,6 +28,13 @@ export class CognitiveTestsService {
       },
       orderBy: { recordedAt: 'desc' },
     });
+  }
+
+  private requireNotFuture(instant: Date): Date {
+    if (instant.getTime() > Date.now() + 60_000) {
+      throw new BadRequestException('Un résultat ne peut pas être daté du futur');
+    }
+    return instant;
   }
 
   async update(ownerId: string, testId: string, input: UpdateCognitiveTestDto): Promise<CognitiveTest> {

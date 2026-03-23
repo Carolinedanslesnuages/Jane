@@ -48,6 +48,15 @@ describe('CognitiveTestsService', () => {
     expect(await service.list(strangerId, {})).toEqual([]);
   });
 
+  it('keeps the moment of a result noted without network, but not in the future', async () => {
+    const past = await service.record(ownerId, animalId, { testType: 'DETOUR', durationSeconds: 9, recordedAt: '2026-03-01T09:00:00Z' });
+    expect(past.recordedAt.toISOString()).toBe('2026-03-01T09:00:00.000Z');
+    const tomorrow = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+    await expect(service.record(ownerId, animalId, { testType: 'DETOUR', durationSeconds: 9, recordedAt: tomorrow })).rejects.toThrow(
+      'futur',
+    );
+  });
+
   it('corrects only the given fields, and can clear the score', async () => {
     const test = await service.record(ownerId, animalId, { testType: 'DETOUR', durationSeconds: 12.5, score: 7, notes: 'ok' });
     const corrected = await service.update(ownerId, test.id, { durationSeconds: 11 });

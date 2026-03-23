@@ -23,6 +23,7 @@
       </select>
       <p v-else-if="animalsStore.loaded" class="muted empty">Ajoutez un animal dans Profils.</p>
     </div>
+    <SyncStatus @sync="emit('sync')" />
     <footer class="account">
       <span class="account-name">{{ session.label }}</span>
       <button type="button" @click="session.signOut()">Se déconnecter</button>
@@ -34,9 +35,11 @@
 import { onMounted } from 'vue';
 import { routes } from '../router';
 import { useAnimalsStore } from '../stores/animals';
+import SyncStatus from './SyncStatus.vue';
 import { useSessionStore } from '../stores/session';
 import { speciesLabel } from '../utils/species';
 
+const emit = defineEmits<{ sync: [] }>();
 const session = useSessionStore();
 const animalsStore = useAnimalsStore();
 onMounted(() => Promise.all([session.load(), animalsStore.load()]));

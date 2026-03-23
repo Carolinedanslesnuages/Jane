@@ -1,7 +1,7 @@
 <template>
   <OfflineBanner />
   <div class="shell">
-    <AppSidebar />
+    <AppSidebar @sync="syncNow" />
     <main class="content">
       <div class="content-inner">
         <RouterView />
@@ -13,8 +13,11 @@
 
 <script setup lang="ts">
 import AppSidebar from './components/AppSidebar.vue';
+import { useAutoSync } from './composables/useAutoSync';
 import OfflineBanner from './components/OfflineBanner.vue';
 import ToastHost from './components/ToastHost.vue';
+
+const { syncNow } = useAutoSync();
 </script>
 
 <style scoped>

@@ -12,6 +12,16 @@ npm run typecheck      # vérification des types
 npm run build          # production vers dist/
 ```
 
+### Essayer la version de production (mode hors ligne)
+
+Le service worker qui permet d'ouvrir Jane sans réseau n'existe que dans la version construite :
+
+```bash
+npm run build:preview && npm run preview:e2e    # http://localhost:5273 (arrêter `npm run dev` avant)
+```
+
+Après une première visite, couper le réseau (outils de développement du navigateur, onglet Réseau) montre le fonctionnement hors ligne.
+
 ## Variables (fichier `.env.development`)
 
 | Variable | Rôle |

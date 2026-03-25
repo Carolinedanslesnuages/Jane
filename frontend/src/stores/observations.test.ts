@@ -58,10 +58,10 @@ describe('observations store', () => {
 
   it('starts and stops a state', async () => {
     const store = useObservationsStore();
-    await store.startState('animal-1', 'Dormir');
+    await store.startState('animal-1', 'Dormir', 'REST');
     await store.stopState('animal-1', 'Dormir', { notes: 'sieste' });
-    expect(post).toHaveBeenNthCalledWith(1, '/animals/animal-1/states/start', { behavior: 'Dormir' });
-    expect(post).toHaveBeenNthCalledWith(2, '/animals/animal-1/states/stop', { behavior: 'Dormir', notes: 'sieste' });
+    expect(apiSend).toHaveBeenNthCalledWith(1, '/animals/animal-1/states/start', { behavior: 'Dormir' });
+    expect(apiSend).toHaveBeenNthCalledWith(2, '/animals/animal-1/states/stop', { behavior: 'Dormir', notes: 'sieste' });
   });
 
   it('loads the full history and refreshes it after a deletion', async () => {
@@ -104,6 +104,33 @@ describe('observations store', () => {
       expect(entry).toMatchObject({ label: 'Aboyer (Rex)', path: '/animals/animal-1/events' });
       expect(entry.body).toMatchObject({ behavior: 'Aboyer', location: 'Jardin' });
       expect(new Date((entry.body as { occurredAt: string }).occurredAt).getTime()).toBeGreaterThanOrEqual(before);
+    });
+
+    it('shows a state started without network as running, then as stopped, and sends both with their real times', async () => {
+      const store = useObservationsStore();
+      await store.refresh('animal-1');
+      useConnectivityStore().setOnline(false);
+      await store.startState('animal-1', 'Courir', 'PLAY', 'Courir (Rex)');
+      expect(store.isRunning('Courir')).toBe(true);
+      const started = store.running.find((state) => state.behavior === 'Courir');
+      expect(started).toMatchObject({ pending: true, category: 'PLAY' });
+      expect(useOutboxStore().entries()[0].body).toMatchObject({ behavior: 'Courir', startedAt: expect.any(String) });
+
+      // A state known to the server can be stopped offline too.
+      expect(store.isRunning('Dormir')).toBe(true);
+      await store.stopState('animal-1', 'Dormir', {}, 'Dormir (Rex)');
+      expect(store.isRunning('Dormir')).toBe(false);
+      await store.stopState('animal-1', 'Courir', {}, 'Courir (Rex)');
+      expect(store.isRunning('Courir')).toBe(false);
+
+      const entries = useOutboxStore().entries();
+      expect(entries.map((entry) => entry.path)).toEqual([
+        '/animals/animal-1/states/start',
+        '/animals/animal-1/states/stop',
+        '/animals/animal-1/states/stop',
+      ]);
+      expect(entries[1].body).toMatchObject({ behavior: 'Dormir', endedAt: expect.any(String) });
+      expect(apiSend).not.toHaveBeenCalled();
     });
 
     it('keeps an elapsed state in the outbox', async () => {

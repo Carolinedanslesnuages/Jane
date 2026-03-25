@@ -4,7 +4,7 @@
     <ul>
       <li v-for="state in states" :key="state.id">
         <span class="dot" :style="{ background: categoryColor(state.category) }" aria-hidden="true"></span>
-        <span class="behavior">{{ state.behavior }}</span>
+        <span class="behavior">{{ state.behavior }}<span v-if="state.pending" class="device">sur cet appareil</span></span>
         <span class="elapsed">{{ elapsed(state.startedAt) }}</span>
       </li>
     </ul>
@@ -56,6 +56,15 @@ li {
 
 .behavior {
   flex: 1;
+}
+
+.device {
+  margin-left: var(--space-2);
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  background: var(--color-sand);
+  color: var(--color-muted);
+  font-size: 0.75rem;
 }
 
 .elapsed {

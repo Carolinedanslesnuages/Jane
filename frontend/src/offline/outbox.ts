@@ -8,6 +8,8 @@ export interface OutboxEntry {
   body: unknown;
   /** When the observer made the entry, so the data keeps its real time. */
   createdAt: string;
+  /** Information kept for the display only (never sent to the server). */
+  meta?: Record<string, string>;
 }
 
 export interface FlushResult {

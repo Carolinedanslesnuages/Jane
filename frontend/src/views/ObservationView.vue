@@ -8,7 +8,7 @@
 
     <template v-else-if="animalsStore.selectedAnimal">
       <AnimalBanner :animal="animalsStore.selectedAnimal" />
-      <ActiveStates :states="observationsStore.activeStates" />
+      <ActiveStates :states="observationsStore.running" />
 
       <fieldset class="mode">
         <legend>Mode d'observation</legend>
@@ -132,7 +132,7 @@ const categories = computed(() => {
   const animal = animalsStore.selectedAnimal;
   return animal ? ethogramStore.categoriesFor(animal.species) : [];
 });
-const runningBehaviors = computed(() => observationsStore.activeStates.map((state) => state.behavior));
+const runningBehaviors = computed(() => observationsStore.running.map((state) => state.behavior));
 
 /** The optional fields of the context card, without the empty ones. */
 function currentContext() {
@@ -152,11 +152,12 @@ async function choose(behavior: string) {
       const outcome = await observationsStore.recordEvent(animal.id, behavior, currentContext(), `${behavior} (${animal.name})`);
       toasts.info(savedMessage(behavior, outcome));
     } else if (observationsStore.isRunning(behavior)) {
-      await observationsStore.stopState(animal.id, behavior, currentContext());
-      toasts.info(`${behavior} terminé et enregistré.`);
+      const outcome = await observationsStore.stopState(animal.id, behavior, currentContext(), `${behavior} (${animal.name})`);
+      toasts.info(outcome === 'queued' ? savedMessage(behavior, outcome) : `${behavior} terminé et enregistré.`);
     } else {
-      await observationsStore.startState(animal.id, behavior);
-      toasts.info(`${behavior} démarré.`);
+      const category = categories.value.find((entry) => entry.behaviors.includes(behavior))?.category ?? 'REST';
+      const outcome = await observationsStore.startState(animal.id, behavior, category, `${behavior} (${animal.name})`);
+      toasts.info(outcome === 'queued' ? `${behavior} démarré sur cet appareil, il sera envoyé au retour du réseau.` : `${behavior} démarré.`);
     }
   } catch (error) {
     toasts.error((error as Error).message);

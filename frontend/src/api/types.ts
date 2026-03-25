@@ -51,6 +51,8 @@ export interface Observation {
 }
 
 export interface ActiveState {
+  /** True for a state started on this device that the server does not know yet. */
+  pending?: boolean;
   id: string;
   animalId: string;
   behavior: string;

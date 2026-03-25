@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { apiSend } from '../api/client';
 import { currentSubject } from '../auth/keycloak';
 import { NetworkError, Outbox, RejectedError, type FlushResult, type OutboxEntry } from '../offline/outbox';
@@ -9,7 +9,10 @@ export const useOutboxStore = defineStore('outbox', () => {
   const outbox = new Outbox(localStorage);
   const connectivity = useConnectivityStore();
 
-  const pending = ref(0);
+
+  /** The entries waiting for the current account (reactive copy of what is in the storage). */
+  const waiting = ref<OutboxEntry[]>([]);
+  const pending = computed(() => waiting.value.length);
   const rejected = ref<FlushResult['rejected']>([]);
   const flushing = ref(false);
 
@@ -18,12 +21,11 @@ export const useOutboxStore = defineStore('outbox', () => {
 
   function refreshCount() {
     const userId = currentUserId();
-    pending.value = userId ? outbox.list(userId).length : 0;
+    waiting.value = userId ? outbox.list(userId) : [];
   }
 
   function entries(): OutboxEntry[] {
-    const userId = currentUserId();
-    return userId ? outbox.list(userId) : [];
+    return waiting.value;
   }
 
   /**
@@ -31,7 +33,13 @@ export const useOutboxStore = defineStore('outbox', () => {
    * `queuedBody` is what to send if it has to wait: it carries the moment of the observation.
    * Returns "sent" or "queued"; a request the server refuses throws.
    */
-  async function submit(path: string, body: unknown, label: string, queuedBody: unknown = body): Promise<'sent' | 'queued'> {
+  async function submit(
+    path: string,
+    body: unknown,
+    label: string,
+    queuedBody: unknown = body,
+    meta?: Record<string, string>,
+  ): Promise<'sent' | 'queued'> {
     const userId = currentUserId();
     if (connectivity.online) {
       try {
@@ -47,7 +55,7 @@ export const useOutboxStore = defineStore('outbox', () => {
     if (!userId) {
       throw new Error('Impossible de conserver la saisie : aucun compte connu sur cet appareil.');
     }
-    outbox.add({ userId, label, path, body: queuedBody });
+    outbox.add({ userId, label, path, body: queuedBody, meta });
     refreshCount();
     return 'queued';
   }

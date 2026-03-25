@@ -6,7 +6,11 @@ const remove = vi.fn();
 const signOut = vi.fn();
 
 vi.mock('../api/client', () => ({ api: { get: (...args: unknown[]) => get(...args), delete: (...args: unknown[]) => remove(...args) } }));
-vi.mock('../auth/keycloak', () => ({ signOut: (...args: unknown[]) => signOut(...args) }));
+vi.mock('../auth/keycloak', () => ({
+  signOut: (...args: unknown[]) => signOut(...args),
+  currentSubject: () => 'u1',
+  isOfflineSession: () => false,
+}));
 
 import { useSessionStore } from './session';
 

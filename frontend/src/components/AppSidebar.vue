@@ -26,7 +26,9 @@
     <SyncStatus @sync="emit('sync')" />
     <footer class="account">
       <span class="account-name">{{ session.label }}</span>
-      <button type="button" @click="session.signOut()">Se déconnecter</button>
+      <button type="button" :disabled="!session.canSignOut" :title="session.canSignOut ? undefined : 'Impossible sans réseau'" @click="session.signOut()">
+        Se déconnecter
+      </button>
     </footer>
   </aside>
 </template>

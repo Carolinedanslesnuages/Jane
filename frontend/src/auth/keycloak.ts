@@ -1,5 +1,6 @@
 import Keycloak from 'keycloak-js';
 import { NetworkError } from '../offline/outbox';
+import { decideStartup, isReachable, type StartupMode } from '../offline/startup';
 import { recallUser, rememberUser } from '../offline/user';
 
 export const keycloak = new Keycloak({
@@ -8,8 +9,24 @@ export const keycloak = new Keycloak({
   clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
 });
 
-/** Signs the visitor in (authorization code flow with PKCE); redirects to Keycloak when needed. */
-export async function initializeAuthentication(): Promise<boolean> {
+let startupMode: StartupMode = 'online';
+
+/** True when the application opened without network, with the data kept on this device. */
+export function isOfflineSession(): boolean {
+  return startupMode === 'offline';
+}
+
+/**
+ * Signs the visitor in (authorization code flow with PKCE); redirects to Keycloak when needed.
+ * When Keycloak cannot be reached and this device already knows an account, nothing is attempted:
+ * Jane opens offline ("offline"). On a device that never signed in, it reports "blocked".
+ */
+export async function initializeAuthentication(): Promise<StartupMode> {
+  const realmUrl = `${import.meta.env.VITE_KEYCLOAK_URL}/realms/${import.meta.env.VITE_KEYCLOAK_REALM}`;
+  startupMode = decideStartup(await isReachable(realmUrl), recallUser());
+  if (startupMode !== 'online') {
+    return startupMode;
+  }
   const authenticated = await keycloak.init({
     onLoad: 'login-required',
     pkceMethod: 'S256',
@@ -18,7 +35,7 @@ export async function initializeAuthentication(): Promise<boolean> {
   if (authenticated && keycloak.subject) {
     rememberUser(keycloak.subject);
   }
-  return authenticated;
+  return startupMode;
 }
 
 /**
@@ -35,6 +52,9 @@ export function currentSubject(): string | null {
  * When the network works but the session is over, the visitor is sent back to the login page.
  */
 export async function getAccessToken(): Promise<string> {
+  if (isOfflineSession()) {
+    throw new NetworkError('Mode hors ligne : aucune session ouverte');
+  }
   try {
     await keycloak.updateToken(30);
   } catch {

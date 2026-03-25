@@ -2,7 +2,8 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { api } from '../api/client';
 import type { Profile } from '../api/types';
-import { signOut } from '../auth/keycloak';
+import { currentSubject, isOfflineSession, signOut } from '../auth/keycloak';
+import { loadWithCache } from '../offline/cache';
 
 export const useSessionStore = defineStore('session', () => {
   const profile = ref<Profile | null>(null);
@@ -11,7 +12,8 @@ export const useSessionStore = defineStore('session', () => {
   const label = computed(() => profile.value?.displayName || profile.value?.email || '');
 
   async function load() {
-    profile.value = await api.get<Profile>('/me');
+    const { value } = await loadWithCache(`profile:${currentSubject() ?? 'anonymous'}`, () => api.get<Profile>('/me'));
+    profile.value = value;
   }
 
   /** Deletes the account and all its data, then ends the session. Irreversible. */
@@ -20,5 +22,8 @@ export const useSessionStore = defineStore('session', () => {
     await signOut();
   }
 
-  return { profile, label, load, signOut, deleteAccount };
+  /** Signing out needs the identity server: it is not possible in an offline session. */
+  const canSignOut = !isOfflineSession();
+
+  return { profile, label, load, signOut, deleteAccount, canSignOut };
 });

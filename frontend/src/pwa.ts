@@ -3,9 +3,15 @@ export function registerServiceWorker(): void {
   if (!import.meta.env.PROD || !('serviceWorker' in navigator)) {
     return;
   }
-  window.addEventListener('load', () => {
+  const register = () => {
     navigator.serviceWorker.register('/sw.js').catch((error) => {
       console.warn("Le mode hors ligne n'est pas disponible :", error);
     });
-  });
+  };
+  // The page may already be loaded: sign-in happens before this runs.
+  if (document.readyState === 'complete') {
+    register();
+  } else {
+    window.addEventListener('load', register);
+  }
 }

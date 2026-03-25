@@ -8,6 +8,9 @@ import { ref } from 'vue';
 export const useConnectivityStore = defineStore('connectivity', () => {
   const online = ref(typeof navigator === 'undefined' ? true : navigator.onLine);
 
+  /** True when the application was opened without network: it must reload to sign in once the network is back. */
+  const offlineSession = ref(false);
+
   function setOnline(value: boolean) {
     online.value = value;
   }
@@ -24,5 +27,10 @@ export const useConnectivityStore = defineStore('connectivity', () => {
     };
   }
 
-  return { online, setOnline, listen };
+  function startOfflineSession() {
+    offlineSession.value = true;
+    online.value = false;
+  }
+
+  return { online, offlineSession, setOnline, startOfflineSession, listen };
 });

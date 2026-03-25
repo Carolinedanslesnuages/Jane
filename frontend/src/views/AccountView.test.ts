@@ -10,7 +10,11 @@ vi.mock('../api/client', () => ({
   api: { get: (...args: unknown[]) => get(...args), delete: (...args: unknown[]) => remove(...args) },
   downloadFile: vi.fn(),
 }));
-vi.mock('../auth/keycloak', () => ({ signOut: (...args: unknown[]) => signOut(...args) }));
+vi.mock('../auth/keycloak', () => ({
+  signOut: (...args: unknown[]) => signOut(...args),
+  currentSubject: () => 'u1',
+  isOfflineSession: () => false,
+}));
 
 import AccountView from './AccountView.vue';
 

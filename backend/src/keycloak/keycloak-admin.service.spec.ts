@@ -32,7 +32,14 @@ describe('KeycloakAdminService', () => {
 
   it('is configured only when a secret is set', () => {
     expect(createService().isConfigured).toBe(true);
-    expect(createService({ KEYCLOAK_ADMIN_CLIENT_SECRET: undefined }).isConfigured).toBe(false);
+    // ConfigService also reads process.env: make sure the developer's own environment does not leak in.
+    const saved = process.env.KEYCLOAK_ADMIN_CLIENT_SECRET;
+    delete process.env.KEYCLOAK_ADMIN_CLIENT_SECRET;
+    try {
+      expect(createService({ KEYCLOAK_ADMIN_CLIENT_SECRET: undefined }).isConfigured).toBe(false);
+    } finally {
+      if (saved !== undefined) process.env.KEYCLOAK_ADMIN_CLIENT_SECRET = saved;
+    }
   });
 
   it('gets a token with the client credentials, then deletes the user', async () => {

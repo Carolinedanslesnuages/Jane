@@ -43,6 +43,7 @@ model Animal {
   owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   observations   Observation[]
+  sessions       ObservationSession[]
   activeStates   ActiveState[]
   cognitiveTests CognitiveTest[]
 
@@ -65,7 +66,7 @@ enum ObservationType {
 
 /// Un comportement observé : instantané (EVENT) ou avec une durée (STATE).
 model Observation {
-  id              String           @id @default(uuid())
+  id              String              @id @default(uuid())
   animalId        String
   behavior        String
   category        BehaviorCategory
@@ -73,15 +74,19 @@ model Observation {
   /// Début d'un état ; vide pour un événement.
   startedAt       DateTime?
   /// Instant d'enregistrement (fin de l'état, ou moment de l'événement).
-  recordedAt      DateTime         @default(now())
+  recordedAt      DateTime            @default(now())
   durationSeconds Float?
   notes           String?
   location        String?
   weather         String?
   stimuli         String?
-  animal          Animal           @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  animal          Animal              @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  /// Séance pendant laquelle l'observation a été faite, s'il y en avait une.
+  sessionId       String?
+  session         ObservationSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
 
   @@index([animalId, recordedAt])
+  @@index([sessionId])
 }
 
 /// Un état en cours de chronométrage (démarré, pas encore arrêté).
@@ -115,4 +120,28 @@ model CognitiveTest {
   animal          Animal            @relation(fields: [animalId], references: [id], onDelete: Cascade)
 
   @@index([animalId, recordedAt])
+}
+
+enum SamplingMethod {
+  /// Tout ce qui se passe est noté, sans règle de sélection.
+  AD_LIBITUM
+  /// Un animal suivi en continu pendant la séance.
+  FOCAL
+  /// Relevés à intervalles réguliers.
+  SCAN
+}
+
+/// Une séance d'observation : un observateur, une méthode, un début et une fin.
+model ObservationSession {
+  id           String         @id @default(uuid())
+  animalId     String
+  observerName String
+  method       SamplingMethod @default(AD_LIBITUM)
+  startedAt    DateTime       @default(now())
+  endedAt      DateTime?
+  notes        String?
+  animal       Animal         @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  observations Observation[]
+
+  @@index([animalId, startedAt])
 }

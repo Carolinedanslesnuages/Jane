@@ -22,8 +22,9 @@ export class ObservationsService {
     const category = this.requireCategory(animal.species, input.behavior);
     const { behavior, occurredAt, ...context } = input;
     const recordedAt = occurredAt ? this.requireNotFuture(new Date(occurredAt), "L'événement") : new Date();
+    const sessionId = await this.findSessionId(animalId, recordedAt);
     return this.prisma.observation.create({
-      data: { animalId, behavior, category, type: 'EVENT', recordedAt, ...context },
+      data: { animalId, behavior, category, type: 'EVENT', recordedAt, sessionId, ...context },
     });
   }
 
@@ -58,6 +59,11 @@ export class ObservationsService {
         throw new BadRequestException("La fin de l'état doit être après son début");
       }
       await transaction.activeState.delete({ where: { id: running.id } });
+      const session = await transaction.observationSession.findFirst({
+        where: { animalId, startedAt: { lte: running.startedAt }, OR: [{ endedAt: null }, { endedAt: { gte: running.startedAt } }] },
+        orderBy: { startedAt: 'desc' },
+        select: { id: true },
+      });
       return transaction.observation.create({
         data: {
           animalId,
@@ -67,6 +73,7 @@ export class ObservationsService {
           startedAt: running.startedAt,
           recordedAt: stoppedAt,
           durationSeconds: (stoppedAt.getTime() - running.startedAt.getTime()) / 1000,
+          sessionId: session?.id ?? null,
           ...context,
         },
       });
@@ -86,6 +93,7 @@ export class ObservationsService {
     if (end.getTime() - start.getTime() > MAX_LOGGED_STATE_MS) {
       throw new BadRequestException('Un état ne peut pas durer plus de 48 heures');
     }
+    const sessionId = await this.findSessionId(animalId, start);
     return this.prisma.observation.create({
       data: {
         animalId,
@@ -95,6 +103,7 @@ export class ObservationsService {
         startedAt: start,
         recordedAt: end,
         durationSeconds: (end.getTime() - start.getTime()) / 1000,
+        sessionId,
         ...context,
       },
     });
@@ -156,6 +165,19 @@ export class ObservationsService {
       throw new NotFoundException('Observation introuvable');
     }
     await this.prisma.observation.delete({ where: { id: observationId } });
+  }
+
+  /**
+   * The session an observation made at `moment` belongs to: the one of that animal that covers the moment
+   * (started before it, not ended before it). Done by time so that entries noted offline find their session too.
+   */
+  private async findSessionId(animalId: string, moment: Date): Promise<string | null> {
+    const session = await this.prisma.observationSession.findFirst({
+      where: { animalId, startedAt: { lte: moment }, OR: [{ endedAt: null }, { endedAt: { gte: moment } }] },
+      orderBy: { startedAt: 'desc' },
+      select: { id: true },
+    });
+    return session?.id ?? null;
   }
 
   private requireNotFuture(instant: Date, subject: string): Date {

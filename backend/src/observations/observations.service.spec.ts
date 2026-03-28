@@ -122,6 +122,49 @@ describe('ObservationsService', () => {
     });
   });
 
+  describe('sessions', () => {
+    const makeSession = (data: { startedAt: Date; endedAt?: Date }) =>
+      prisma.observationSession.create({ data: { animalId, observerName: 'Démo', ...data } });
+
+    it('attaches an observation to the open session', async () => {
+      const session = await makeSession({ startedAt: new Date(Date.now() - 3600_000) });
+      const event = await service.recordEvent(ownerId, animalId, { behavior: 'Aboyer' });
+      expect(event.sessionId).toBe(session.id);
+    });
+
+    it('attaches by time, so an entry noted afterwards finds the session that covered it', async () => {
+      const session = await makeSession({ startedAt: new Date('2026-03-01T09:00:00Z'), endedAt: new Date('2026-03-01T11:00:00Z') });
+      const inside = await service.recordEvent(ownerId, animalId, { behavior: 'Aboyer', occurredAt: '2026-03-01T10:00:00Z' });
+      const outside = await service.recordEvent(ownerId, animalId, { behavior: 'Aboyer', occurredAt: '2026-03-01T12:00:00Z' });
+      expect(inside.sessionId).toBe(session.id);
+      expect(outside.sessionId).toBeNull();
+    });
+
+    it('attaches an elapsed state by its start', async () => {
+      const session = await makeSession({ startedAt: new Date('2026-03-01T09:00:00Z'), endedAt: new Date('2026-03-01T11:00:00Z') });
+      const state = await service.logState(ownerId, animalId, {
+        behavior: 'Dormir',
+        startedAt: '2026-03-01T10:30:00Z',
+        endedAt: '2026-03-01T11:30:00Z',
+      });
+      expect(state.sessionId).toBe(session.id);
+    });
+
+    it('attaches a stopped state to the session during which it started', async () => {
+      const session = await makeSession({ startedAt: new Date(Date.now() - 3600_000) });
+      await service.startState(ownerId, animalId, 'Dormir');
+      const state = await service.stopState(ownerId, animalId, { behavior: 'Dormir' });
+      expect(state.sessionId).toBe(session.id);
+    });
+
+    it("never attaches to another animal's session", async () => {
+      const other = await prisma.animal.create({ data: { ownerId, name: 'Luna' } });
+      await prisma.observationSession.create({ data: { animalId: other.id, observerName: 'Démo', startedAt: new Date(Date.now() - 3600_000) } });
+      const event = await service.recordEvent(ownerId, animalId, { behavior: 'Aboyer' });
+      expect(event.sessionId).toBeNull();
+    });
+  });
+
   describe('species', () => {
     it("checks the behaviour against the ethogram of the animal's species", async () => {
       const cat = await prisma.animal.create({ data: { ownerId, name: 'Mistigri', species: 'CAT' } });

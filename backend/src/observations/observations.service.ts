@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { ActiveState, Observation, Prisma, Species } from '@prisma/client';
+import { ActiveState, Observation, Prisma, SamplingMethod, Species } from '@prisma/client';
 import { AnimalsService } from '../animals/animals.service';
 import { findCategory } from '../ethogram/ethogram';
 import { PrismaService } from '../prisma/prisma.service';
@@ -134,9 +134,13 @@ export class ObservationsService {
   }
 
   /** Every observation matching the filters, without pagination (statistics and exports). */
-  listAll(ownerId: string, query: Pick<ListObservationsQuery, 'animalId' | 'from' | 'to'>): Promise<Observation[]> {
+  listAll(
+    ownerId: string,
+    query: Pick<ListObservationsQuery, 'animalId' | 'from' | 'to'>,
+  ): Promise<(Observation & { session: { observerName: string; method: SamplingMethod } | null })[]> {
     return this.prisma.observation.findMany({
       where: this.buildWhere(ownerId, query),
+      include: { session: { select: { observerName: true, method: true } } },
       orderBy: { recordedAt: 'desc' },
     });
   }

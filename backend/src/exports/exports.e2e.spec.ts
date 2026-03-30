@@ -23,10 +23,20 @@ describe('GET /exports/observations.csv (HTTP)', () => {
     expect(response.headers['content-type']).toContain('text/csv');
     expect(response.headers['content-disposition']).toContain('attachment');
     const lines = response.text.replace('﻿', '').trim().split('\r\n');
-    expect(lines[0]).toBe('date,animal,espece,comportement,categorie,type,debut,duree_secondes,lieu,meteo,stimuli,notes');
+    expect(lines[0]).toBe('date,animal,espece,comportement,categorie,type,debut,duree_secondes,lieu,meteo,stimuli,notes,observateur,methode');
     expect(lines).toHaveLength(2);
     expect(lines[1]).toContain("'=Rex,Chien,Aboyer,Stress,evenement");
     expect(lines[1]).toContain('"chez le voisin, tard"');
+  });
+
+  it('tells who observed, and how, when there was a session', async () => {
+    const server = app.getHttpServer();
+    const animalId = (await request(server).post('/animals').set(as('erin')).send({ name: 'Séance' })).body.id;
+    await request(server).post(`/animals/${animalId}/sessions`).set(as('erin')).send({ observerName: 'Marie', method: 'SCAN' }).expect(201);
+    await request(server).post(`/animals/${animalId}/events`).set(as('erin')).send({ behavior: 'Aboyer' }).expect(201);
+    const response = await request(server).get(`/exports/observations.csv?animalId=${animalId}`).set(as('erin')).expect(200);
+    const lines = response.text.replace('\uFEFF', '').trim().split('\r\n');
+    expect(lines[1].endsWith(',Marie,Scan')).toBe(true);
   });
 
   it('contains nothing for another user', async () => {

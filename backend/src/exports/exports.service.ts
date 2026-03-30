@@ -3,6 +3,7 @@ import { CognitiveTestType } from '@prisma/client';
 import { CognitiveTestsService } from '../cognitive-tests/cognitive-tests.service';
 import { AnimalsService } from '../animals/animals.service';
 import { SPECIES_LABELS } from '../animals/species';
+import { SAMPLING_METHOD_LABELS } from '../sessions/sampling-methods';
 import { CATEGORY_LABELS } from '../ethogram/ethogram';
 import { ObservationsService } from '../observations/observations.service';
 import { StatsService } from '../stats/stats.service';
@@ -23,6 +24,8 @@ const CSV_HEADER = [
   'meteo',
   'stimuli',
   'notes',
+  'observateur',
+  'methode',
 ];
 
 @Injectable()
@@ -54,6 +57,8 @@ export class ExportsService {
       observation.weather,
       observation.stimuli,
       observation.notes,
+      observation.session?.observerName,
+      observation.session ? SAMPLING_METHOD_LABELS[observation.session.method] : undefined,
     ]);
     return toCsv(CSV_HEADER, rows);
   }

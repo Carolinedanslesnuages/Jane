@@ -8,6 +8,8 @@
 
     <template v-else-if="animalsStore.selectedAnimal">
       <AnimalBanner :animal="animalsStore.selectedAnimal" />
+      <SessionCard />
+
       <ActiveStates :states="observationsStore.running" />
 
       <fieldset class="mode">
@@ -101,6 +103,7 @@ import CategoryCard from '../components/CategoryCard.vue';
 import ObservationsTable from '../components/ObservationsTable.vue';
 import PageHeader from '../components/PageHeader.vue';
 import ScanSamplingPanel from '../components/ScanSamplingPanel.vue';
+import SessionCard from '../components/SessionCard.vue';
 import { useAnimalsStore } from '../stores/animals';
 import { useEthogramStore } from '../stores/ethogram';
 import { useObservationsStore } from '../stores/observations';

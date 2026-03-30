@@ -104,3 +104,22 @@ export interface StatsSummary {
 }
 
 export type Species = 'DOG' | 'CAT' | 'HORSE' | 'OTHER';
+
+export type SamplingMethod = 'AD_LIBITUM' | 'FOCAL' | 'SCAN';
+
+export interface ObservationSession {
+  id: string;
+  animalId: string;
+  observerName: string;
+  method: SamplingMethod;
+  startedAt: string;
+  endedAt: string | null;
+  notes: string | null;
+  observationCount: number;
+}
+
+export interface SessionInput {
+  observerName?: string;
+  method?: SamplingMethod;
+  notes?: string;
+}

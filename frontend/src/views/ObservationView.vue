@@ -107,6 +107,7 @@ import SessionCard from '../components/SessionCard.vue';
 import { useAnimalsStore } from '../stores/animals';
 import { useEthogramStore } from '../stores/ethogram';
 import { useObservationsStore } from '../stores/observations';
+import { useSessionsStore } from '../stores/sessions';
 import { useToastsStore } from '../stores/toasts';
 import { formatDateTime } from '../utils/format';
 import { fromDateTimeInput, toDateTimeInput } from '../utils/period';
@@ -118,6 +119,7 @@ const STIMULI = ['', 'Calme', 'Visiteurs', 'Bruit', 'Autres animaux', 'Jouets'];
 const animalsStore = useAnimalsStore();
 const ethogramStore = useEthogramStore();
 const observationsStore = useObservationsStore();
+const sessionsStore = useSessionsStore();
 const toasts = useToastsStore();
 
 const mode = ref<'EVENT' | 'STATE'>('EVENT');
@@ -166,6 +168,8 @@ async function choose(behavior: string) {
     toasts.error((error as Error).message);
   } finally {
     busy.value = false;
+    // The open session shows how many observations it holds.
+    sessionsStore.load(animal.id);
   }
 }
 

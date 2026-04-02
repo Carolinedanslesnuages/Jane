@@ -76,12 +76,45 @@ const DOG_ETHOGRAM = defineEthogram({
 });
 
 const CAT_ETHOGRAM = defineEthogram({
-  EXPLORATION: ['Explorer une pièce', 'Flairer un objet', 'Se percher en hauteur', 'Observer par la fenêtre'],
-  PLAY: ['Chasser un jouet', 'Poursuivre', 'Bondir', 'Jouer avec un humain'],
-  REST: ['Dormir', 'Se reposer', 'Somnoler', 'Se toiletter'],
-  SOCIAL: ['Ronronner', 'Pétrir', "Se frotter contre quelqu'un", "Demander de l'attention", 'Toiletter un congénère'],
-  STRESS: ['Se cacher', 'Oreilles plaquées', 'Queue gonflée', 'Feuler', 'Miauler de façon répétée', 'Pupilles dilatées'],
-  ELIMINATION: ['Utiliser la litière', 'Uriner hors de la litière', 'Marquer en urinant', 'Gratter la litière'],
+  EXPLORATION: [
+    ['Explorer une pièce', "Parcourt une pièce, museau et moustaches en avant, en s'arrêtant pour inspecter."],
+    ['Flairer un objet', "Approche le museau d'un objet et le renifle."],
+    ['Se percher en hauteur', "Monte sur un meuble ou un support élevé et s'y installe."],
+    ['Observer par la fenêtre', "Assis ou couché face à une fenêtre, regard dirigé vers l'extérieur."],
+  ],
+  PLAY: [
+    ['Chasser un jouet', "Se met à l'affût, fixe un jouet, puis s'élance et l'attrape."],
+    ['Poursuivre', 'Court après un objet ou une personne en mouvement.'],
+    ['Bondir', 'Saut brusque vers un objet, pattes antérieures tendues.'],
+    ['Jouer avec un humain', "Attaque ou poursuit un jouet que la personne anime, griffes rentrées."],
+  ],
+  REST: [
+    ['Dormir', 'Yeux fermés, corps replié ou étalé, respiration lente.'],
+    ['Se reposer', 'Couché, éveillé, yeux ouverts ou mi-clos, immobile.'],
+    ['Somnoler', 'Yeux mi-clos, oreilles encore mobiles.'],
+    ['Se toiletter', 'Se lèche le pelage, les pattes ou la face, ou se gratte.'],
+  ],
+  SOCIAL: [
+    ['Ronronner', "Vibration sonore continue et régulière, perçue à l'oreille ou au toucher."],
+    ['Pétrir', "Alterne les pattes antérieures contre une surface ou une personne, parfois griffes sorties."],
+    ["Se frotter contre quelqu'un", 'Frotte la tête, les joues ou le flanc contre une personne ou un congénère.'],
+    ["Demander de l'attention", 'Miaule, suit ou se place devant la personne pour la solliciter.'],
+    ['Toiletter un congénère', "Lèche le pelage d'un autre animal."],
+  ],
+  STRESS: [
+    ['Se cacher', 'Se réfugie dans un lieu fermé ou sous un meuble et y reste.'],
+    ['Oreilles plaquées', 'Les oreilles sont couchées vers l\'arrière ou sur les côtés de la tête.'],
+    ['Queue gonflée', 'Les poils de la queue sont hérissés : elle paraît épaissie.'],
+    ['Feuler', 'Émet un souffle bruyant, bouche ouverte.'],
+    ['Miauler de façon répétée', 'Miaulements répétés, souvent plaintifs, sans cause évidente.'],
+    ['Pupilles dilatées', 'Pupilles très larges alors que la lumière est normale.'],
+  ],
+  ELIMINATION: [
+    ['Utiliser la litière', 'Urine ou défèque dans le bac prévu.'],
+    ['Uriner hors de la litière', 'Urine en dehors du bac, en position accroupie.'],
+    ['Marquer en urinant', "Debout, queue dressée et frémissante, projette de l'urine sur une surface verticale."],
+    ['Gratter la litière', "Gratte la litière avant ou après l'élimination."],
+  ],
 });
 
 const HORSE_ETHOGRAM = defineEthogram({

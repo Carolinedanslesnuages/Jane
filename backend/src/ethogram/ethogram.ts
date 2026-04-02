@@ -4,6 +4,8 @@ export interface EthogramCategory {
   category: BehaviorCategory;
   label: string;
   behaviors: string[];
+  /** What to look for to record each behaviour: observable criteria, not interpretations. */
+  definitions: Record<string, string>;
 }
 
 /** The six categories are shared by every species; only the behaviours inside them differ. */
@@ -18,18 +20,59 @@ export const CATEGORY_LABELS: Record<BehaviorCategory, string> = {
 
 const CATEGORY_ORDER: BehaviorCategory[] = ['EXPLORATION', 'PLAY', 'REST', 'SOCIAL', 'STRESS', 'ELIMINATION'];
 
+/** A behaviour, alone or with its definition: `['Dormir', 'Yeux fermés, ...']`. */
+type BehaviorEntry = string | [name: string, definition: string];
+
 /** Builds an ethogram from the behaviours of each category (labels are shown as-is in the interface). */
-function defineEthogram(behaviors: Record<BehaviorCategory, string[]>): EthogramCategory[] {
-  return CATEGORY_ORDER.map((category) => ({ category, label: CATEGORY_LABELS[category], behaviors: behaviors[category] }));
+function defineEthogram(entries: Record<BehaviorCategory, BehaviorEntry[]>): EthogramCategory[] {
+  return CATEGORY_ORDER.map((category) => {
+    const names = entries[category].map((entry) => (typeof entry === 'string' ? entry : entry[0]));
+    const definitions = Object.fromEntries(entries[category].filter((entry): entry is [string, string] => typeof entry !== 'string'));
+    return { category, label: CATEGORY_LABELS[category], behaviors: names, definitions };
+  });
 }
 
 const DOG_ETHOGRAM = defineEthogram({
-  EXPLORATION: ['Flairer le sol', 'Flairer les objets', "Inspecter l'environnement", 'Chercher'],
-  PLAY: ['Jouer avec jouet', 'Jouer avec humain', 'Jouer avec autre chien', 'Courir', 'Sauter'],
-  REST: ['Dormir', 'Se reposer', 'Somnoler', "S'allonger"],
-  SOCIAL: ['Interaction humain', 'Interaction chien', "Demande d'attention", 'Lécher', 'Contact physique'],
-  STRESS: ['Aboyer', 'Gémir', 'Haleter excessif', 'Trembler', 'Se lécher les babines', 'Bâiller', 'Queue basse'],
-  ELIMINATION: ['Uriner', 'Déféquer', 'Renifler avant élimination'],
+  EXPLORATION: [
+    ['Flairer le sol', "Le museau est près du sol, les narines s'activent, la tête suit une piste."],
+    ['Flairer les objets', 'Le museau touche ou approche un objet en reniflant.'],
+    ["Inspecter l'environnement", "La tête se tourne et le regard balaie les lieux, l'animal est immobile ou se déplace lentement."],
+    ['Chercher', "Se déplace en explorant activement pour trouver quelque chose (nourriture, jouet)."],
+  ],
+  PLAY: [
+    ['Jouer avec jouet', 'Saisit, secoue, lance ou poursuit un objet de manière ludique.'],
+    ['Jouer avec humain', "Sollicite ou répond à un jeu avec une personne (poursuite, tirer, révérence de jeu)."],
+    ['Jouer avec autre chien', 'Jeu avec un congénère : poursuite, lutte souple, rôles qui alternent.'],
+    ['Courir', 'Déplacement rapide, galop ou trot soutenu, sans autre but visible.'],
+    ['Sauter', "Bondit : les quatre pattes quittent le sol ou les antérieures se lèvent."],
+  ],
+  REST: [
+    ['Dormir', 'Yeux fermés, corps relâché, respiration lente et régulière, peu de réaction aux bruits légers.'],
+    ['Se reposer', 'Couché ou assis, calme, yeux ouverts, tête posée ou relevée.'],
+    ['Somnoler', "Yeux mi-clos ou qui s'ouvrent par moments, oreilles encore mobiles : sommeil léger."],
+    ["S'allonger", 'Passe de la position debout ou assise à couchée (le geste, pas la durée).'],
+  ],
+  SOCIAL: [
+    ['Interaction humain', "Échange avec une personne : regard, contact, réponse à un appel ou à un geste."],
+    ['Interaction chien', 'Échange avec un congénère : approche, flairage, postures, hors jeu.'],
+    ["Demande d'attention", "Se place près de la personne et la sollicite (patte, museau, regard insistant, gémissement doux)."],
+    ['Lécher', 'Passe la langue sur une personne, un congénère ou un objet.'],
+    ['Contact physique', 'Corps appuyé contre une personne ou un congénère, contact prolongé.'],
+  ],
+  STRESS: [
+    ['Aboyer', "Émet un ou plusieurs aboiements."],
+    ['Gémir', 'Émet un son aigu, plaintif et prolongé.'],
+    ['Haleter excessif', "Halètement hors de proportion avec l'effort ou la chaleur, langue sortie, bouche tendue."],
+    ['Trembler', 'Tremblements du corps ou des membres en dehors du froid.'],
+    ['Se lécher les babines', 'La langue passe rapidement sur le museau, hors repas.'],
+    ['Bâiller', 'Ouverture large et prolongée de la gueule, sans fatigue apparente.'],
+    ['Queue basse', 'La queue est tenue basse ou rentrée entre les postérieurs.'],
+  ],
+  ELIMINATION: [
+    ['Uriner', "Émission d'urine, accroupi ou patte levée."],
+    ['Déféquer', 'Émission de selles, dos arrondi.'],
+    ['Renifler avant élimination', "Flaire et tourne en cercle avant d'uriner ou de déféquer."],
+  ],
 });
 
 const CAT_ETHOGRAM = defineEthogram({

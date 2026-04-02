@@ -42,4 +42,13 @@ describe('ethogram', () => {
     expect(findCategory('OTHER', 'Fuir')).toBe('STRESS');
     expect(findCategory('OTHER', 'Aboyer')).toBeUndefined();
   });
+
+  it('defines every behaviour of the dog with an observable criterion', () => {
+    for (const entry of ethogramFor('DOG')) {
+      for (const behavior of entry.behaviors) {
+        expect(entry.definitions[behavior]).toBeTruthy();
+      }
+      expect(Object.keys(entry.definitions).sort()).toEqual([...entry.behaviors].sort());
+    }
+  });
 });

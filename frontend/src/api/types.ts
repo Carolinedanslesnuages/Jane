@@ -33,6 +33,8 @@ export interface EthogramCategory {
   category: BehaviorCategory;
   label: string;
   behaviors: string[];
+  /** What to look for to record each behaviour. */
+  definitions: Record<string, string>;
 }
 
 export interface Observation {

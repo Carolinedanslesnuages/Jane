@@ -75,6 +75,10 @@
         </div>
       </AppCard>
 
+      <label class="inline definitions-toggle">
+        <input v-model="showDefinitions" type="checkbox" /> Afficher les définitions des comportements
+      </label>
+
       <div class="category-grid">
         <CategoryCard
           v-for="category in categories"
@@ -83,6 +87,7 @@
           :mode="retroactive ? 'EVENT' : mode"
           :running-behaviors="retroactive ? [] : runningBehaviors"
           :disabled="busy"
+          :show-definitions="showDefinitions"
           @choose="choose"
         />
       </div>
@@ -126,6 +131,8 @@ const mode = ref<'EVENT' | 'STATE'>('EVENT');
 const context = reactive({ location: '', weather: '', stimuli: '', notes: '' });
 
 const retroactive = ref(false);
+const showDefinitions = ref(readStoredFlag('jane.showDefinitions'));
+watch(showDefinitions, (value) => storeFlag('jane.showDefinitions', value));
 const when = ref(toDateTimeInput(new Date()));
 const from = ref(toDateTimeInput(new Date(Date.now() - 30 * 60_000)));
 const to = ref(toDateTimeInput(new Date()));
@@ -170,6 +177,22 @@ async function choose(behavior: string) {
     busy.value = false;
     // The open session shows how many observations it holds.
     sessionsStore.load(animal.id);
+  }
+}
+
+function readStoredFlag(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function storeFlag(key: string, value: boolean) {
+  try {
+    localStorage.setItem(key, value ? '1' : '0');
+  } catch {
+    // The choice is simply not remembered.
   }
 }
 
@@ -251,6 +274,10 @@ watch(
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
   gap: var(--space-4);
   margin-bottom: var(--space-5);
+}
+
+.definitions-toggle {
+  margin-bottom: var(--space-3);
 }
 
 .moment-grid {

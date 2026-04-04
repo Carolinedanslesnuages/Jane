@@ -4,16 +4,18 @@
       <span class="badge">{{ category.label }}</span>
     </h3>
     <div class="behaviors">
-      <button
-        v-for="behavior in category.behaviors"
-        :key="behavior"
-        type="button"
-        :class="{ running: isRunning(behavior) }"
-        :disabled="disabled"
-        @click="emit('choose', behavior)"
-      >
-        {{ labelFor(behavior) }}
-      </button>
+      <div v-for="behavior in category.behaviors" :key="behavior" class="behavior">
+        <button
+          type="button"
+          :class="{ running: isRunning(behavior) }"
+          :disabled="disabled"
+          :title="category.definitions[behavior]"
+          @click="emit('choose', behavior)"
+        >
+          {{ labelFor(behavior) }}
+        </button>
+        <p v-if="showDefinitions && category.definitions[behavior]" class="definition">{{ category.definitions[behavior] }}</p>
+      </div>
     </div>
   </section>
 </template>
@@ -27,6 +29,8 @@ const props = defineProps<{
   mode: 'EVENT' | 'STATE';
   runningBehaviors: string[];
   disabled?: boolean;
+  /** Show the definition of each behaviour under its button. */
+  showDefinitions?: boolean;
 }>();
 const emit = defineEmits<{ choose: [behavior: string] }>();
 
@@ -76,6 +80,13 @@ function labelFor(behavior: string): string {
 .behaviors button {
   width: 100%;
   text-align: center;
+}
+
+.definition {
+  margin: var(--space-1) 0 0;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  color: var(--color-muted);
 }
 
 .behaviors button.running {

@@ -27,8 +27,8 @@ function animal(overrides: Partial<Animal>): Animal {
 }
 
 const ethograms = {
-  DOG: [{ category: 'STRESS' as const, label: 'Stress', behaviors: ['Aboyer'] }],
-  CAT: [{ category: 'SOCIAL' as const, label: 'Social', behaviors: ['Ronronner'] }],
+  DOG: [{ category: 'STRESS' as const, label: 'Stress', behaviors: ['Aboyer'], definitions: { Aboyer: 'Aboiement.' } }],
+  CAT: [{ category: 'SOCIAL' as const, label: 'Social', behaviors: ['Ronronner'], definitions: { Ronronner: 'Vibration.' } }],
 };
 
 function mountView(selected: Animal) {
@@ -70,5 +70,15 @@ describe('ObservationView', () => {
     const wrapper = mount(ObservationView, { global: { stubs: { RouterLink: true } } });
     await flushPromises();
     expect(wrapper.text()).toContain("Ajoutez d'abord un animal");
+  });
+
+  it('shows the definitions on demand and remembers the choice', async () => {
+    localStorage.clear();
+    const wrapper = mountView(animal({ species: 'DOG' }));
+    await flushPromises();
+    expect(wrapper.text()).not.toContain('Aboiement.');
+    await wrapper.get('.definitions-toggle input').setValue(true);
+    expect(wrapper.text()).toContain('Aboiement.');
+    expect(localStorage.getItem('jane.showDefinitions')).toBe('1');
   });
 });

@@ -9,7 +9,7 @@ import { useEthogramStore } from './ethogram';
 describe('ethogram store', () => {
   beforeEach(() => {
     get.mockReset();
-    get.mockImplementation(async (path: string) => [{ category: 'REST', label: 'Repos', behaviors: [path] }]);
+    get.mockImplementation(async (path: string) => [{ category: 'REST', label: 'Repos', behaviors: [path], definitions: {} }]);
     setActivePinia(createPinia());
   });
 

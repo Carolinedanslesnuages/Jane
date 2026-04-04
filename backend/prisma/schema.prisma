@@ -9,12 +9,16 @@ datasource db {
 
 /// Utilisateur local, rattaché à un compte Keycloak par son identifiant (claim "sub").
 model User {
-  id              String   @id @default(uuid())
-  keycloakSubject String   @unique
-  email           String?
-  displayName     String?
-  createdAt       DateTime @default(now())
-  animals         Animal[]
+  id                   String        @id @default(uuid())
+  keycloakSubject      String        @unique
+  email                String?
+  displayName          String?
+  createdAt            DateTime      @default(now())
+  animals              Animal[]
+  /// Animaux que d'autres comptes ont partagés avec cet utilisateur.
+  sharedWithMe         AnimalShare[]
+  /// Observations saisies par cet utilisateur.
+  recordedObservations Observation[] @relation("RecordedBy")
 }
 
 enum Sex {
@@ -44,6 +48,7 @@ model Animal {
 
   observations   Observation[]
   sessions       ObservationSession[]
+  shares         AnimalShare[]
   activeStates   ActiveState[]
   cognitiveTests CognitiveTest[]
 
@@ -83,6 +88,9 @@ model Observation {
   animal          Animal              @relation(fields: [animalId], references: [id], onDelete: Cascade)
   /// Séance pendant laquelle l'observation a été faite, s'il y en avait une.
   sessionId       String?
+  /// Qui a saisi l'observation (utile quand un animal est partagé).
+  recordedById    String?
+  recordedBy      User?               @relation("RecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
   session         ObservationSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
 
   @@index([animalId, recordedAt])
@@ -144,4 +152,25 @@ model ObservationSession {
   observations Observation[]
 
   @@index([animalId, startedAt])
+}
+
+enum ShareRole {
+  /// Peut consulter les observations, les statistiques et les exports.
+  VIEWER
+  /// Peut aussi saisir des observations, des séances et des tests.
+  OBSERVER
+}
+
+/// Un animal partagé avec un autre compte. Le propriétaire reste celui qui l'a créé.
+model AnimalShare {
+  id        String    @id @default(uuid())
+  animalId  String
+  userId    String
+  role      ShareRole @default(OBSERVER)
+  createdAt DateTime  @default(now())
+  animal    Animal    @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([animalId, userId])
+  @@index([userId])
 }

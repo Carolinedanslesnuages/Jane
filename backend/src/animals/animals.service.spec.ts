@@ -1,4 +1,4 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { createTestDatabase, resetDatabase } from '../../test/database';
 import { PrismaService } from '../prisma/prisma.service';
 import { AnimalsService } from './animals.service';
@@ -61,5 +61,67 @@ describe('AnimalsService', () => {
     await service.remove(ownerId, animal.id);
     expect(await prisma.observation.count()).toBe(0);
     expect(await prisma.cognitiveTest.count()).toBe(0);
+  });
+});
+
+describe('AnimalsService access roles', () => {
+  let prisma: PrismaService;
+  let service: AnimalsService;
+  let ownerId: string;
+  let observerId: string;
+  let viewerId: string;
+  let strangerId: string;
+  let animalId: string;
+
+  beforeAll(async () => {
+    prisma = await createTestDatabase();
+    service = new AnimalsService(prisma);
+  });
+
+  beforeEach(async () => {
+    await resetDatabase(prisma);
+    ownerId = (await prisma.user.create({ data: { keycloakSubject: 'owner', displayName: 'Marie' } })).id;
+    observerId = (await prisma.user.create({ data: { keycloakSubject: 'observer' } })).id;
+    viewerId = (await prisma.user.create({ data: { keycloakSubject: 'viewer' } })).id;
+    strangerId = (await prisma.user.create({ data: { keycloakSubject: 'stranger' } })).id;
+    animalId = (await prisma.animal.create({ data: { ownerId, name: 'Rex' } })).id;
+    await prisma.animalShare.create({ data: { animalId, userId: observerId, role: 'OBSERVER' } });
+    await prisma.animalShare.create({ data: { animalId, userId: viewerId, role: 'VIEWER' } });
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
+  });
+
+  it('gives each person the role they hold', async () => {
+    expect((await service.requireAccess(ownerId, animalId, 'VIEWER')).role).toBe('OWNER');
+    expect((await service.requireAccess(observerId, animalId, 'VIEWER')).role).toBe('OBSERVER');
+    expect((await service.requireAccess(viewerId, animalId, 'VIEWER')).role).toBe('VIEWER');
+  });
+
+  it('refuses a role that is too low, saying so', async () => {
+    await expect(service.requireAccess(viewerId, animalId, 'OBSERVER')).rejects.toThrow(ForbiddenException);
+    await expect(service.requireAccess(observerId, animalId, 'OBSERVER')).resolves.toBeDefined();
+    await expect(service.requireAccess(observerId, animalId, 'OWNER')).rejects.toThrow(ForbiddenException);
+    await expect(service.requireAccess(ownerId, animalId, 'OWNER')).resolves.toBeDefined();
+  });
+
+  it('hides the animal from someone it was not shared with', async () => {
+    await expect(service.requireAccess(strangerId, animalId, 'VIEWER')).rejects.toThrow(NotFoundException);
+  });
+
+  it('lists own and shared animals with the role and who shared them', async () => {
+    await prisma.animal.create({ data: { ownerId: observerId, name: 'Luna' } });
+    const listed = await service.listAccessible(observerId);
+    expect(listed.map((animal) => [animal.name, animal.role, animal.ownerName])).toEqual([
+      ['Luna', 'OWNER', null],
+      ['Rex', 'OBSERVER', 'Marie'],
+    ]);
+    expect(await service.listAccessible(strangerId)).toEqual([]);
+  });
+
+  it('keeps editing and deleting for the owner only', async () => {
+    await expect(service.update(observerId, animalId, { name: 'Max' })).rejects.toThrow(NotFoundException);
+    await expect(service.remove(viewerId, animalId)).rejects.toThrow(NotFoundException);
   });
 });

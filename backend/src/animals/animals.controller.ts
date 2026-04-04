@@ -11,7 +11,7 @@ export class AnimalsController {
 
   @Get()
   list(@CurrentUser() user: User, @Query() query: ListAnimalsQuery) {
-    return this.animalsService.list(user.id, query);
+    return this.animalsService.listAccessible(user.id, query);
   }
 
   @Post()

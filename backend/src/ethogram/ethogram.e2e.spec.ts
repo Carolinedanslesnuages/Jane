@@ -29,6 +29,17 @@ describe('GET /ethogram (HTTP)', () => {
     expect(behaviorsOf(horse.body)).toContain('Piaffer');
   });
 
+  it('serves a definition for every behaviour', async () => {
+    const response = await request(app.getHttpServer()).get('/ethogram?species=HORSE').expect(200);
+    for (const entry of response.body as { behaviors: string[]; definitions: Record<string, string> }[]) {
+      for (const behavior of entry.behaviors) {
+        expect(entry.definitions[behavior]).toBeTruthy();
+      }
+    }
+    const stress = response.body.find((entry: { category: string }) => entry.category === 'STRESS');
+    expect(stress.definitions.Piaffer).toContain('antérieur');
+  });
+
   it('rejects an unknown species', async () => {
     await request(app.getHttpServer()).get('/ethogram?species=DRAGON').expect(400);
   });

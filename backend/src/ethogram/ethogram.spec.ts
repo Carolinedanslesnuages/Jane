@@ -43,10 +43,10 @@ describe('ethogram', () => {
     expect(findCategory('OTHER', 'Aboyer')).toBeUndefined();
   });
 
-  it.each(['DOG', 'CAT'] as const)('defines every behaviour of the %s with an observable criterion', (species) => {
+  it.each(SPECIES)('defines every behaviour of %s with an observable criterion', (species) => {
     for (const entry of ethogramFor(species)) {
       for (const behavior of entry.behaviors) {
-        expect(entry.definitions[behavior]).toBeTruthy();
+        expect(entry.definitions[behavior]?.length).toBeGreaterThan(10);
       }
       expect(Object.keys(entry.definitions).sort()).toEqual([...entry.behaviors].sort());
     }

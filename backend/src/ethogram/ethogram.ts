@@ -20,15 +20,14 @@ export const CATEGORY_LABELS: Record<BehaviorCategory, string> = {
 
 const CATEGORY_ORDER: BehaviorCategory[] = ['EXPLORATION', 'PLAY', 'REST', 'SOCIAL', 'STRESS', 'ELIMINATION'];
 
-/** A behaviour, alone or with its definition: `['Dormir', 'Yeux fermés, ...']`. */
-type BehaviorEntry = string | [name: string, definition: string];
+/** A behaviour with its definition: `['Dormir', 'Yeux fermés, ...']`. */
+type BehaviorEntry = [name: string, definition: string];
 
 /** Builds an ethogram from the behaviours of each category (labels are shown as-is in the interface). */
 function defineEthogram(entries: Record<BehaviorCategory, BehaviorEntry[]>): EthogramCategory[] {
   return CATEGORY_ORDER.map((category) => {
-    const names = entries[category].map((entry) => (typeof entry === 'string' ? entry : entry[0]));
-    const definitions = Object.fromEntries(entries[category].filter((entry): entry is [string, string] => typeof entry !== 'string'));
-    return { category, label: CATEGORY_LABELS[category], behaviors: names, definitions };
+    const names = entries[category].map(([name]) => name);
+    return { category, label: CATEGORY_LABELS[category], behaviors: names, definitions: Object.fromEntries(entries[category]) };
   });
 }
 
@@ -118,22 +117,81 @@ const CAT_ETHOGRAM = defineEthogram({
 });
 
 const HORSE_ETHOGRAM = defineEthogram({
-  EXPLORATION: ['Flairer', "Inspecter l'environnement", 'Brouter', 'Gratter le sol du sabot'],
-  PLAY: ['Galoper librement', 'Ruer en jeu', 'Jouer avec un congénère', 'Se rouler'],
-  REST: ['Dormir debout', 'Dormir couché', 'Somnoler', 'Se reposer'],
-  SOCIAL: ['Se toiletter mutuellement', "Se tenir près d'un congénère", 'Interaction humain', 'Hennir'],
-  STRESS: ['Piaffer', 'Secouer la tête', 'Fouetter de la queue', 'Oreilles plaquées', 'Montrer le blanc de l\'œil', 'Tic', 'Trembler'],
-  ELIMINATION: ['Uriner', 'Déféquer'],
+  EXPLORATION: [
+    ['Flairer', "Le museau approche un objet, le sol ou un congénère, narines actives."],
+    ["Inspecter l'environnement", 'Tête haute, oreilles orientées vers une source, regard fixe.'],
+    ['Brouter', "Prélève de l'herbe ou du fourrage avec les lèvres et les dents, tête basse."],
+    ['Gratter le sol du sabot', 'Racle le sol avec un antérieur, sans autre signe de tension.'],
+  ],
+  PLAY: [
+    ['Galoper librement', 'Galop en liberté, sans cavalier, souvent queue relevée.'],
+    ['Ruer en jeu', 'Détend les postérieurs en bondissant, sans cible.'],
+    ['Jouer avec un congénère', 'Poursuite, morsures retenues, cabrage, rôles qui alternent.'],
+    ['Se rouler', 'Se couche et se roule sur le dos ou le flanc, jambes en l\'air.'],
+  ],
+  REST: [
+    ['Dormir debout', 'Debout, tête basse, un postérieur relâché, yeux fermés ou mi-clos.'],
+    ['Dormir couché', 'Couché sur le flanc ou en sphinx, yeux fermés.'],
+    ['Somnoler', 'Debout, paupières tombantes, lèvre inférieure relâchée.'],
+    ['Se reposer', 'Immobile, éveillé, détendu.'],
+  ],
+  SOCIAL: [
+    ['Se toiletter mutuellement', "Deux chevaux se grattent mutuellement l'encolure ou le garrot avec les lèvres."],
+    ["Se tenir près d'un congénère", "Reste à moins d'une longueur de corps d'un congénère."],
+    ['Interaction humain', 'Approche, flaire ou suit une personne, ou répond à son contact.'],
+    ['Hennir', 'Émet un hennissement.'],
+  ],
+  STRESS: [
+    ['Piaffer', 'Frappe le sol sur place avec un antérieur, de façon répétée.'],
+    ['Secouer la tête', 'Mouvements brusques et répétés de la tête, sans insecte ni gêne apparente.'],
+    ['Fouetter de la queue', 'Mouvements vifs de la queue, hors présence de mouches.'],
+    ['Oreilles plaquées', "Oreilles couchées en arrière, collées contre l'encolure."],
+    ["Montrer le blanc de l'œil", "Le blanc de l'œil est visible autour de l'iris."],
+    ['Tic', "Comportement répétitif stéréotypé (tic à l'appui, tic de l'ours, tic à l'air)."],
+    ['Trembler', 'Frissons musculaires visibles en dehors du froid.'],
+  ],
+  ELIMINATION: [
+    ['Uriner', 'Écarte les postérieurs, queue relevée, urine.'],
+    ['Déféquer', 'Queue relevée, émet des crottins.'],
+  ],
 });
 
 /** A neutral ethogram for any other species (rabbit, bird, rodent, wildlife…). */
 const GENERIC_ETHOGRAM = defineEthogram({
-  EXPLORATION: ['Explorer', 'Flairer', 'Chercher de la nourriture', 'Observer'],
-  PLAY: ['Jouer', 'Courir', 'Sauter', 'Grimper'],
-  REST: ['Dormir', 'Se reposer', 'Somnoler'],
-  SOCIAL: ['Interagir avec un congénère', 'Interagir avec un humain', 'Se toiletter', 'Vocaliser'],
-  STRESS: ['Fuir', 'Se cacher', 'Se figer', 'Vocalisation de détresse', 'Comportement répétitif'],
-  ELIMINATION: ['Uriner', 'Déféquer'],
+  EXPLORATION: [
+    ['Explorer', "Se déplace en inspectant l'espace, museau ou tête en mouvement."],
+    ['Flairer', 'Approche le museau ou le bec du sol ou d\'un objet pour le sentir.'],
+    ['Chercher de la nourriture', 'Fouille, gratte ou prélève pour trouver à manger.'],
+    ['Observer', "Reste immobile, tête orientée vers un point d'intérêt."],
+  ],
+  PLAY: [
+    ['Jouer', 'Activité sans but apparent : mouvements exagérés, rôles alternés.'],
+    ['Courir', 'Déplacement rapide, hors fuite.'],
+    ['Sauter', 'Bondit ou enchaîne des sauts.'],
+    ['Grimper', 'Monte sur un support, une paroi ou un perchoir.'],
+  ],
+  REST: [
+    ['Dormir', 'Yeux fermés, immobile, respiration lente.'],
+    ['Se reposer', 'Immobile et éveillé.'],
+    ['Somnoler', 'Sommeil léger, yeux mi-clos.'],
+  ],
+  SOCIAL: [
+    ['Interagir avec un congénère', 'Approche, contact ou échange avec un autre animal.'],
+    ['Interagir avec un humain', 'Approche, contact ou réponse à une personne.'],
+    ['Se toiletter', 'Entretient son pelage, ses plumes ou sa peau (léchage, lissage, bain de poussière).'],
+    ['Vocaliser', 'Émet un cri, un chant ou un son.'],
+  ],
+  STRESS: [
+    ['Fuir', 'S\'éloigne vite d\'un stimulus.'],
+    ['Se cacher', 'Se réfugie hors de vue.'],
+    ['Se figer', 'Interrompt tout mouvement, tendu, face à un stimulus.'],
+    ['Vocalisation de détresse', 'Cris aigus ou répétés en situation d\'inconfort.'],
+    ['Comportement répétitif', 'Mouvement stéréotypé répété, sans fonction apparente.'],
+  ],
+  ELIMINATION: [
+    ['Uriner', "Émet de l'urine."],
+    ['Déféquer', 'Émet des selles.'],
+  ],
 });
 
 /** The ethogram of every species. */

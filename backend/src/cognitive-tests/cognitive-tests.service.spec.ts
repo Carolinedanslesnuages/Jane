@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { createTestDatabase, resetDatabase } from '../../test/database';
 import { AnimalsService } from '../animals/animals.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -77,5 +77,21 @@ describe('CognitiveTestsService', () => {
     await expect(service.update(strangerId, test.id, { durationSeconds: 1 })).rejects.toThrow(NotFoundException);
     await expect(service.remove(strangerId, test.id)).rejects.toThrow(NotFoundException);
     expect(await service.list(ownerId, {})).toHaveLength(1);
+  });
+
+  it('lets observers record and correct, and viewers only read', async () => {
+    const observerId = (await prisma.user.create({ data: { keycloakSubject: 'observer' } })).id;
+    const viewerId = (await prisma.user.create({ data: { keycloakSubject: 'viewer' } })).id;
+    await prisma.animalShare.create({ data: { animalId, userId: observerId, role: 'OBSERVER' } });
+    await prisma.animalShare.create({ data: { animalId, userId: viewerId, role: 'VIEWER' } });
+
+    const test = await service.record(observerId, animalId, { testType: 'DETOUR', durationSeconds: 12 });
+    expect(await service.list(viewerId, { animalId })).toHaveLength(1);
+    await expect(service.record(viewerId, animalId, { testType: 'DETOUR', durationSeconds: 5 })).rejects.toThrow(ForbiddenException);
+    await expect(service.update(viewerId, test.id, { durationSeconds: 1 })).rejects.toThrow(ForbiddenException);
+    await expect(service.remove(viewerId, test.id)).rejects.toThrow(ForbiddenException);
+    await expect(service.update(observerId, test.id, { durationSeconds: 11 })).resolves.toMatchObject({ durationSeconds: 11 });
+    await service.remove(observerId, test.id);
+    expect(await service.list(ownerId, {})).toEqual([]);
   });
 });

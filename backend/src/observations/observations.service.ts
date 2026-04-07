@@ -139,10 +139,18 @@ export class ObservationsService {
   listAll(
     userId: string,
     query: Pick<ListObservationsQuery, 'animalId' | 'from' | 'to'>,
-  ): Promise<(Observation & { session: { observerName: string; method: SamplingMethod } | null })[]> {
+  ): Promise<
+    (Observation & {
+      session: { observerName: string; method: SamplingMethod } | null;
+      recordedBy: { displayName: string | null; email: string | null } | null;
+    })[]
+  > {
     return this.prisma.observation.findMany({
       where: this.buildWhere(userId, query),
-      include: { session: { select: { observerName: true, method: true } } },
+      include: {
+        session: { select: { observerName: true, method: true } },
+        recordedBy: { select: { displayName: true, email: true } },
+      },
       orderBy: { recordedAt: 'desc' },
     });
   }

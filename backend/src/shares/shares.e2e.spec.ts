@@ -60,3 +60,61 @@ describe('sharing an animal (HTTP)', () => {
     expect((await request(server).get('/animals').set(as('bob')).expect(200)).body).toEqual([]);
   });
 });
+
+describe('working together on a shared animal (HTTP)', () => {
+  let app: INestApplication;
+  let animalId: string;
+  const as = (token: string) => ({ Authorization: `Bearer ${token}` });
+  const period = 'from=2020-01-01T00:00:00Z&to=2099-01-01T00:00:00Z';
+
+  beforeAll(async () => {
+    ({ app } = await createTestApp());
+    const server = app.getHttpServer();
+    await request(server).get('/me').set(as('observer')).expect(200);
+    await request(server).get('/me').set(as('viewer')).expect(200);
+    animalId = (await request(server).post('/animals').set(as('owner')).send({ name: 'Rex' }).expect(201)).body.id;
+    await request(server).post(`/animals/${animalId}/shares`).set(as('owner')).send({ email: 'observer@jane.test', role: 'OBSERVER' }).expect(201);
+    await request(server).post(`/animals/${animalId}/shares`).set(as('owner')).send({ email: 'viewer@jane.test', role: 'VIEWER' }).expect(201);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('lets the observer record, the owner and the viewer read it, and the export tell who recorded', async () => {
+    const server = app.getHttpServer();
+    await request(server).post(`/animals/${animalId}/events`).set(as('observer')).send({ behavior: 'Aboyer' }).expect(201);
+    await request(server).post(`/animals/${animalId}/events`).set(as('owner')).send({ behavior: 'Courir' }).expect(201);
+
+    for (const token of ['owner', 'observer', 'viewer']) {
+      const listed = await request(server).get(`/observations?animalId=${animalId}`).set(as(token)).expect(200);
+      expect(listed.body.total).toBe(2);
+      const stats = await request(server).get(`/stats/summary?animalId=${animalId}&${period}`).set(as(token)).expect(200);
+      expect(stats.body.totals.observations).toBe(2);
+    }
+    const csv = await request(server).get(`/exports/observations.csv?animalId=${animalId}`).set(as('viewer')).expect(200);
+    const rows = csv.text.replace('﻿', '').trim().split('\r\n').slice(1);
+    expect(rows.some((row) => row.includes(',Aboyer,') && row.endsWith(',observer@jane.test'))).toBe(true);
+    expect(rows.some((row) => row.includes(',Courir,') && row.endsWith(',owner@jane.test'))).toBe(true);
+  });
+
+  it('stops the viewer from changing anything, with an explanation', async () => {
+    const server = app.getHttpServer();
+    const refused = await request(server).post(`/animals/${animalId}/events`).set(as('viewer')).send({ behavior: 'Aboyer' }).expect(403);
+    expect(refused.body.message).toContain('pas le droit');
+    await request(server).post(`/animals/${animalId}/states/start`).set(as('viewer')).send({ behavior: 'Dormir' }).expect(403);
+    await request(server).post(`/animals/${animalId}/sessions`).set(as('viewer')).send({}).expect(403);
+    await request(server).post(`/animals/${animalId}/cognitive-tests`).set(as('viewer')).send({ testType: 'DETOUR', durationSeconds: 5 }).expect(403);
+    const observations = (await request(server).get(`/observations?animalId=${animalId}`).set(as('viewer'))).body.items;
+    await request(server).delete(`/observations/${observations[0].id}`).set(as('viewer')).expect(403);
+  });
+
+  it('lets the observer run sessions and tests, and the viewer download the report', async () => {
+    const server = app.getHttpServer();
+    await request(server).post(`/animals/${animalId}/sessions`).set(as('observer')).send({ method: 'FOCAL' }).expect(201);
+    await request(server).post(`/animals/${animalId}/cognitive-tests`).set(as('observer')).send({ testType: 'DETOUR', durationSeconds: 9 }).expect(201);
+    const sessions = await request(server).get(`/sessions?animalId=${animalId}`).set(as('viewer')).expect(200);
+    expect(sessions.body).toHaveLength(1);
+    await request(server).get(`/exports/report.pdf?animalId=${animalId}&${period}`).set(as('viewer')).expect(200);
+  });
+});

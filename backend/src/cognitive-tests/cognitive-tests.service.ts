@@ -11,18 +11,18 @@ export class CognitiveTestsService {
     private readonly animalsService: AnimalsService,
   ) {}
 
-  async record(ownerId: string, animalId: string, input: RecordCognitiveTestDto): Promise<CognitiveTest> {
-    await this.animalsService.findOne(ownerId, animalId);
+  async record(userId: string, animalId: string, input: RecordCognitiveTestDto): Promise<CognitiveTest> {
+    await this.animalsService.requireAccess(userId, animalId, 'OBSERVER');
     const { recordedAt, ...result } = input;
     return this.prisma.cognitiveTest.create({
       data: { animalId, ...result, ...(recordedAt ? { recordedAt: this.requireNotFuture(new Date(recordedAt)) } : {}) },
     });
   }
 
-  list(ownerId: string, query: ListCognitiveTestsQuery): Promise<CognitiveTest[]> {
+  list(userId: string, query: ListCognitiveTestsQuery): Promise<CognitiveTest[]> {
     return this.prisma.cognitiveTest.findMany({
       where: {
-        animal: { ownerId },
+        animal: AnimalsService.accessibleBy(userId),
         ...(query.animalId ? { animalId: query.animalId } : {}),
         ...(query.testType ? { testType: query.testType } : {}),
       },
@@ -37,21 +37,25 @@ export class CognitiveTestsService {
     return instant;
   }
 
-  async update(ownerId: string, testId: string, input: UpdateCognitiveTestDto): Promise<CognitiveTest> {
-    await this.findOwned(ownerId, testId);
+  async update(userId: string, testId: string, input: UpdateCognitiveTestDto): Promise<CognitiveTest> {
+    await this.findOwned(userId, testId);
     return this.prisma.cognitiveTest.update({ where: { id: testId }, data: input });
   }
 
-  async remove(ownerId: string, testId: string): Promise<void> {
-    await this.findOwned(ownerId, testId);
+  async remove(userId: string, testId: string): Promise<void> {
+    await this.findOwned(userId, testId);
     await this.prisma.cognitiveTest.delete({ where: { id: testId } });
   }
 
-  private async findOwned(ownerId: string, testId: string): Promise<CognitiveTest> {
-    const test = await this.prisma.cognitiveTest.findFirst({ where: { id: testId, animal: { ownerId } } });
+  private async findOwned(userId: string, testId: string): Promise<CognitiveTest> {
+    const test = await this.prisma.cognitiveTest.findFirst({
+      where: { id: testId, animal: AnimalsService.accessibleBy(userId) },
+    });
     if (!test) {
       throw new NotFoundException('Test introuvable');
     }
+    // Seeing a result is not enough to change it: that takes the right to record for the animal.
+    await this.animalsService.requireAccess(userId, test.animalId, 'OBSERVER');
     return test;
   }
 }

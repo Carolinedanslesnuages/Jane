@@ -26,6 +26,7 @@ const CSV_HEADER = [
   'notes',
   'observateur',
   'methode',
+  'saisi_par',
 ];
 
 @Injectable()
@@ -41,7 +42,7 @@ export class ExportsService {
   async observationsCsv(ownerId: string, query: ExportQuery): Promise<string> {
     const [observations, animals] = await Promise.all([
       this.observationsService.listAll(ownerId, query),
-      this.animalsService.list(ownerId),
+      this.animalsService.listAccessible(ownerId),
     ]);
     const animalsById = new Map(animals.map((animal) => [animal.id, animal]));
     const rows = observations.map((observation) => [
@@ -59,13 +60,14 @@ export class ExportsService {
       observation.notes,
       observation.session?.observerName,
       observation.session ? SAMPLING_METHOD_LABELS[observation.session.method] : undefined,
+      observation.recordedBy?.displayName ?? observation.recordedBy?.email,
     ]);
     return toCsv(CSV_HEADER, rows);
   }
 
   /** The behavioural assessment of one animal over a period, as a PDF document. */
   async report(ownerId: string, query: ReportQuery): Promise<Buffer> {
-    const animal = await this.animalsService.findOne(ownerId, query.animalId);
+    const animal = await this.animalsService.requireAccess(ownerId, query.animalId, 'VIEWER');
     const summary = await this.statsService.summary(ownerId, query);
     const tests = await this.cognitiveTestsService.list(ownerId, { animalId: animal.id });
     const formatDay = (instant: string) => new Date(instant).toLocaleDateString('fr-FR', { timeZone: query.timezone ?? 'UTC' });

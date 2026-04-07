@@ -1,4 +1,4 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { createTestDatabase, resetDatabase } from '../../test/database';
 import { AnimalsService } from '../animals/animals.service';
 import { ObservationsService } from '../observations/observations.service';
@@ -92,5 +92,20 @@ describe('SessionsService', () => {
     await expect(service.findOne(strangerId, session.id)).rejects.toThrow(NotFoundException);
     await expect(service.remove(strangerId, session.id)).rejects.toThrow(NotFoundException);
     expect(await service.list(strangerId, {})).toEqual([]);
+  });
+
+  it('lets observers run sessions and viewers only read them', async () => {
+    const observerId = (await prisma.user.create({ data: { keycloakSubject: 'observer' } })).id;
+    const viewerId = (await prisma.user.create({ data: { keycloakSubject: 'viewer' } })).id;
+    await prisma.animalShare.create({ data: { animalId, userId: observerId, role: 'OBSERVER' } });
+    await prisma.animalShare.create({ data: { animalId, userId: viewerId, role: 'VIEWER' } });
+
+    await expect(service.start(viewerId, animalId, {}, 'Lecteur')).rejects.toThrow(ForbiddenException);
+    const session = await service.start(observerId, animalId, {}, 'Observatrice');
+    expect((await service.list(viewerId, { animalId }))).toHaveLength(1);
+    expect((await service.findOne(viewerId, session.id)).observerName).toBe('Observatrice');
+    await expect(service.end(viewerId, session.id, {})).rejects.toThrow(ForbiddenException);
+    await expect(service.remove(viewerId, session.id)).rejects.toThrow(ForbiddenException);
+    await expect(service.end(observerId, session.id, {})).resolves.toBeDefined();
   });
 });

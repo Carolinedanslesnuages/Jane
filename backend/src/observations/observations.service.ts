@@ -17,20 +17,20 @@ export class ObservationsService {
   ) {}
 
   /** Records an instant behaviour (an event). */
-  async recordEvent(ownerId: string, animalId: string, input: RecordEventDto): Promise<Observation> {
-    const animal = await this.animalsService.findOne(ownerId, animalId);
+  async recordEvent(userId: string, animalId: string, input: RecordEventDto): Promise<Observation> {
+    const animal = await this.animalsService.requireAccess(userId, animalId, 'OBSERVER');
     const category = this.requireCategory(animal.species, input.behavior);
     const { behavior, occurredAt, ...context } = input;
     const recordedAt = occurredAt ? this.requireNotFuture(new Date(occurredAt), "L'événement") : new Date();
     const sessionId = await this.findSessionId(animalId, recordedAt);
     return this.prisma.observation.create({
-      data: { animalId, behavior, category, type: 'EVENT', recordedAt, sessionId, ...context },
+      data: { animalId, behavior, category, type: 'EVENT', recordedAt, sessionId, recordedById: userId, ...context },
     });
   }
 
   /** Starts timing a behaviour. A behaviour can only run once at a time for a given animal. */
-  async startState(ownerId: string, animalId: string, behavior: string, startedAt?: string): Promise<ActiveState> {
-    const animal = await this.animalsService.findOne(ownerId, animalId);
+  async startState(userId: string, animalId: string, behavior: string, startedAt?: string): Promise<ActiveState> {
+    const animal = await this.animalsService.requireAccess(userId, animalId, 'OBSERVER');
     const category = this.requireCategory(animal.species, behavior);
     try {
       const start = startedAt ? this.requireNotFuture(new Date(startedAt), "Le début de l'état") : new Date();
@@ -44,8 +44,8 @@ export class ObservationsService {
   }
 
   /** Stops a running behaviour and stores it as an observation with its duration. */
-  async stopState(ownerId: string, animalId: string, input: StopStateDto): Promise<Observation> {
-    await this.animalsService.findOne(ownerId, animalId);
+  async stopState(userId: string, animalId: string, input: StopStateDto): Promise<Observation> {
+    await this.animalsService.requireAccess(userId, animalId, 'OBSERVER');
     const { behavior, endedAt, ...context } = input;
     return this.prisma.$transaction(async (transaction) => {
       const running = await transaction.activeState.findUnique({
@@ -74,6 +74,7 @@ export class ObservationsService {
           recordedAt: stoppedAt,
           durationSeconds: (stoppedAt.getTime() - running.startedAt.getTime()) / 1000,
           sessionId: session?.id ?? null,
+          recordedById: userId,
           ...context,
         },
       });
@@ -81,8 +82,8 @@ export class ObservationsService {
   }
 
   /** Records a state that is already over (noted after the fact), with its start and end. */
-  async logState(ownerId: string, animalId: string, input: LogStateDto): Promise<Observation> {
-    const animal = await this.animalsService.findOne(ownerId, animalId);
+  async logState(userId: string, animalId: string, input: LogStateDto): Promise<Observation> {
+    const animal = await this.animalsService.requireAccess(userId, animalId, 'OBSERVER');
     const category = this.requireCategory(animal.species, input.behavior);
     const { behavior, startedAt, endedAt, ...context } = input;
     const start = new Date(startedAt);
@@ -104,14 +105,15 @@ export class ObservationsService {
         recordedAt: end,
         durationSeconds: (end.getTime() - start.getTime()) / 1000,
         sessionId,
+        recordedById: userId,
         ...context,
       },
     });
   }
 
   /** The states currently running for an animal, oldest first. */
-  async listActiveStates(ownerId: string, animalId: string): Promise<ActiveState[]> {
-    await this.animalsService.findOne(ownerId, animalId);
+  async listActiveStates(userId: string, animalId: string): Promise<ActiveState[]> {
+    await this.animalsService.requireAccess(userId, animalId, 'VIEWER');
     return this.prisma.activeState.findMany({ where: { animalId }, orderBy: { startedAt: 'asc' } });
   }
 
@@ -119,8 +121,8 @@ export class ObservationsService {
    * Lists the observations of the owner's animals, newest first.
    * A state belongs to the period in which it started, an event to the moment it happened.
    */
-  async list(ownerId: string, query: ListObservationsQuery): Promise<{ total: number; items: Observation[] }> {
-    const where = this.buildWhere(ownerId, query);
+  async list(userId: string, query: ListObservationsQuery): Promise<{ total: number; items: Observation[] }> {
+    const where = this.buildWhere(userId, query);
     const [total, items] = await this.prisma.$transaction([
       this.prisma.observation.count({ where }),
       this.prisma.observation.findMany({
@@ -135,18 +137,18 @@ export class ObservationsService {
 
   /** Every observation matching the filters, without pagination (statistics and exports). */
   listAll(
-    ownerId: string,
+    userId: string,
     query: Pick<ListObservationsQuery, 'animalId' | 'from' | 'to'>,
   ): Promise<(Observation & { session: { observerName: string; method: SamplingMethod } | null })[]> {
     return this.prisma.observation.findMany({
-      where: this.buildWhere(ownerId, query),
+      where: this.buildWhere(userId, query),
       include: { session: { select: { observerName: true, method: true } } },
       orderBy: { recordedAt: 'desc' },
     });
   }
 
   private buildWhere(
-    ownerId: string,
+    userId: string,
     query: Pick<ListObservationsQuery, 'animalId' | 'from' | 'to'>,
   ): Prisma.ObservationWhereInput {
     const range = {
@@ -155,19 +157,21 @@ export class ObservationsService {
     };
     const hasRange = Object.keys(range).length > 0;
     return {
-      animal: { ownerId },
+      animal: AnimalsService.accessibleBy(userId),
       ...(query.animalId ? { animalId: query.animalId } : {}),
       ...(hasRange ? { OR: [{ startedAt: range }, { startedAt: null, recordedAt: range }] } : {}),
     };
   }
 
-  async remove(ownerId: string, observationId: string): Promise<void> {
+  async remove(userId: string, observationId: string): Promise<void> {
     const found = await this.prisma.observation.findFirst({
-      where: { id: observationId, animal: { ownerId } },
+      where: { id: observationId, animal: AnimalsService.accessibleBy(userId) },
     });
     if (!found) {
       throw new NotFoundException('Observation introuvable');
     }
+    // Seeing an observation is not enough to delete it: that takes the right to record for the animal.
+    await this.animalsService.requireAccess(userId, found.animalId, 'OBSERVER');
     await this.prisma.observation.delete({ where: { id: observationId } });
   }
 

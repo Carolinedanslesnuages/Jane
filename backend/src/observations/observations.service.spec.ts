@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { createTestDatabase, resetDatabase } from '../../test/database';
 import { AnimalsService } from '../animals/animals.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -162,6 +162,60 @@ describe('ObservationsService', () => {
       await prisma.observationSession.create({ data: { animalId: other.id, observerName: 'Démo', startedAt: new Date(Date.now() - 3600_000) } });
       const event = await service.recordEvent(ownerId, animalId, { behavior: 'Aboyer' });
       expect(event.sessionId).toBeNull();
+    });
+  });
+
+  describe('shared animals', () => {
+    let observerId: string;
+    let viewerId: string;
+
+    beforeEach(async () => {
+      observerId = (await prisma.user.create({ data: { keycloakSubject: 'observer' } })).id;
+      viewerId = (await prisma.user.create({ data: { keycloakSubject: 'viewer' } })).id;
+      await prisma.animalShare.create({ data: { animalId, userId: observerId, role: 'OBSERVER' } });
+      await prisma.animalShare.create({ data: { animalId, userId: viewerId, role: 'VIEWER' } });
+    });
+
+    it('lets an observer record, and keeps who recorded', async () => {
+      const event = await service.recordEvent(observerId, animalId, { behavior: 'Aboyer' });
+      expect(event.recordedById).toBe(observerId);
+      const mine = await service.recordEvent(ownerId, animalId, { behavior: 'Courir' });
+      expect(mine.recordedById).toBe(ownerId);
+      await service.startState(observerId, animalId, 'Dormir');
+      const state = await service.stopState(observerId, animalId, { behavior: 'Dormir' });
+      expect(state.recordedById).toBe(observerId);
+    });
+
+    it('lets a viewer read but not record', async () => {
+      await service.recordEvent(ownerId, animalId, { behavior: 'Aboyer' });
+      expect((await service.list(viewerId, { animalId })).total).toBe(1);
+      expect(await service.listActiveStates(viewerId, animalId)).toEqual([]);
+      await expect(service.recordEvent(viewerId, animalId, { behavior: 'Aboyer' })).rejects.toThrow(ForbiddenException);
+      await expect(service.startState(viewerId, animalId, 'Dormir')).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.logState(viewerId, animalId, { behavior: 'Dormir', startedAt: '2026-03-01T10:00:00Z', endedAt: '2026-03-01T11:00:00Z' }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('lets everyone with access see the observations of everyone', async () => {
+      await service.recordEvent(observerId, animalId, { behavior: 'Aboyer' });
+      expect((await service.list(ownerId, {})).total).toBe(1);
+      expect((await service.list(viewerId, {})).total).toBe(1);
+      expect((await service.listAll(viewerId, { animalId })).length).toBe(1);
+    });
+
+    it('lets an observer delete but not a viewer', async () => {
+      const event = await service.recordEvent(ownerId, animalId, { behavior: 'Aboyer' });
+      await expect(service.remove(viewerId, event.id)).rejects.toThrow(ForbiddenException);
+      await service.remove(observerId, event.id);
+      expect((await service.list(ownerId, {})).total).toBe(0);
+    });
+
+    it('stops showing everything once the share is withdrawn', async () => {
+      await service.recordEvent(ownerId, animalId, { behavior: 'Aboyer' });
+      await prisma.animalShare.deleteMany({ where: { userId: viewerId } });
+      expect((await service.list(viewerId, {})).total).toBe(0);
+      await expect(service.recordEvent(viewerId, animalId, { behavior: 'Aboyer' })).rejects.toThrow(NotFoundException);
     });
   });
 

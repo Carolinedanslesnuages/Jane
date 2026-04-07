@@ -7,6 +7,7 @@ import { EthogramController } from './ethogram/ethogram.controller';
 import { ObservationsModule } from './observations/observations.module';
 import { CognitiveTestsModule } from './cognitive-tests/cognitive-tests.module';
 import { SessionsModule } from './sessions/sessions.module';
+import { SharesModule } from './shares/shares.module';
 import { StatsModule } from './stats/stats.module';
 import { ExportsModule } from './exports/exports.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -28,6 +29,7 @@ import { HealthController } from './health/health.controller';
     ObservationsModule,
     CognitiveTestsModule,
     SessionsModule,
+    SharesModule,
     StatsModule,
     ExportsModule,
   ],

@@ -117,6 +117,8 @@ describe('AnimalsService access roles', () => {
       ['Luna', 'OWNER', null],
       ['Rex', 'OBSERVER', 'Marie'],
     ]);
+    const share = await prisma.animalShare.findFirstOrThrow({ where: { userId: observerId } });
+    expect(listed.map((animal) => animal.shareId)).toEqual([null, share.id]);
     expect(await service.listAccessible(strangerId)).toEqual([]);
   });
 

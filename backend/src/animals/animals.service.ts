@@ -13,6 +13,8 @@ export type AnimalWithAccess = Animal & {
   role: AccessRole;
   /** Who shared the animal; empty for the owner's own animals. */
   ownerName: string | null;
+  /** The share the user holds on the animal (to leave it); empty for the owner's own animals. */
+  shareId: string | null;
 };
 
 @Injectable()
@@ -59,6 +61,7 @@ export class AnimalsService {
         ...animal,
         role: isOwner ? 'OWNER' : (shares[0]?.role ?? 'VIEWER'),
         ownerName: isOwner ? null : (owner.displayName ?? owner.email),
+        shareId: isOwner ? null : (shares[0]?.id ?? null),
       };
     });
   }

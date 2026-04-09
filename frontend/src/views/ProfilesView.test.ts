@@ -5,19 +5,23 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const get = vi.fn();
 const post = vi.fn();
 const patch = vi.fn();
+const remove = vi.fn();
 
 vi.mock('../api/client', () => ({
   api: {
     get: (...args: unknown[]) => get(...args),
     post: (...args: unknown[]) => post(...args),
     patch: (...args: unknown[]) => patch(...args),
-    delete: vi.fn(),
+    delete: (...args: unknown[]) => remove(...args),
   },
 }));
 
 import ProfilesView from './ProfilesView.vue';
 
-const rex = { id: 'a1', name: 'Rex', species: 'DOG', breed: null, birthDate: null, sex: null, neutered: false, createdAt: '2026-02-20T10:00:00Z' };
+const rex = {
+  id: 'a1', name: 'Rex', species: 'DOG', breed: null, birthDate: null, sex: null, neutered: false, createdAt: '2026-02-20T10:00:00Z',
+  role: 'OWNER', ownerName: null, shareId: null,
+};
 const mistigri = { ...rex, id: 'a2', name: 'Mistigri', species: 'CAT' };
 
 describe('ProfilesView', () => {
@@ -25,6 +29,7 @@ describe('ProfilesView', () => {
     get.mockReset();
     post.mockReset();
     patch.mockReset();
+    remove.mockReset();
     patch.mockResolvedValue({});
     get.mockResolvedValue([rex, mistigri]);
     post.mockResolvedValue({ id: 'a3' });
@@ -81,5 +86,22 @@ describe('ProfilesView', () => {
     await wrapper.findAll('button').find((button) => button.text() === 'Annuler')!.trigger('click');
     expect(patch).not.toHaveBeenCalled();
     expect(wrapper.find('#edit-name').exists()).toBe(false);
+  });
+
+  it('shows an animal shared by someone else without editing, and lets the person leave', async () => {
+    get.mockResolvedValue([rex, { ...mistigri, role: 'OBSERVER', ownerName: 'Marie', shareId: 'sh1' }]);
+    remove.mockResolvedValue(undefined);
+    const wrapper = mount(ProfilesView);
+    await flushPromises();
+    const shared = wrapper.findAll('article')[1];
+    expect(shared.text()).toContain('Partagé par Marie · Observateur');
+    expect(shared.text()).not.toContain('Modifier');
+    expect(shared.text()).not.toContain('Supprimer');
+    expect(wrapper.findAll('article')[0].text()).toContain('Modifier');
+
+    await shared.findAll('button').find((button) => button.text() === 'Quitter ce partage')!.trigger('click');
+    await shared.findAll('button').find((button) => button.text() === 'Confirmer')!.trigger('click');
+    await flushPromises();
+    expect(remove).toHaveBeenCalledWith('/animals/a2/shares/sh1');
   });
 });

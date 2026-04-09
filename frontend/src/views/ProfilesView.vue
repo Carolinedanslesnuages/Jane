@@ -32,6 +32,9 @@
         <article v-else>
           <h3>{{ animal.name }}</h3>
           <p class="muted">{{ describe(animal) }}</p>
+          <p v-if="!isOwner(animal)" class="shared-badge">
+            Partagé par {{ animal.ownerName }} · {{ ROLE_LABELS[animal.role] }}
+          </p>
           <dl>
             <dt>Âge</dt>
             <dd v-if="animal.birthDate" class="age figure">{{ formatAge(animal.birthDate) }}</dd>
@@ -39,12 +42,19 @@
             <dt>Stérilisé(e)</dt>
             <dd>{{ animal.neutered ? 'Oui' : 'Non' }}</dd>
           </dl>
-          <div class="card-actions">
+          <div v-if="isOwner(animal)" class="card-actions">
             <button type="button" @click="editingId = animal.id">Modifier</button>
             <ConfirmAction
               label="Supprimer"
               :message="`Supprimer ${animal.name} efface aussi ses observations et ses tests. Définitif.`"
               @confirm="removeAnimal(animal)"
+            />
+          </div>
+          <div v-else class="card-actions">
+            <ConfirmAction
+              label="Quitter ce partage"
+              :message="`Vous ne verrez plus ${animal.name}. Ses observations restent chez ${animal.ownerName}.`"
+              @confirm="leaveShare(animal)"
             />
           </div>
         </article>
@@ -61,12 +71,15 @@ import AppCard from '../components/AppCard.vue';
 import ConfirmAction from '../components/ConfirmAction.vue';
 import PageHeader from '../components/PageHeader.vue';
 import { useAnimalsStore } from '../stores/animals';
+import { useSharesStore } from '../stores/shares';
 import { useToastsStore } from '../stores/toasts';
+import { isOwner, ROLE_LABELS } from '../utils/access';
 import { formatAge } from '../utils/format';
 import { filterBySpecies, SPECIES, speciesLabel } from '../utils/species';
 
 const animalsStore = useAnimalsStore();
 const toasts = useToastsStore();
+const sharesStore = useSharesStore();
 const speciesFilter = ref<Species | 'ALL'>('ALL');
 const editingId = ref<string | null>(null);
 const visibleAnimals = computed(() => filterBySpecies(animalsStore.animals, speciesFilter.value));
@@ -77,6 +90,17 @@ const SEX_LABELS: Record<Sex, string> = { MALE: 'Mâle', FEMALE: 'Femelle' };
 
 function describe(animal: Animal): string {
   return [speciesLabel(animal.species), animal.breed, animal.sex ? SEX_LABELS[animal.sex] : null].filter(Boolean).join(' · ') || 'Informations non renseignées';
+}
+
+async function leaveShare(animal: Animal) {
+  if (!animal.shareId) return;
+  try {
+    await sharesStore.leave(animal.id, animal.shareId);
+    await animalsStore.load();
+    toasts.info(`Vous ne suivez plus ${animal.name}.`);
+  } catch (error) {
+    toasts.error((error as Error).message);
+  }
 }
 
 async function removeAnimal(animal: Animal) {
@@ -141,6 +165,15 @@ dt {
 
 dd {
   margin: 0 0 var(--space-2);
+}
+
+.shared-badge {
+  display: inline-block;
+  margin: 0 0 var(--space-2);
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  background: var(--color-sand);
+  font-size: 0.85rem;
 }
 
 .card-actions {

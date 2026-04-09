@@ -119,7 +119,11 @@ describe('ProfilesView', () => {
     await flushPromises();
     expect(wrapper.text()).toContain('Partager Rex');
     expect(wrapper.text()).toContain('Paul');
-    expect(wrapper.text()).toContain('Lecteur');
+    expect((wrapper.get('select.role').element as HTMLSelectElement).value).toBe('VIEWER');
+
+    await wrapper.get('select.role').setValue('OBSERVER');
+    await flushPromises();
+    expect(post).toHaveBeenCalledWith('/animals/a1/shares', { email: 'paul@jane.test', role: 'OBSERVER' });
 
     await wrapper.get('input[type="email"]').setValue('marie@jane.test');
     await wrapper.get('.share-form').trigger('submit');

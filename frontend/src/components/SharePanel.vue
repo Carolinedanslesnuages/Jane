@@ -20,7 +20,10 @@
     <ul v-if="sharesStore.shares.length > 0" class="shares">
       <li v-for="entry in sharesStore.shares" :key="entry.id">
         <span class="who">{{ entry.displayName || entry.email }}<span v-if="entry.displayName" class="muted"> · {{ entry.email }}</span></span>
-        <span class="role">{{ entry.role === 'OBSERVER' ? 'Observateur' : 'Lecteur' }}</span>
+        <select class="role" :value="entry.role" :aria-label="`Droits de ${entry.displayName || entry.email}`" @change="changeRole(entry, ($event.target as HTMLSelectElement).value as ShareRole)">
+          <option value="OBSERVER">Observateur</option>
+          <option value="VIEWER">Lecteur</option>
+        </select>
         <ConfirmAction label="Retirer" :message="`Retirer l'accès de ${entry.displayName || entry.email} ?`" @confirm="withdraw(entry.id)" />
       </li>
     </ul>
@@ -30,7 +33,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import type { Animal, ShareRole } from '../api/types';
+import type { Animal, Share, ShareRole } from '../api/types';
 import { useSharesStore } from '../stores/shares';
 import { useToastsStore } from '../stores/toasts';
 import ConfirmAction from './ConfirmAction.vue';
@@ -61,6 +64,17 @@ async function share() {
     toasts.error((error as Error).message);
   } finally {
     busy.value = false;
+  }
+}
+
+/** Changes the rights of someone who already has access. */
+async function changeRole(entry: Share, newRole: ShareRole) {
+  if (!entry.email || newRole === entry.role) return;
+  try {
+    await sharesStore.share(props.animal.id, entry.email, newRole);
+    toasts.info('Droits modifiés.');
+  } catch (error) {
+    toasts.error((error as Error).message);
   }
 }
 
@@ -120,9 +134,8 @@ h4 {
 }
 
 .role {
-  font-size: 0.85rem;
-  padding: 0.1rem 0.6rem;
-  border-radius: 999px;
-  background: var(--color-sand);
+  width: auto;
+  font-size: 0.9rem;
+  padding: 0.2rem 0.5rem;
 }
 </style>

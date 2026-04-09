@@ -5,6 +5,7 @@ import AnimalBanner from './AnimalBanner.vue';
 
 const cat: Animal = {
   id: 'a1', name: 'Mistigri', species: 'CAT', breed: null, birthDate: null, sex: null, neutered: false,
+  role: 'OWNER' as const, ownerName: null, shareId: null,
   createdAt: '2026-02-20T10:00:00Z',
 };
 

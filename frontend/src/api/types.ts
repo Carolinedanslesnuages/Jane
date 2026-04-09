@@ -1,6 +1,14 @@
 export type Sex = 'MALE' | 'FEMALE';
 
+export type AccessRole = 'OWNER' | 'OBSERVER' | 'VIEWER';
+
 export interface Animal {
+  /** What the signed-in person may do with this animal. */
+  role: AccessRole;
+  /** Who shared it, for an animal that is not the person's own. */
+  ownerName: string | null;
+  /** The share to leave, for an animal that is not the person's own. */
+  shareId: string | null;
   id: string;
   name: string;
   species: Species;
@@ -124,4 +132,14 @@ export interface SessionInput {
   observerName?: string;
   method?: SamplingMethod;
   notes?: string;
+}
+
+export type ShareRole = 'VIEWER' | 'OBSERVER';
+
+export interface Share {
+  id: string;
+  role: ShareRole;
+  email: string | null;
+  displayName: string | null;
+  createdAt: string;
 }

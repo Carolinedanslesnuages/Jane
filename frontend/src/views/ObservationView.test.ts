@@ -22,7 +22,7 @@ import ObservationView from './ObservationView.vue';
 function animal(overrides: Partial<Animal>): Animal {
   return {
     id: 'a1', name: 'Rex', species: 'DOG', breed: null, birthDate: null, sex: null, neutered: false,
-    createdAt: '2026-02-20T10:00:00Z', ...overrides,
+    createdAt: '2026-02-20T10:00:00Z', role: 'OWNER', ownerName: null, shareId: null, ...overrides,
   };
 }
 

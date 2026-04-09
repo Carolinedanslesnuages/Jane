@@ -12,7 +12,7 @@ import { useConnectivityStore } from '../stores/connectivity';
 import { useSessionStore } from '../stores/session';
 import SessionCard from './SessionCard.vue';
 
-const rex = { id: 'a1', name: 'Rex', species: 'DOG' as const, breed: null, birthDate: null, sex: null, neutered: false, createdAt: '2026-03-01T10:00:00Z' };
+const rex = { id: 'a1', name: 'Rex', species: 'DOG' as const, breed: null, birthDate: null, sex: null, neutered: false, createdAt: '2026-03-01T10:00:00Z', role: 'OWNER' as const, ownerName: null, shareId: null };
 const open = { id: 's1', animalId: 'a1', observerName: 'Marie', method: 'FOCAL', startedAt: new Date(Date.now() - 125_000).toISOString(), endedAt: null, notes: null, observationCount: 3 };
 
 function setup(sessions: unknown[]) {

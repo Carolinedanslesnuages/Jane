@@ -104,4 +104,26 @@ describe('ProfilesView', () => {
     await flushPromises();
     expect(remove).toHaveBeenCalledWith('/animals/a2/shares/sh1');
   });
+
+  it('opens a sharing panel for the owner, shares by address and shows who has access', async () => {
+    get.mockImplementation(async (path: string) => {
+      if (path.endsWith('/shares')) {
+        return [{ id: 'sh9', role: 'VIEWER', email: 'paul@jane.test', displayName: 'Paul', createdAt: '2026-04-09' }];
+      }
+      return [rex];
+    });
+    post.mockResolvedValue({});
+    const wrapper = mount(ProfilesView);
+    await flushPromises();
+    await wrapper.findAll('article')[0].findAll('button').find((button) => button.text() === 'Partager')!.trigger('click');
+    await flushPromises();
+    expect(wrapper.text()).toContain('Partager Rex');
+    expect(wrapper.text()).toContain('Paul');
+    expect(wrapper.text()).toContain('Lecteur');
+
+    await wrapper.get('input[type="email"]').setValue('marie@jane.test');
+    await wrapper.get('.share-form').trigger('submit');
+    await flushPromises();
+    expect(post).toHaveBeenCalledWith('/animals/a1/shares', { email: 'marie@jane.test', role: 'OBSERVER' });
+  });
 });

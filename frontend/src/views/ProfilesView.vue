@@ -44,6 +44,9 @@
           </dl>
           <div v-if="isOwner(animal)" class="card-actions">
             <button type="button" @click="editingId = animal.id">Modifier</button>
+            <button type="button" :aria-expanded="sharingId === animal.id" @click="sharingId = sharingId === animal.id ? null : animal.id">
+              Partager
+            </button>
             <ConfirmAction
               label="Supprimer"
               :message="`Supprimer ${animal.name} efface aussi ses observations et ses tests. Définitif.`"
@@ -57,6 +60,7 @@
               @confirm="leaveShare(animal)"
             />
           </div>
+          <SharePanel v-if="sharingId === animal.id && isOwner(animal)" :animal="animal" />
         </article>
       </AppCard>
     </div>
@@ -69,6 +73,7 @@ import type { Animal, AnimalInput, Sex, Species } from '../api/types';
 import AnimalForm from '../components/AnimalForm.vue';
 import AppCard from '../components/AppCard.vue';
 import ConfirmAction from '../components/ConfirmAction.vue';
+import SharePanel from '../components/SharePanel.vue';
 import PageHeader from '../components/PageHeader.vue';
 import { useAnimalsStore } from '../stores/animals';
 import { useSharesStore } from '../stores/shares';
@@ -82,6 +87,7 @@ const toasts = useToastsStore();
 const sharesStore = useSharesStore();
 const speciesFilter = ref<Species | 'ALL'>('ALL');
 const editingId = ref<string | null>(null);
+const sharingId = ref<string | null>(null);
 const visibleAnimals = computed(() => filterBySpecies(animalsStore.animals, speciesFilter.value));
 
 onMounted(() => animalsStore.load());

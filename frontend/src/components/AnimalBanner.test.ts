@@ -25,4 +25,10 @@ describe('AnimalBanner', () => {
     const wrapper = mount(AnimalBanner, { props: { animal: null } });
     expect(wrapper.text()).toBe('');
   });
+
+  it("tells who shared the animal and with which rights", () => {
+    const shared = { ...cat, role: 'VIEWER' as const, ownerName: 'Marie' };
+    const wrapper = mount(AnimalBanner, { props: { animal: shared } });
+    expect(wrapper.text()).toContain('Lecteur · partagé par Marie');
+  });
 });

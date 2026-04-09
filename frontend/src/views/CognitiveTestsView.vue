@@ -8,41 +8,46 @@
 
     <template v-else-if="animalsStore.selectedAnimal">
       <AnimalBanner :animal="animalsStore.selectedAnimal" />
-      <AppCard>
-        <label for="test-type">Épreuve pour {{ animalsStore.selectedAnimal.name }}</label>
-        <select id="test-type" v-model="testType">
-          <option v-for="test in COGNITIVE_TESTS" :key="test.type" :value="test.type">{{ test.label }}</option>
-        </select>
-        <p class="muted description">{{ currentTest.description }}</p>
-      </AppCard>
+      <template v-if="canRecordHere">
+        <AppCard>
+          <label for="test-type">Épreuve pour {{ animalsStore.selectedAnimal.name }}</label>
+          <select id="test-type" v-model="testType">
+            <option v-for="test in COGNITIVE_TESTS" :key="test.type" :value="test.type">{{ test.label }}</option>
+          </select>
+          <p class="muted description">{{ currentTest.description }}</p>
+        </AppCard>
 
-      <AppCard title="Chronomètre">
-        <div class="stopwatch">
-          <output class="reading figure" aria-live="off">{{ stopwatch.elapsedSeconds.value.toFixed(1).replace('.', ',') }} s</output>
-          <button v-if="!stopwatch.running.value" type="button" class="primary" @click="startStopwatch">Démarrer</button>
-          <button v-else type="button" class="primary" @click="stopStopwatch">Arrêter</button>
-          <button type="button" @click="resetStopwatch">Réinitialiser</button>
-        </div>
-      </AppCard>
+        <AppCard title="Chronomètre">
+          <div class="stopwatch">
+            <output class="reading figure" aria-live="off">{{ stopwatch.elapsedSeconds.value.toFixed(1).replace('.', ',') }} s</output>
+            <button v-if="!stopwatch.running.value" type="button" class="primary" @click="startStopwatch">Démarrer</button>
+            <button v-else type="button" class="primary" @click="stopStopwatch">Arrêter</button>
+            <button type="button" @click="resetStopwatch">Réinitialiser</button>
+          </div>
+        </AppCard>
 
-      <AppCard title="Résultat">
-        <form class="result-form" @submit.prevent="saveResult">
-          <div>
-            <label for="result-duration">Durée (secondes)</label>
-            <input id="result-duration" v-model.number="measuredSeconds" type="number" min="0.1" step="0.1" required />
-          </div>
-          <div>
-            <label class="inline"><input v-model="withScore" type="checkbox" /> Renseigner un score</label>
-            <input v-model.number="score" type="number" min="0" max="10" step="0.5" :disabled="!withScore" aria-label="Score sur 10" />
-          </div>
-          <div class="notes">
-            <label for="result-notes">Notes</label>
-            <textarea id="result-notes" v-model="notes" rows="2" maxlength="500"></textarea>
-          </div>
-          <div class="actions">
-            <button type="submit" class="primary" :disabled="saving || !(measuredSeconds > 0)">Enregistrer le test</button>
-          </div>
-        </form>
+        <AppCard title="Résultat">
+          <form class="result-form" @submit.prevent="saveResult">
+            <div>
+              <label for="result-duration">Durée (secondes)</label>
+              <input id="result-duration" v-model.number="measuredSeconds" type="number" min="0.1" step="0.1" required />
+            </div>
+            <div>
+              <label class="inline"><input v-model="withScore" type="checkbox" /> Renseigner un score</label>
+              <input v-model.number="score" type="number" min="0" max="10" step="0.5" :disabled="!withScore" aria-label="Score sur 10" />
+            </div>
+            <div class="notes">
+              <label for="result-notes">Notes</label>
+              <textarea id="result-notes" v-model="notes" rows="2" maxlength="500"></textarea>
+            </div>
+            <div class="actions">
+              <button type="submit" class="primary" :disabled="saving || !(measuredSeconds > 0)">Enregistrer le test</button>
+            </div>
+          </form>
+        </AppCard>
+      </template>
+      <AppCard v-else>
+        <p>Vous consultez ces résultats en tant que <strong>lecteur</strong> : ils ne peuvent pas être modifiés avec ce compte.</p>
       </AppCard>
 
       <h2>Historique de {{ animalsStore.selectedAnimal.name }}</h2>
@@ -70,7 +75,7 @@
         <div class="table-wrapper">
           <table>
             <thead>
-              <tr><th>Date</th><th>Épreuve</th><th>Durée</th><th>Score</th><th>Notes</th><th><span class="visually-hidden">Actions</span></th></tr>
+              <tr><th>Date</th><th>Épreuve</th><th>Durée</th><th>Score</th><th>Notes</th><th v-if="canRecordHere"><span class="visually-hidden">Actions</span></th></tr>
             </thead>
             <tbody>
               <tr v-for="test in cognitiveStore.tests" :key="test.id">
@@ -80,7 +85,7 @@
                   <td><input v-model.number="edit.durationSeconds" type="number" min="0.1" step="0.1" aria-label="Durée en secondes" /></td>
                   <td><input v-model="edit.score" type="number" min="0" max="10" step="0.5" aria-label="Score sur 10 (vide pour effacer)" /></td>
                   <td><input v-model="edit.notes" maxlength="500" aria-label="Notes" /></td>
-                  <td class="row-actions">
+                  <td v-if="canRecordHere" class="row-actions">
                     <button type="button" class="primary" @click="saveEdit(test.id)">Enregistrer</button>
                     <button type="button" @click="editingTestId = null">Annuler</button>
                   </td>
@@ -89,7 +94,7 @@
                   <td>{{ formatPreciseDuration(test.durationSeconds) }}</td>
                   <td>{{ test.score ?? '–' }}</td>
                   <td>{{ test.notes || '–' }}</td>
-                  <td class="row-actions">
+                  <td v-if="canRecordHere" class="row-actions">
                     <button type="button" @click="startEdit(test)">Modifier</button>
                     <ConfirmAction label="Supprimer" message="Supprimer ce résultat ?" @confirm="removeTest(test.id)" />
                   </td>
@@ -115,6 +120,7 @@ import { useCognitiveStore } from '../stores/cognitive';
 import { useAnimalsStore } from '../stores/animals';
 import { useToastsStore } from '../stores/toasts';
 import { ACCENT_HEX } from '../charts/setup';
+import { canRecord } from '../utils/access';
 import { cognitiveLabel, COGNITIVE_TESTS } from '../utils/cognitive';
 import { formatDateTime, formatPreciseDuration } from '../utils/format';
 import type { CognitiveTest, CognitiveTestType } from '../api/types';
@@ -208,6 +214,7 @@ const chartOptions = {
   plugins: { title: { display: true, text: 'Évolution des durées (secondes)' } },
 };
 
+const canRecordHere = computed(() => canRecord(animalsStore.selectedAnimal));
 const editingTestId = ref<string | null>(null);
 const edit = reactive({ durationSeconds: 0, score: '' as number | string, notes: '' });
 

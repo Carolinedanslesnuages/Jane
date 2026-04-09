@@ -8,89 +8,97 @@
 
     <template v-else-if="animalsStore.selectedAnimal">
       <AnimalBanner :animal="animalsStore.selectedAnimal" />
-      <SessionCard />
+      <template v-if="canRecordHere">
+        <SessionCard />
 
-      <ActiveStates :states="observationsStore.running" />
+        <ActiveStates :states="observationsStore.running" />
 
-      <fieldset class="mode">
-        <legend>Mode d'observation</legend>
-        <label class="radio"><input v-model="mode" type="radio" value="EVENT" /> Événement</label>
-        <label class="radio"><input v-model="mode" type="radio" value="STATE" /> État</label>
-        <p class="muted hint">
-          {{
-            mode === 'EVENT'
-              ? 'Un clic enregistre une action instantanée, par exemple un aboiement.'
-              : "Démarrer puis arrêter mesure la durée d'un comportement, par exemple le sommeil."
-          }}
+        <fieldset class="mode">
+          <legend>Mode d'observation</legend>
+          <label class="radio"><input v-model="mode" type="radio" value="EVENT" /> Événement</label>
+          <label class="radio"><input v-model="mode" type="radio" value="STATE" /> État</label>
+          <p class="muted hint">
+            {{
+              mode === 'EVENT'
+                ? 'Un clic enregistre une action instantanée, par exemple un aboiement.'
+                : "Démarrer puis arrêter mesure la durée d'un comportement, par exemple le sommeil."
+            }}
+          </p>
+        </fieldset>
+
+        <ScanSamplingPanel />
+
+        <AppCard title="Moment">
+          <label class="inline"><input v-model="retroactive" type="checkbox" /> Noter après coup</label>
+          <div v-if="retroactive" class="moment-grid">
+            <div v-if="mode === 'EVENT'">
+              <label for="moment-when">Quand ?</label>
+              <input id="moment-when" v-model="when" type="datetime-local" :max="nowInput" />
+            </div>
+            <template v-else>
+              <div>
+                <label for="moment-from">Début</label>
+                <input id="moment-from" v-model="from" type="datetime-local" :max="nowInput" />
+              </div>
+              <div>
+                <label for="moment-to">Fin</label>
+                <input id="moment-to" v-model="to" type="datetime-local" :max="nowInput" />
+              </div>
+            </template>
+          </div>
+          <p v-else class="muted hint">Les comportements sont enregistrés à l'instant où vous les touchez.</p>
+        </AppCard>
+
+        <AppCard title="Contexte">
+          <div class="context-grid">
+            <div>
+              <label for="context-location">Lieu</label>
+              <select id="context-location" v-model="context.location">
+                <option v-for="option in LOCATIONS" :key="option" :value="option">{{ option || 'Non précisé' }}</option>
+              </select>
+            </div>
+            <div>
+              <label for="context-weather">Météo</label>
+              <select id="context-weather" v-model="context.weather">
+                <option v-for="option in WEATHERS" :key="option" :value="option">{{ option || 'Non précisée' }}</option>
+              </select>
+            </div>
+            <div>
+              <label for="context-stimuli">Stimuli</label>
+              <select id="context-stimuli" v-model="context.stimuli">
+                <option v-for="option in STIMULI" :key="option" :value="option">{{ option || 'Non précisés' }}</option>
+              </select>
+            </div>
+            <div>
+              <label for="context-notes">Notes</label>
+              <input id="context-notes" v-model="context.notes" maxlength="500" />
+            </div>
+          </div>
+        </AppCard>
+
+        <label class="inline definitions-toggle">
+          <input v-model="showDefinitions" type="checkbox" /> Afficher les définitions des comportements
+        </label>
+
+        <div class="category-grid">
+          <CategoryCard
+            v-for="category in categories"
+            :key="category.category"
+            :category="category"
+            :mode="retroactive ? 'EVENT' : mode"
+            :running-behaviors="retroactive ? [] : runningBehaviors"
+            :disabled="busy"
+            :show-definitions="showDefinitions"
+            @choose="choose"
+          />
+        </div>
+      </template>
+      <AppCard v-else>
+        <p>
+          Vous consultez {{ animalsStore.selectedAnimal.name }} en tant que <strong>lecteur</strong> : les observations ne peuvent pas
+          être saisies avec ce compte. Demandez à {{ animalsStore.selectedAnimal.ownerName }} le rôle d'observateur.
         </p>
-      </fieldset>
-
-      <ScanSamplingPanel />
-
-      <AppCard title="Moment">
-        <label class="inline"><input v-model="retroactive" type="checkbox" /> Noter après coup</label>
-        <div v-if="retroactive" class="moment-grid">
-          <div v-if="mode === 'EVENT'">
-            <label for="moment-when">Quand ?</label>
-            <input id="moment-when" v-model="when" type="datetime-local" :max="nowInput" />
-          </div>
-          <template v-else>
-            <div>
-              <label for="moment-from">Début</label>
-              <input id="moment-from" v-model="from" type="datetime-local" :max="nowInput" />
-            </div>
-            <div>
-              <label for="moment-to">Fin</label>
-              <input id="moment-to" v-model="to" type="datetime-local" :max="nowInput" />
-            </div>
-          </template>
-        </div>
-        <p v-else class="muted hint">Les comportements sont enregistrés à l'instant où vous les touchez.</p>
       </AppCard>
-
-      <AppCard title="Contexte">
-        <div class="context-grid">
-          <div>
-            <label for="context-location">Lieu</label>
-            <select id="context-location" v-model="context.location">
-              <option v-for="option in LOCATIONS" :key="option" :value="option">{{ option || 'Non précisé' }}</option>
-            </select>
-          </div>
-          <div>
-            <label for="context-weather">Météo</label>
-            <select id="context-weather" v-model="context.weather">
-              <option v-for="option in WEATHERS" :key="option" :value="option">{{ option || 'Non précisée' }}</option>
-            </select>
-          </div>
-          <div>
-            <label for="context-stimuli">Stimuli</label>
-            <select id="context-stimuli" v-model="context.stimuli">
-              <option v-for="option in STIMULI" :key="option" :value="option">{{ option || 'Non précisés' }}</option>
-            </select>
-          </div>
-          <div>
-            <label for="context-notes">Notes</label>
-            <input id="context-notes" v-model="context.notes" maxlength="500" />
-          </div>
-        </div>
-      </AppCard>
-
-      <label class="inline definitions-toggle">
-        <input v-model="showDefinitions" type="checkbox" /> Afficher les définitions des comportements
-      </label>
-
-      <div class="category-grid">
-        <CategoryCard
-          v-for="category in categories"
-          :key="category.category"
-          :category="category"
-          :mode="retroactive ? 'EVENT' : mode"
-          :running-behaviors="retroactive ? [] : runningBehaviors"
-          :disabled="busy"
-          :show-definitions="showDefinitions"
-          @choose="choose"
-        />
-      </div>
 
       <h2>Dernières observations</h2>
       <ObservationsTable :observations="observationsStore.recent" />
@@ -114,6 +122,7 @@ import { useEthogramStore } from '../stores/ethogram';
 import { useObservationsStore } from '../stores/observations';
 import { useSessionsStore } from '../stores/sessions';
 import { useToastsStore } from '../stores/toasts';
+import { canRecord } from '../utils/access';
 import { formatDateTime } from '../utils/format';
 import { fromDateTimeInput, toDateTimeInput } from '../utils/period';
 
@@ -130,6 +139,7 @@ const toasts = useToastsStore();
 const mode = ref<'EVENT' | 'STATE'>('EVENT');
 const context = reactive({ location: '', weather: '', stimuli: '', notes: '' });
 
+const canRecordHere = computed(() => canRecord(animalsStore.selectedAnimal));
 const retroactive = ref(false);
 const showDefinitions = ref(readStoredFlag('jane.showDefinitions'));
 watch(showDefinitions, (value) => storeFlag('jane.showDefinitions', value));

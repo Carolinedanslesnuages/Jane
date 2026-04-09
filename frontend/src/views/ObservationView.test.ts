@@ -81,4 +81,20 @@ describe('ObservationView', () => {
     expect(wrapper.text()).toContain('Aboiement.');
     expect(localStorage.getItem('jane.showDefinitions')).toBe('1');
   });
+
+  it('offers a viewer the observations to read, but no way to record', async () => {
+    const wrapper = mountView(animal({ species: 'DOG', role: 'VIEWER', ownerName: 'Marie', shareId: 's1' }));
+    await flushPromises();
+    expect(wrapper.text()).toContain('lecteur');
+    expect(wrapper.text()).toContain('Marie');
+    expect(wrapper.text()).toContain('Dernières observations');
+    expect(wrapper.findAll('button').map((button) => button.text())).not.toContain('Aboyer');
+    expect(wrapper.text()).not.toContain('Démarrer une séance');
+  });
+
+  it('lets an observer record on a shared animal', async () => {
+    const wrapper = mountView(animal({ species: 'DOG', role: 'OBSERVER', ownerName: 'Marie', shareId: 's1' }));
+    await flushPromises();
+    expect(wrapper.findAll('button').map((button) => button.text())).toContain('Aboyer');
+  });
 });

@@ -24,7 +24,7 @@
       <div v-else class="table-wrapper">
         <table>
           <thead>
-            <tr><th>Début</th><th>Durée</th><th>Observateur</th><th>Méthode</th><th>Observations</th><th><span class="visually-hidden">Actions</span></th></tr>
+            <tr><th>Début</th><th>Durée</th><th>Observateur</th><th>Méthode</th><th>Observations</th><th v-if="canRecordHere"><span class="visually-hidden">Actions</span></th></tr>
           </thead>
           <tbody>
             <tr v-for="session in sessionsStore.sessions" :key="session.id">
@@ -33,7 +33,7 @@
               <td>{{ session.observerName }}</td>
               <td>{{ samplingLabel(session.method) }}</td>
               <td>{{ session.observationCount }}</td>
-              <td>
+              <td v-if="canRecordHere">
                 <ConfirmAction label="Supprimer" message="Supprimer cette séance ? Ses observations sont conservées." @confirm="removeSession(session.id)" />
               </td>
             </tr>
@@ -48,13 +48,13 @@
           · les {{ observationsStore.history.length }} plus récentes sont affichées
         </template>
       </p>
-      <ObservationsTable :observations="observationsStore.history" removable @remove="removeObservation" />
+      <ObservationsTable :observations="observationsStore.history" :removable="canRecordHere" @remove="removeObservation" />
     </template>
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import ConfirmAction from '../components/ConfirmAction.vue';
 import { downloadFile } from '../api/client';
 import type { Observation, ObservationSession } from '../api/types';
@@ -68,11 +68,13 @@ import { useSessionsStore } from '../stores/sessions';
 import { useToastsStore } from '../stores/toasts';
 import { formatDateTime, formatDuration } from '../utils/format';
 import { samplingLabel } from '../utils/sampling';
+import { canRecord } from '../utils/access';
 import { daysAgo, endOfLocalDay, startOfLocalDay, toInputDate } from '../utils/period';
 
 const animalsStore = useAnimalsStore();
 const observationsStore = useObservationsStore();
 const sessionsStore = useSessionsStore();
+const canRecordHere = computed(() => canRecord(animalsStore.selectedAnimal));
 const toasts = useToastsStore();
 
 const downloading = ref(false);

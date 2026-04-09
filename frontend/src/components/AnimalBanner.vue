@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { Animal } from '../api/types';
+import { ROLE_LABELS } from '../utils/access';
 import { formatAge } from '../utils/format';
 import { speciesLabel } from '../utils/species';
 
@@ -18,6 +19,9 @@ const details = computed(() => {
     return '';
   }
   const parts = [speciesLabel(props.animal.species)];
+  if (props.animal.role !== 'OWNER') {
+    parts.push(`${ROLE_LABELS[props.animal.role]} · partagé par ${props.animal.ownerName}`);
+  }
   if (props.animal.birthDate) {
     parts.push(formatAge(props.animal.birthDate));
   }

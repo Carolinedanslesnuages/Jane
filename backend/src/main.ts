@@ -6,6 +6,8 @@ import { configureApp } from './app.setup';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  // Behind the reverse proxy (Caddy) the client address is in X-Forwarded-For: rate limiting needs it.
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
   configureApp(app);
   const documentation = new DocumentBuilder()
     .setTitle('API Jane')

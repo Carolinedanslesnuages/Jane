@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { validateEnvironment } from './config/environment';
 import { AuthModule } from './auth/auth.module';
 import { AnimalsModule } from './animals/animals.module';
@@ -23,6 +25,8 @@ import { HealthController } from './health/health.controller';
         return raw;
       },
     }),
+    // Per address: 300 requests a minute is far above normal use (a page makes a handful), and stops a loop or a scan.
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 300 }]),
     PrismaModule,
     AuthModule,
     AnimalsModule,
@@ -34,5 +38,6 @@ import { HealthController } from './health/health.controller';
     ExportsModule,
   ],
   controllers: [HealthController, EthogramController],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

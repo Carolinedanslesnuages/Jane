@@ -20,5 +20,7 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
 COPY package.json ./
 EXPOSE 3300
+# Le conteneur est « en bonne santé » quand l'API répond et joint sa base de données.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 CMD wget -qO- http://localhost:3300/health || exit 1
 # Applique les migrations puis démarre l'API.
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]

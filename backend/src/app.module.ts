@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { validateEnvironment } from './config/environment';
 import { AuthModule } from './auth/auth.module';
@@ -13,6 +13,7 @@ import { SharesModule } from './shares/shares.module';
 import { StatsModule } from './stats/stats.module';
 import { ExportsModule } from './exports/exports.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { RequestLoggingInterceptor } from './logging/request-logging.interceptor';
 import { HealthController } from './health/health.controller';
 
 @Module({
@@ -38,6 +39,9 @@ import { HealthController } from './health/health.controller';
     ExportsModule,
   ],
   controllers: [HealthController, EthogramController],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_INTERCEPTOR, useClass: RequestLoggingInterceptor },
+  ],
 })
 export class AppModule {}

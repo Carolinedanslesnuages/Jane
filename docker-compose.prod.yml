@@ -36,6 +36,7 @@ services:
       JANE_ADMIN_CLIENT_SECRET: ${JANE_ADMIN_CLIENT_SECRET:?secret du compte de service requis}
     volumes:
       - ./keycloak/realm-jane.prod.json:/opt/keycloak/data/import/realm-jane.json:ro
+      - ./keycloak/themes:/opt/keycloak/themes:ro
     depends_on:
       postgres:
         condition: service_healthy

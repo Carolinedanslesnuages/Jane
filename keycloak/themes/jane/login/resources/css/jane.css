@@ -1,0 +1,92 @@
+/* Couleurs et typographie de Jane (mêmes valeurs que frontend/src/styles/tokens.css). */
+:root {
+  --jane-forest: #2f5d50;
+  --jane-forest-dark: #234a40;
+  --jane-cream: #fbf8f1;
+  --jane-sand: #f0eadb;
+  --jane-border: #d9d0ba;
+  --jane-ink: #2b2a26;
+
+  --pf-v5-global--primary-color--100: var(--jane-forest);
+  --pf-v5-global--primary-color--200: var(--jane-forest-dark);
+  --pf-v5-global--link--Color: var(--jane-forest);
+  --pf-v5-global--link--Color--hover: var(--jane-forest-dark);
+  --pf-v5-global--active-color--100: var(--jane-forest);
+  --pf-v5-global--BorderColor--100: var(--jane-border);
+  --pf-v5-global--FontFamily--text: 'Source Sans 3', 'Source Sans Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --pf-v5-global--FontFamily--heading: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --pf-v5-global--BorderRadius--sm: 0.6rem;
+}
+
+html,
+body,
+.pf-v5-c-login {
+  background: var(--jane-cream);
+  background-image: none;
+  color: var(--jane-ink);
+}
+
+/* Le nom « Jane » en haut de la carte : le thème d'origine l'écrit en blanc, sur fond sombre. */
+.kc-logo-text,
+#kc-header-wrapper,
+#kc-header-wrapper * {
+  color: var(--jane-ink) !important;
+}
+
+#kc-header-wrapper {
+  font-family: var(--pf-v5-global--FontFamily--heading);
+  font-size: 2.5rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.pf-v5-c-login__main {
+  background: #fff;
+  border: 1px solid var(--jane-border);
+  border-radius: 0.6rem;
+  box-shadow: none;
+}
+
+.pf-v5-c-login__main-header h1,
+#kc-page-title {
+  font-family: var(--pf-v5-global--FontFamily--heading);
+  font-weight: 600;
+}
+
+.pf-v5-c-form-control,
+.pf-v5-c-form-control input {
+  background-color: var(--jane-sand);
+  border-radius: 0.6rem;
+}
+
+.pf-v5-c-button {
+  border-radius: 0.6rem;
+}
+
+.pf-v5-c-button.pf-m-primary {
+  background-color: var(--jane-forest);
+}
+
+.pf-v5-c-button.pf-m-primary:hover,
+.pf-v5-c-button.pf-m-primary:focus {
+  background-color: var(--jane-forest-dark);
+}
+
+/* Champ actif : un seul liseré vert (le thème d'origine en dessine deux, en bleu) */
+.pf-v5-c-form-control::after,
+.pf-v5-c-form-control:hover::after,
+.pf-v5-c-form-control:focus-within::after {
+  border-color: transparent;
+  border-bottom-color: var(--jane-forest);
+}
+
+.pf-v5-c-form-control:focus-within {
+  outline: 2px solid var(--jane-forest);
+  outline-offset: 1px;
+}
+
+.pf-v5-c-form-control input:focus,
+.pf-v5-c-form-control input:focus-visible {
+  outline: none;
+}

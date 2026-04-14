@@ -46,11 +46,11 @@
         <h2>Budget-temps</h2>
         <div class="chart-pair">
           <AppCard>
-            <div v-if="budgetChart" class="chart"><Doughnut :data="budgetChart" :options="budgetOptions" /></div>
+            <div v-if="budgetChart" class="chart"><Doughnut :data="budgetChart" :options="budgetOptions" role="img" :aria-label="describeChart('Répartition du temps mesuré, en minutes', budgetChart)" /></div>
             <p v-else class="muted">Aucun état mesuré : utilisez le mode État pour chronométrer.</p>
           </AppCard>
           <AppCard>
-            <div v-if="eventsChart" class="chart"><Bar :data="eventsChart" :options="eventsOptions" /></div>
+            <div v-if="eventsChart" class="chart"><Bar :data="eventsChart" :options="eventsOptions" role="img" :aria-label="describeChart('Événements par catégorie', eventsChart)" /></div>
             <p v-else class="muted">Aucun événement enregistré.</p>
           </AppCard>
         </div>
@@ -59,11 +59,11 @@
         <p v-if="summary.stress.total === 0" class="muted">Aucun signe de stress enregistré sur cette période.</p>
         <template v-else>
           <AppCard>
-            <div class="chart short"><Line v-if="stressByDay" :data="stressByDay" :options="lineOptions" /></div>
+            <div class="chart short"><Line v-if="stressByDay" :data="stressByDay" :options="lineOptions" role="img" :aria-label="describeChart('Fréquence du stress par jour', stressByDay)" /></div>
           </AppCard>
           <div class="chart-pair">
             <AppCard>
-              <div class="chart short"><Bar v-if="stressByBehavior" :data="stressByBehavior" :options="barOptions('Signes les plus fréquents')" /></div>
+              <div class="chart short"><Bar v-if="stressByBehavior" :data="stressByBehavior" :options="barOptions('Signes les plus fréquents')" role="img" :aria-label="describeChart('Signes de stress les plus fréquents', stressByBehavior)" /></div>
             </AppCard>
             <AppCard>
               <p class="stress-figure">
@@ -78,13 +78,13 @@
           </div>
           <AppCard title="Contextes du stress">
             <div class="chart-triple">
-              <div class="chart short"><Bar v-if="stressByHour" :data="stressByHour" :options="barOptions('Par heure')" /></div>
+              <div class="chart short"><Bar v-if="stressByHour" :data="stressByHour" :options="barOptions('Par heure')" role="img" :aria-label="describeChart('Stress par heure', stressByHour)" /></div>
               <div class="chart short">
-                <Bar v-if="stressByStimulus" :data="stressByStimulus" :options="barOptions('Par stimulus')" />
+                <Bar v-if="stressByStimulus" :data="stressByStimulus" :options="barOptions('Par stimulus')" role="img" :aria-label="describeChart('Stress par stimulus', stressByStimulus)" />
                 <p v-else class="muted">Aucun stimulus renseigné.</p>
               </div>
               <div class="chart short">
-                <Bar v-if="stressByLocation" :data="stressByLocation" :options="barOptions('Par lieu')" />
+                <Bar v-if="stressByLocation" :data="stressByLocation" :options="barOptions('Par lieu')" role="img" :aria-label="describeChart('Stress par lieu', stressByLocation)" />
                 <p v-else class="muted">Aucun lieu renseigné.</p>
               </div>
             </div>
@@ -93,7 +93,7 @@
 
         <h2>Activité quotidienne</h2>
         <AppCard>
-          <div class="chart"><Bar :data="timelineChart" :options="timelineOptions" /></div>
+          <div class="chart"><Bar :data="timelineChart" :options="timelineOptions" role="img" :aria-label="describeChart('Observations par jour et par catégorie', timelineChart)" /></div>
         </AppCard>
       </template>
     </template>
@@ -103,6 +103,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { Bar, Doughnut, Line } from 'vue-chartjs';
+import { describeChart } from '../charts/describe';
 import AnimalBanner from '../components/AnimalBanner.vue';
 import AppCard from '../components/AppCard.vue';
 import PageHeader from '../components/PageHeader.vue';

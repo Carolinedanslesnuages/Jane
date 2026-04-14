@@ -69,7 +69,7 @@
         </div>
 
         <AppCard v-if="chartData.datasets.length > 0 && cognitiveStore.tests.length > 1">
-          <div class="chart"><Line :data="chartData" :options="chartOptions" /></div>
+          <div class="chart"><Line :data="chartData" :options="chartOptions" role="img" :aria-label="describeChart('Évolution des durées en secondes', chartData)" /></div>
         </AppCard>
 
         <div class="table-wrapper">
@@ -111,6 +111,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { Line } from 'vue-chartjs';
+import { describeChart } from '../charts/describe';
 import AnimalBanner from '../components/AnimalBanner.vue';
 import AppCard from '../components/AppCard.vue';
 import ConfirmAction from '../components/ConfirmAction.vue';

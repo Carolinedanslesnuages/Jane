@@ -62,10 +62,12 @@ function labelFor(behavior: string): string {
 
 .badge {
   display: inline-block;
-  padding: 0.1rem 0.6rem;
+  padding: 0.1rem 0.65rem;
   border-radius: 999px;
-  color: var(--color-white);
-  background: var(--accent);
+  /* Dark text on a tint of the accent: the accent colours alone are too light for white text (WCAG AA). */
+  color: var(--color-ink);
+  background: color-mix(in srgb, var(--accent) 22%, #ffffff);
+  border: 1px solid var(--accent);
   font-family: var(--font-body);
   font-size: 0.8rem;
   font-weight: 600;
@@ -90,8 +92,10 @@ function labelFor(behavior: string): string {
 }
 
 .behaviors button.running {
-  background: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, #ffffff);
   border-color: var(--accent);
-  color: var(--color-white);
+  border-width: 2px;
+  color: var(--color-ink);
+  font-weight: 600;
 }
 </style>

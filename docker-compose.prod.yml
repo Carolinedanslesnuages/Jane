@@ -40,9 +40,33 @@ services:
       postgres:
         condition: service_healthy
 
+  # Une sauvegarde par jour des bases de Jane et de Keycloak, gardée 14 jours dans le volume « backups ».
+  backup:
+    image: postgres:17-alpine
+    restart: always
+    entrypoint: ["sh", "/backup.sh", "--loop"]
+    environment:
+      PGHOST: postgres
+      PGUSER: jane
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_DIR: /backups
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+    volumes:
+      - ./deploy/backup.sh:/backup.sh:ro
+      - backups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   api:
     build: ./backend
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3300/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
     environment:
       DATABASE_URL: postgresql://jane:${POSTGRES_PASSWORD}@postgres:5432/jane?schema=public
       API_PORT: 3300
@@ -85,3 +109,4 @@ services:
 volumes:
   postgres_data:
   caddy_data:
+  backups:

@@ -32,13 +32,44 @@ Les migrations de la base sont appliquées automatiquement au démarrage de l'AP
 
 ## Sauvegardes
 
-Tout l'état est dans deux volumes Docker : `postgres_data` (observations, comptes Jane, base de Keycloak) et `caddy_data`
-(certificats). Sauvegardez la base régulièrement :
+Le service `backup` sauvegarde chaque jour les deux bases (celle de Jane et celle de Keycloak) dans le volume Docker
+`backups`, et garde 14 jours (`BACKUP_KEEP_DAYS`). Chaque sauvegarde est un dossier daté contenant `jane.dump` et `keycloak.dump`.
+Une sauvegarde interrompue n'est jamais confondue avec une bonne : le fichier ne prend son nom qu'une fois terminé.
+
+**Une sauvegarde sur le même serveur ne protège pas d'une panne du serveur.** Copiez régulièrement le dossier ailleurs
+(autre machine, stockage d'objets) :
 
 ```bash
-docker compose -f docker-compose.prod.yml exec postgres pg_dump -U jane jane > jane-$(date +%F).sql
-docker compose -f docker-compose.prod.yml exec postgres pg_dump -U jane keycloak > keycloak-$(date +%F).sql
+docker compose -f docker-compose.prod.yml cp backup:/backups ./sauvegardes-jane
 ```
+
+Sauvegarde immédiate (avant une mise à jour, par exemple) :
+
+```bash
+docker compose -f docker-compose.prod.yml exec backup sh /backup.sh
+```
+
+### Restaurer
+
+Choisissez un dossier daté, puis restaurez la base voulue. **La base cible est supprimée puis recréée.**
+
+```bash
+docker compose -f docker-compose.prod.yml stop api keycloak
+docker compose -f docker-compose.prod.yml cp deploy/restore.sh backup:/restore.sh
+docker compose -f docker-compose.prod.yml exec -e PGDATABASE=postgres backup \
+  sh /restore.sh /backups/2026-04-12_030000/jane.dump jane
+docker compose -f docker-compose.prod.yml start api keycloak
+```
+
+Essayez la restauration une fois à blanc (vers une base de test, par exemple `jane_essai`) avant d'en avoir besoin.
+
+## Surveillance
+
+- `GET /health` répond 200 si l'API joint sa base, 503 sinon ; `GET /health/live` répond tant que le processus tourne. Docker
+  s'en sert pour marquer le conteneur de l'API « healthy » ou « unhealthy » (`docker compose ps`).
+- Les journaux de l'API (`docker compose logs api`) comptent une ligne JSON par requête (méthode, chemin, statut, durée, compte).
+  Les paramètres de l'adresse et le contenu des requêtes n'y figurent pas.
+- L'API limite le nombre de requêtes par adresse (300 par minute, 20 pour les exports) et répond 429 au-delà.
 
 ## Mise à jour
 

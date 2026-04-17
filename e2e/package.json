@@ -10,6 +10,7 @@
     "test:offline": "JANE_E2E_OFFLINE=1 playwright test tests/offline.spec.ts"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.50.0",
     "@types/node": "^22.10.0",
     "typescript": "^5.9.3"

@@ -1,6 +1,6 @@
 {
   "name": "jane-e2e",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Tests de bout en bout de Jane dans un vrai navigateur",
   "private": true,
   "scripts": {

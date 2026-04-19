@@ -1,6 +1,6 @@
 {
   "name": "jane-frontend",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Interface web de Jane, carnet d'observation du comportement canin",
   "private": true,
   "type": "module",

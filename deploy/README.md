@@ -22,10 +22,19 @@ docker compose -f docker-compose.prod.yml --env-file .env.production up -d --bui
 
 Les migrations de la base sont appliquées automatiquement au démarrage de l'API.
 
+## HTTPS obligatoire
+
+Le mode hors ligne (service worker) et l'installation de l'application ne fonctionnent que sur une adresse **HTTPS**, ce que
+fournit Caddy. Sans HTTPS, l'application reste utilisable mais ne s'ouvre pas sans réseau.
+
 ## Comptes
 
 - Le realm `jane` est importé depuis `keycloak/realm-jane.prod.json`. L'adresse de l'interface y est injectée par la variable
   `JANE_WEB_URL` (déduite du domaine). Aucun compte de démonstration n'est créé.
+- **Suppression de compte** : Jane supprime aussi le compte de connexion grâce à un compte de service Keycloak (`jane-admin`).
+  Son secret est `JANE_ADMIN_CLIENT_SECRET` dans `.env.production` ; sans lui, la suppression d'un compte efface les données de
+  Jane mais laisse le compte de connexion. Choisissez une longue chaîne aléatoire.
+- Les pages de connexion et d'inscription utilisent le thème « jane » (`keycloak/themes/jane`), monté dans le conteneur Keycloak.
 - La console d'administration Keycloak est sur `https://auth.<domaine>` (compte `admin`, mot de passe de `.env.production`).
   Les visiteurs peuvent créer leur compte depuis la page de connexion ; désactivez « Inscription » dans le realm pour fermer
   l'accès à vous seule.
